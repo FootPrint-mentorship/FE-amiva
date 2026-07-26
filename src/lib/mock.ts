@@ -223,6 +223,387 @@ export const pendingConfirmations: PendingConfirmation[] = [
   },
 ];
 
+/** Events across the week for the calendar screen (includes today's `events`). */
+export const weekEvents: CalendarEvent[] = [
+  ...events,
+  {
+    id: "evt_04",
+    title: "1:1 with Abraham",
+    start_at: iso(11, 0, 1),
+    end_at: iso(11, 30, 1),
+    all_day: false,
+    location: null,
+    conference_url: "https://meet.google.com/def",
+    attendees: [{ email: "abraham@amiva.app", name: "Abraham", response_status: "accepted" }],
+    status: "confirmed",
+  },
+  {
+    id: "evt_05",
+    title: "Product review",
+    start_at: iso(14, 0, 1),
+    end_at: iso(15, 0, 1),
+    all_day: false,
+    location: "Office · Boardroom",
+    conference_url: null,
+    attendees: [],
+    status: "confirmed",
+  },
+  {
+    id: "evt_06",
+    title: "Flight to Nairobi — KQ533",
+    start_at: iso(9, 15, 3),
+    end_at: iso(13, 30, 3),
+    all_day: false,
+    location: "MMA Terminal 1",
+    conference_url: null,
+    attendees: [],
+    status: "confirmed",
+  },
+  {
+    id: "evt_07",
+    title: "Client dinner — Kemi",
+    start_at: iso(19, 0, 2),
+    end_at: iso(20, 30, 2),
+    all_day: false,
+    location: "Victoria Island",
+    conference_url: null,
+    attendees: [{ email: "kemi@client.com", name: "Kemi", response_status: "needsAction" }],
+    status: "tentative",
+  },
+  {
+    id: "evt_08",
+    title: "Deep work — proposal",
+    start_at: iso(10, 0, -1),
+    end_at: iso(12, 0, -1),
+    all_day: false,
+    location: null,
+    conference_url: null,
+    attendees: [],
+    status: "confirmed",
+  },
+];
+
+export type Memory = {
+  id: string;
+  content: string;
+  category: "personal" | "work" | "people" | "travel" | "finance" | "ideas" | "other";
+  tags: string[];
+  source_channel: "whatsapp" | "web";
+  favorite: boolean;
+  archived: boolean;
+  created_at: string;
+};
+
+export const memories: Memory[] = [
+  {
+    id: "mem_01",
+    content: "Landlord's account: GTB 0123456789, Musa Ibrahim. Rent due last Friday of every month.",
+    category: "finance",
+    tags: ["landlord", "rent"],
+    source_channel: "whatsapp",
+    favorite: true,
+    archived: false,
+    created_at: iso(9, 12, -6),
+  },
+  {
+    id: "mem_02",
+    content: "Mum's blood pressure medication: Amlodipine 5mg, refill at HealthPlus Lekki.",
+    category: "people",
+    tags: ["mum", "health"],
+    source_channel: "whatsapp",
+    favorite: false,
+    archived: false,
+    created_at: iso(18, 40, -12),
+  },
+  {
+    id: "mem_03",
+    content: "Wifi password at the office: Vertex2026!",
+    category: "work",
+    tags: ["office"],
+    source_channel: "web",
+    favorite: false,
+    archived: false,
+    created_at: iso(10, 5, -20),
+  },
+  {
+    id: "mem_04",
+    content: "Kemi prefers WhatsApp voice notes over email for quick updates. Formal docs by email only.",
+    category: "people",
+    tags: ["kemi", "client"],
+    source_channel: "whatsapp",
+    favorite: false,
+    archived: false,
+    created_at: iso(15, 30, -3),
+  },
+  {
+    id: "mem_05",
+    content: "Nairobi trip: staying at Sarova Stanley, booking ref 6HJQZP. Airport pickup arranged by James (+254 712 345 678).",
+    category: "travel",
+    tags: ["nairobi", "august"],
+    source_channel: "whatsapp",
+    favorite: true,
+    archived: false,
+    created_at: iso(12, 0, -2),
+  },
+  {
+    id: "mem_06",
+    content: "App idea: recurring 'money dates' feature — weekly finance check-in with summary of spending vs budget.",
+    category: "ideas",
+    tags: ["product"],
+    source_channel: "web",
+    favorite: false,
+    archived: false,
+    created_at: iso(22, 15, -8),
+  },
+  {
+    id: "mem_07",
+    content: "Generator service contact: Emeka, +234 803 555 1234. Last serviced in May.",
+    category: "personal",
+    tags: ["home"],
+    source_channel: "whatsapp",
+    favorite: false,
+    archived: false,
+    created_at: iso(8, 45, -30),
+  },
+];
+
+export type TodoList = {
+  id: string;
+  name: string;
+  type: "shopping" | "packing" | "reading" | "watch" | "ideas" | "custom";
+  is_template: boolean;
+  archived: boolean;
+  items: { id: string; text: string; completed: boolean; position: number }[];
+  updated_at: string;
+};
+
+export const todoLists: TodoList[] = [
+  {
+    id: "lst_01",
+    name: "Weekly shopping",
+    type: "shopping",
+    is_template: false,
+    archived: false,
+    items: [
+      { id: "itm_01", text: "Rice 5kg", completed: true, position: 0 },
+      { id: "itm_02", text: "Beans", completed: true, position: 1 },
+      { id: "itm_03", text: "Titus fish", completed: false, position: 2 },
+      { id: "itm_04", text: "Palm oil", completed: false, position: 3 },
+      { id: "itm_05", text: "Garri", completed: false, position: 4 },
+    ],
+    updated_at: iso(12, 0),
+  },
+  {
+    id: "lst_02",
+    name: "Nairobi trip packing",
+    type: "packing",
+    is_template: false,
+    archived: false,
+    items: [
+      { id: "itm_06", text: "Passport", completed: false, position: 0 },
+      { id: "itm_07", text: "Chargers + power bank", completed: false, position: 1 },
+      { id: "itm_08", text: "Business cards", completed: false, position: 2 },
+    ],
+    updated_at: iso(9, 30, -1),
+  },
+  {
+    id: "lst_03",
+    name: "Books to read",
+    type: "reading",
+    is_template: false,
+    archived: false,
+    items: [
+      { id: "itm_09", text: "The Mom Test", completed: true, position: 0 },
+      { id: "itm_10", text: "Zero to One", completed: false, position: 1 },
+    ],
+    updated_at: iso(20, 0, -3),
+  },
+  {
+    id: "lst_04",
+    name: "Travel checklist",
+    type: "packing",
+    is_template: true,
+    archived: false,
+    items: [
+      { id: "itm_11", text: "Passport / ID", completed: false, position: 0 },
+      { id: "itm_12", text: "Tickets", completed: false, position: 1 },
+      { id: "itm_13", text: "Toiletries", completed: false, position: 2 },
+      { id: "itm_14", text: "Medication", completed: false, position: 3 },
+    ],
+    updated_at: iso(8, 0, -14),
+  },
+];
+
+export type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  resource?: { kind: "reminder" | "task" | "event"; title: string; meta: string };
+  confirmation?: PendingConfirmation;
+  at: string;
+};
+
+export const chatSeed: ChatMessage[] = [
+  {
+    id: "msg_01",
+    role: "user",
+    text: "Remind me to pay rent on Friday morning",
+    at: iso(9, 40),
+  },
+  {
+    id: "msg_02",
+    role: "assistant",
+    text: "Done — I'll remind you Friday 31 Jul, 9:00 AM (WAT).",
+    resource: { kind: "reminder", title: "Pay rent", meta: "Fri 31 Jul · 9:00 AM WAT · WhatsApp" },
+    at: iso(9, 40),
+  },
+  {
+    id: "msg_03",
+    role: "user",
+    text: "Move my 2pm with Tunde to Friday morning",
+    at: iso(9, 42),
+  },
+  {
+    id: "msg_04",
+    role: "assistant",
+    text: "I found 'Investor sync' with Tunde today at 1:00 PM. Friday 9:00–9:30 AM is free for both of you. Move it?",
+    confirmation: pendingConfirmations[0],
+    at: iso(9, 42),
+  },
+];
+
+export type EmailThreadSummary = {
+  id: string;
+  subject: string;
+  from: { name: string; email: string };
+  summary: string;
+  importance: "high" | "normal" | "low";
+  importance_reason: string;
+  suggested_action: "reply" | "read" | "schedule";
+  last_message_at: string;
+};
+
+export const emailThreads: EmailThreadSummary[] = [
+  {
+    id: "thr_01",
+    subject: "Contract renewal — action needed",
+    from: { name: "Kemi A.", email: "kemi@client.com" },
+    summary: "Kemi needs the signed renewal by Friday; legal flagged clause 4 for review.",
+    importance: "high",
+    importance_reason: "Explicit deadline (Friday) and a direct request to you.",
+    suggested_action: "reply",
+    last_message_at: iso(8, 30),
+  },
+  {
+    id: "thr_02",
+    subject: "Your e-ticket — KQ533 LOS→NBO",
+    from: { name: "Kenya Airways", email: "noreply@kenya-airways.com" },
+    summary: "E-ticket confirmed for the day after tomorrow, 9:15 AM departure. Booking ref 6HJQZP.",
+    importance: "normal",
+    importance_reason: "Travel document for an upcoming trip on your calendar.",
+    suggested_action: "read",
+    last_message_at: iso(10, 4, -1),
+  },
+  {
+    id: "thr_03",
+    subject: "Intro: Amara from Flux Ventures",
+    from: { name: "Tunde O.", email: "tunde@vc.com" },
+    summary: "Tunde is introducing you to Amara, who invests in productivity tools. She suggested a call next week.",
+    importance: "high",
+    importance_reason: "Warm investor introduction with a proposed meeting.",
+    suggested_action: "schedule",
+    last_message_at: iso(16, 45, -1),
+  },
+  {
+    id: "thr_04",
+    subject: "Team offsite — venue options",
+    from: { name: "Abraham O.", email: "abraham@amiva.app" },
+    summary: "Three venue options for the August offsite; Abraham needs your pick by Wednesday.",
+    importance: "normal",
+    importance_reason: "Decision requested, but the deadline is several days out.",
+    suggested_action: "reply",
+    last_message_at: iso(9, 15, -2),
+  },
+];
+
+export type AuditEvent = {
+  id: string;
+  action: string;
+  module: "reminders" | "calendar" | "email" | "memory" | "tasks" | "account";
+  summary: string;
+  risk: "low" | "medium" | "high";
+  channel: "whatsapp" | "web";
+  result: "success" | "failure";
+  approval?: string;
+  created_at: string;
+};
+
+export const auditEvents: AuditEvent[] = [
+  {
+    id: "aud_01",
+    action: "email.send",
+    module: "email",
+    summary: "Sent reply to kemi@client.com — “Re: Contract renewal”",
+    risk: "high",
+    channel: "web",
+    result: "success",
+    approval: "Approved by you via web, today 14:03",
+    created_at: iso(14, 3),
+  },
+  {
+    id: "aud_02",
+    action: "reminder.create",
+    module: "reminders",
+    summary: "Created reminder “Pay NEPA bill” — every last Friday, 10:00 AM",
+    risk: "low",
+    channel: "whatsapp",
+    result: "success",
+    created_at: iso(9, 41),
+  },
+  {
+    id: "aud_03",
+    action: "calendar.reschedule",
+    module: "calendar",
+    summary: "Moved “Investor sync — Tunde” to Fri 9:00 AM; attendees notified",
+    risk: "medium",
+    channel: "whatsapp",
+    result: "success",
+    approval: "Approved by you via WhatsApp, today 09:44",
+    created_at: iso(9, 44),
+  },
+  {
+    id: "aud_04",
+    action: "memory.save",
+    module: "memory",
+    summary: "Saved memory “Nairobi trip — Sarova Stanley…” under Travel",
+    risk: "low",
+    channel: "whatsapp",
+    result: "success",
+    created_at: iso(12, 0, -2),
+  },
+  {
+    id: "aud_05",
+    action: "calendar.create",
+    module: "calendar",
+    summary: "Created “Client dinner — Kemi” — provider timeout, retried and failed",
+    risk: "medium",
+    channel: "web",
+    result: "failure",
+    created_at: iso(18, 20, -2),
+  },
+  {
+    id: "aud_06",
+    action: "memory.delete_permanent",
+    module: "memory",
+    summary: "Permanently deleted 1 memory (category: Personal)",
+    risk: "high",
+    channel: "web",
+    result: "success",
+    approval: "Confirmed by you via web, 20 Jul 11:12",
+    created_at: iso(11, 12, -6),
+  },
+];
+
 export function fmtTime(isoStr: string) {
   return new Date(isoStr).toLocaleTimeString("en-GB", {
     hour: "numeric",
