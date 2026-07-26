@@ -1,26 +1,67 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  /* Amiva brand palette (Brand Guideline, July 2026) */
+  --color-indigo-50: #eeedf7;
+  --color-indigo-100: #d9d6ee;
+  --color-indigo-200: #b8b3de;
+  --color-indigo-300: #918bc9;
+  --color-indigo-400: #6c63b4;
+  --color-indigo-500: #4a3fa0;
+  --color-indigo-600: #3a2f89;
+  --color-indigo-700: #2c2372;
+  --color-indigo-800: #251d66;
+  --color-indigo-900: #20185b;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-navy: #131628;
+  --color-cyan-300: #9adeeb;
+  --color-cyan-400: #74d0e2;
+  --color-cyan-500: #57c7dc;
+  --color-cyan-600: #3aa8bd;
+  --color-violet-100: #e5e3f2;
+  --color-violet-300: #a49fce;
+  --color-violet-500: #615aa7;
+  --color-violet-700: #4c4685;
+  --color-soft: #f4f5fb;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-success: #2fa36b;
+  --color-warning: #e5a13a;
+  --color-danger: #d9534f;
+
+  --color-ink: #131628;
+  --color-ink-muted: #6b6f80;
+  --color-line: #e3e5f0;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 16px;
+  --radius-control: 10px;
+
+  --shadow-card: 0 1px 3px rgb(19 22 40 / 0.08);
+  --shadow-pop: 0 8px 30px rgb(19 22 40 / 0.12);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-soft);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-cyan-300);
+  color: var(--color-navy);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cyan-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
