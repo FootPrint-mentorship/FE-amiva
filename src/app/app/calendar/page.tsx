@@ -211,7 +211,7 @@ export default function CalendarPage() {
 
       {/* Create modal */}
       {creating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="New event">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={editingId ? "Edit event" : "New event"}>
           <div className="absolute inset-0 bg-navy/30" onClick={() => { setCreating(false); setEditingId(null); setDraftError(""); }} />
           <Card className="relative max-h-[90vh] w-full max-w-[480px] overflow-y-auto p-6">
             <button

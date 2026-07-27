@@ -27,7 +27,21 @@ Next.js 15 (App Router, Turbopack) · React 19 · TypeScript strict · Tailwind 
 npm run dev        # http://localhost:3000
 npx tsc --noEmit   # type-check (keep green)
 npm run lint
+npm test           # Vitest suite (keep green) · npm run test:watch while developing
 ```
+
+## Testing
+
+Vitest + React Testing Library + jsdom. Config in `vitest.config.mts`; global setup in `src/test/setup.tsx` (mocks `next/image` and `next/navigation` — tests control routing via the exported `nav` object); all tests live in `src/__tests__/` (kept out of `src/app/` so Next never sees them).
+
+Conventions:
+- Test **behavior through roles/labels**, not markup — if a query needs `querySelector`, the component probably needs an aria-label instead (that rule already caught a real bug: the edit-event dialog was announced as "New event").
+- Every screen's spec **acceptance criteria** are the test names; safety rules are non-negotiable tests: email never sends without the explicit confirm, permanent deletes require a confirm step, event cancellation warns about attendees, search returns honest not-found instead of fabricating, timezones always visible.
+- `src/__tests__/lib.test.ts` guards the **mock↔API contract** (unique prefixed ids, recurring reminders carry `recurrence_human`, etc.) — keep it in sync when touching `mock.ts`.
+- Mock async latencies (search 700ms, drafts/chat 900ms) use real timers — use `findBy*` with `{ timeout: 2500+ }`, don't add fake-timer plumbing.
+- Components using React 19 `use(params)` must render inside an awaited `act()` with a `Suspense` wrapper (see `lists-pages.test.tsx`).
+
+- The one gap worth naming honestly: these are jsdom component tests, not real-browser E2E; when the backend exists, a thin Playwright smoke layer over the critical journey (register → onboard → create reminder → receive on WhatsApp) would be the right addition.
 
 ## Layout of the code
 
@@ -74,6 +88,7 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 | Settings (`/app/settings`) | ✅ done (mock) — Profile, Notifications matrix + quiet hours, Integrations, Security, Privacy/danger zone |
 | Auth (`/login`, `/register`, `/verify`, `/forgot-password`, `/link`) | ✅ done (mock submits — no real API) |
 | Onboarding wizard (`/onboarding`, 5 steps) | ✅ done (mock; Google connect buttons simulate) |
+| Test suite (Vitest + RTL, 17 files / 114 tests) | ✅ green — see Testing section |
 | Real API client, TanStack Query, SSE | ❌ blocked on backend |
 
 ## Known non-issues
