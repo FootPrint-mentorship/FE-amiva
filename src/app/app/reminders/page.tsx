@@ -13,6 +13,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
+import { ReminderModal } from "@/components/domain/reminder-modal";
 import { cn } from "@/lib/cn";
 import {
   fmtDay,
@@ -28,7 +29,7 @@ type Tab = (typeof tabs)[number];
 function matches(r: Reminder, tab: Tab) {
   switch (tab) {
     case "Upcoming":
-      return r.status === "scheduled";
+      return r.status === "scheduled" || r.status === "paused";
     case "Recurring":
       return !!r.rrule && r.status !== "completed";
     case "Snoozed":
@@ -41,6 +42,27 @@ function matches(r: Reminder, tab: Tab) {
 export default function RemindersPage() {
   const [tab, setTab] = useState<Tab>("Upcoming");
   const [items, setItems] = useState(seed);
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<Reminder | null>(null);
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+
+  const upsert = (r: Reminder) =>
+    setItems((cur) =>
+      cur.some((x) => x.id === r.id)
+        ? cur.map((x) => (x.id === r.id ? r : x))
+        : [r, ...cur]
+    );
+
+  const togglePause = (id: string) =>
+    setItems((cur) =>
+      cur.map((r) =>
+        r.id === id
+          ? { ...r, status: (r.status === "paused" ? "scheduled" : "paused") as Reminder["status"] }
+          : r
+      )
+    );
+
+  const remove = (id: string) => setItems((cur) => cur.filter((r) => r.id !== id));
 
   const visible = useMemo(() => items.filter((r) => matches(r, tab)), [items, tab]);
 
@@ -69,14 +91,25 @@ export default function RemindersPage() {
             Delivered on WhatsApp, email or both — exactly when you asked.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setCreating(true)}>
           <Plus className="size-4" aria-hidden />
           New reminder
         </Button>
       </div>
 
+      {creating && (
+        <ReminderModal onClose={() => setCreating(false)} onCreate={upsert} />
+      )}
+      {editing && (
+        <ReminderModal
+          initial={editing}
+          onClose={() => setEditing(null)}
+          onCreate={upsert}
+        />
+      )}
+
       {/* Tabs */}
-      <div role="tablist" className="flex gap-1 rounded-[12px] bg-indigo-50 p-1 w-fit">
+      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
         {tabs.map((t) => (
           <button
             key={t}
@@ -104,7 +137,7 @@ export default function RemindersPage() {
             Ask Amiva on WhatsApp — “remind me to call Ada tomorrow at 10” —
             or create one right here.
           </p>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>
             <Plus className="size-4" aria-hidden />
             New reminder
           </Button>
@@ -149,6 +182,7 @@ export default function RemindersPage() {
                           Snoozed until {fmtDay(r.snoozed_until!)}
                         </Chip>
                       )}
+                      {r.status === "paused" && <Chip tone="neutral">Paused</Chip>}
                       {r.notes && (
                         <span className="truncate text-xs text-ink-muted">{r.notes}</span>
                       )}
@@ -163,17 +197,53 @@ export default function RemindersPage() {
                     )}
                   </div>
                   {r.status !== "completed" && (
-                    <div className="flex shrink-0 items-center gap-1">
+                    <div className="relative flex shrink-0 items-center gap-1">
                       <Button size="sm" variant="ghost" onClick={() => complete(r.id)}>
                         <Check className="size-4" aria-hidden />
                         Done
                       </Button>
                       <button
                         aria-label="More options"
+                        aria-expanded={menuFor === r.id}
+                        onClick={() => setMenuFor(menuFor === r.id ? null : r.id)}
                         className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50"
                       >
                         <MoreHorizontal className="size-4" aria-hidden />
                       </button>
+                      {menuFor === r.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-30"
+                            onClick={() => setMenuFor(null)}
+                          />
+                          <div
+                            role="menu"
+                            className="absolute right-0 top-9 z-40 w-40 overflow-hidden rounded-[12px] border border-line bg-white py-1 shadow-pop"
+                          >
+                            <button
+                              role="menuitem"
+                              className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
+                              onClick={() => { setMenuFor(null); setEditing(r); }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              role="menuitem"
+                              className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
+                              onClick={() => { setMenuFor(null); togglePause(r.id); }}
+                            >
+                              {r.status === "paused" ? "Resume" : "Pause"}
+                            </button>
+                            <button
+                              role="menuitem"
+                              className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-danger hover:bg-danger/5"
+                              onClick={() => { setMenuFor(null); remove(r.id); }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </Card>
