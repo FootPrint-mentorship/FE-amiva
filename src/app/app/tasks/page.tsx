@@ -84,7 +84,7 @@ export default function TasksPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Tasks</h1>
           <p className="text-sm text-ink-muted">
-            Captured from your chats, emails and meetings — organised here.
+            Captured from your chats, emails and meetings, organised here.
           </p>
         </div>
       </div>

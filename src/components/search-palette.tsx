@@ -42,7 +42,7 @@ function mockSearch(q: string): Result {
   if (needle.includes("landlord") || needle.includes("rent")) {
     return {
       answer:
-        "Your landlord's account is GTB 0123456789 (Musa Ibrahim). Rent is due on the last Friday of every month — your next reminder is set for Fri 31 Jul, 9:00 AM.",
+        "Your landlord's account is GTB 0123456789 (Musa Ibrahim). Rent is due on the last Friday of every month. Your next reminder is set for Fri 31 Jul, 9:00 AM.",
       confidence: "high",
       citations: [
         {
@@ -63,7 +63,7 @@ function mockSearch(q: string): Result {
       citations: [
         {
           source_type: "event",
-          title: "Flight to Nairobi — KQ533",
+          title: "Flight to Nairobi (KQ533)",
           snippet: "9:15 AM · MMA Terminal 1",
           date: "This week",
         },
@@ -80,7 +80,7 @@ function mockSearch(q: string): Result {
   if (needle.includes("kemi")) {
     return {
       answer:
-        "The proposal for Kemi is due today (task, high priority — 1 of 2 subtasks done). Note: Kemi prefers WhatsApp voice notes for quick updates; formal documents by email.",
+        "The proposal for Kemi is due today (task, high priority, 1 of 2 subtasks done). Note: Kemi prefers WhatsApp voice notes for quick updates; formal documents by email.",
       confidence: "medium",
       citations: [
         {
@@ -148,7 +148,7 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => (e.key === "Enter" || e.key === "Return") && run()}
-            placeholder="Ask anything — “where is my flight ticket?”"
+            placeholder="Ask anything, like “where is my flight ticket?”"
             aria-label="Search or ask Amiva"
             className="h-14 flex-1 bg-transparent text-[15px] text-navy outline-none placeholder:text-ink-muted"
           />

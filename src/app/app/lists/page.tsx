@@ -53,7 +53,7 @@ export default function ListsPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Lists</h1>
           <p className="text-sm text-ink-muted">
-            Shopping, packing, ideas — updated from WhatsApp or right here.
+            Shopping, packing, ideas. Update them from WhatsApp or right here.
           </p>
         </div>
         <Button>

@@ -79,7 +79,7 @@ export default function MemoriesPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Memories</h1>
           <p className="text-sm text-ink-muted">
-            Everything you&apos;ve asked Amiva to remember — yours to search, edit and delete.
+            Everything you&apos;ve asked Amiva to remember. Search it, edit it, delete it.
           </p>
         </div>
         <div className="flex gap-2">
@@ -209,7 +209,7 @@ export default function MemoriesPage() {
               onChange={(e) => setNewContent(e.target.value)}
               rows={4}
               autoFocus
-              placeholder="What should Amiva remember? — “Generator mechanic: Emeka, 0803 555 1234”"
+              placeholder="What should Amiva remember? Try “Generator mechanic: Emeka, 0803 555 1234”"
               aria-label="Memory content"
               className="mt-4 w-full rounded-[10px] border border-line bg-white p-3 text-sm leading-relaxed text-navy placeholder:text-ink-muted focus:border-indigo-300"
             />

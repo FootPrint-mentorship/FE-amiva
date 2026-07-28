@@ -50,7 +50,7 @@ export default function ChatPage() {
         {
           id: `msg_${Date.now()}_a`,
           role: "assistant",
-          text: "This preview runs on mock data — once the backend is connected I'll handle that for real. Here's how a confirmation looks:",
+          text: "This preview runs on mock data. Once the backend is connected I'll handle that for real. Here's how a confirmation looks:",
           at: new Date().toISOString(),
         },
       ]);

@@ -137,7 +137,7 @@ export default function ActivityPage() {
                     {e.approval && <p className="mt-1">✓ {e.approval}</p>}
                     {e.result === "failure" && (
                       <p className="mt-1 text-danger">
-                        The provider did not confirm this action — no change was made. Amiva reported the failure rather than claiming success.
+                        The provider did not confirm this action, so no change was made. Amiva reported the failure rather than claiming success.
                       </p>
                     )}
                   </div>

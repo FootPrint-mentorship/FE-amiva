@@ -57,7 +57,7 @@ export default function EmailPage() {
             {[
               "Amiva reads only the folders you allow",
               "Nothing is ever sent without your approval",
-              "Disconnect any time — access is revoked immediately",
+              "Disconnect any time and access is revoked immediately",
             ].map((t) => (
               <p key={t} className="flex items-start gap-2 text-sm text-navy">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
@@ -69,7 +69,7 @@ export default function EmailPage() {
             Connect Gmail
           </Button>
           <p className="mt-3 text-xs text-ink-muted">
-            Uses Google OAuth — you choose the permissions on Google&apos;s screen.
+            Uses Google OAuth. You choose the permissions on Google&apos;s screen.
           </p>
         </Card>
       </div>
@@ -150,7 +150,7 @@ export default function EmailPage() {
             )}
           </div>
           <p className="mt-2 text-xs text-ink-muted">
-            Nothing is created until you click — Amiva proposes, you decide.
+            Nothing is created until you click. Amiva proposes, you decide.
           </p>
         </Card>
 
@@ -159,14 +159,14 @@ export default function EmailPage() {
           <Card className="border-success/40 bg-success/5 p-5 text-center">
             <p className="font-medium text-success">Reply sent ✓</p>
             <p className="mt-1 text-xs text-ink-muted">
-              Logged in your <span className="font-medium">Activity</span> — sent to {draft?.to} with your approval.
+              Logged in your <span className="font-medium">Activity</span>, sent to {draft?.to} with your approval.
             </p>
           </Card>
         ) : draft ? (
           <Card className="p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-semibold text-navy">
-                Draft reply <Chip tone="warning" className="ml-1.5">Draft — not sent</Chip>
+                Draft reply <Chip tone="warning" className="ml-1.5">Not sent yet</Chip>
               </p>
               <button
                 aria-label="Discard draft"
@@ -197,7 +197,7 @@ export default function EmailPage() {
                   Send this reply to <strong>{draft.to}</strong>?
                 </p>
                 <p className="mt-1 text-xs text-ink-muted">
-                  This is the only send button — Amiva never sends without it.
+                  This is the only send button. Amiva never sends without it.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <Button size="sm" onClick={() => { setSent(true); setConfirmingSend(false); }}>
@@ -228,7 +228,7 @@ export default function EmailPage() {
                 value={instruction}
                 onChange={(e) => setInstruction(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && makeDraft()}
-                placeholder="Tell Amiva what to say — “accept, but push the deadline to Monday”"
+                placeholder="Tell Amiva what to say, e.g. “accept, but push the deadline to Monday”"
                 aria-label="Draft instruction"
                 className="h-11 flex-1 rounded-[10px] border border-line bg-white px-3.5 text-sm text-navy placeholder:text-ink-muted focus:border-indigo-300"
               />
@@ -250,7 +250,7 @@ export default function EmailPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Email</h1>
           <p className="text-sm text-ink-muted">
-            ada@gmail.com · summaries only — your inbox stays in Gmail
+            ada@gmail.com · summaries only, your inbox stays in Gmail
           </p>
         </div>
         <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
@@ -275,7 +275,7 @@ export default function EmailPage() {
         <div className="flex gap-3">
           <Sparkles className="mt-0.5 size-5 shrink-0 text-cyan-600" aria-hidden />
           <p className="text-sm leading-relaxed text-navy">
-            {`${emailThreads.length} threads`} worth your attention this week — 2 high
+            {`${emailThreads.length} threads`} worth your attention this week, 2 of them high
             priority. Kemi&apos;s contract renewal has a Friday deadline, and Tunde
             introduced you to an investor who wants a call.
           </p>

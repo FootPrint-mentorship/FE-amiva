@@ -9,7 +9,7 @@ describe("Tasks page", () => {
     expect(screen.getByText("Send proposal to Kemi")).toBeInTheDocument();
     expect(screen.getByText("Review Q3 budget draft")).toBeInTheDocument();
     expect(screen.getByText("1/2")).toBeInTheDocument(); // subtask progress
-    expect(screen.getByText("Client — Kemi")).toBeInTheDocument();
+    expect(screen.getByText("Client: Kemi")).toBeInTheDocument();
     // Due in 2 days → Upcoming, not Today
     expect(screen.queryByText("Book flight to Nairobi")).not.toBeInTheDocument();
   });

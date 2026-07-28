@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { Year } from "@/components/year";
 
 export default function PublicLayout({
   children,
@@ -18,11 +19,11 @@ export default function PublicLayout({
             Manage your life and work from one conversation.
           </p>
           <p className="mt-4 max-w-[360px] text-white/60">
-            Reminders, calendar, email and memory — handled by your personal
+            Reminders, calendar, email and memory, handled by your personal
             chief of staff on WhatsApp.
           </p>
         </div>
-        <p className="text-xs text-white/40">© 2026 Amiva</p>
+        <p className="text-xs text-white/40">© <Year /> Amiva</p>
       </aside>
 
       {/* Form side */}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { WA_LINK } from "@/lib/site";
 import { MessageCircle } from "lucide-react";
+import { Year } from "@/components/year";
 
 const nav = [
   { href: "/#features", label: "Features" },
@@ -84,7 +85,7 @@ export default function MarketingLayout({
           </div>
         </div>
         <div className="border-t border-white/10 py-5 text-center text-xs text-white/40">
-          © 2026 Amiva. All rights reserved.
+          © <Year /> Amiva. All rights reserved.
         </div>
       </footer>
     </div>

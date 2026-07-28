@@ -25,7 +25,7 @@ const steps = ["Welcome", "Preferences", "Calendar", "Gmail", "First action"];
 const capabilities = [
   { icon: AlarmClock, title: "Remind", body: "One-time and recurring reminders, delivered where you'll see them." },
   { icon: ListChecks, title: "Organise", body: "Calendar, tasks and lists managed from one conversation." },
-  { icon: Brain, title: "Remember", body: "A personal memory you control — save once, find forever." },
+  { icon: Brain, title: "Remember", body: "A personal memory you control. Save once, find forever." },
 ];
 
 const channelOptions = ["WhatsApp", "Email"] as const;
@@ -70,7 +70,7 @@ export default function OnboardingPage() {
         {step === 0 && (
           <Card className="p-8 text-center">
             <h1 className="text-2xl font-semibold tracking-tight text-navy">
-              Meet Amiva — your personal chief of staff
+              Meet Amiva, your personal chief of staff
             </h1>
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {capabilities.map((c) => (
@@ -285,7 +285,7 @@ export default function OnboardingPage() {
             {tried && (
               <div className="mt-4 rounded-[12px] border border-line bg-soft p-4">
                 <p className="text-sm text-navy">
-                  ⏰ Done, {prefs.preferredName} — I&apos;ll remind you{" "}
+                  ⏰ Done, {prefs.preferredName}. I&apos;ll remind you{" "}
                   <strong>tomorrow at 6:00 PM (WAT)</strong>: &quot;Call Mum&quot;.
                 </p>
               </div>

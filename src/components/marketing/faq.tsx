@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 const faqs = [
   {
     q: "Do I need to install an app?",
-    a: "No. Amiva works inside WhatsApp — the app you already use every day. The web dashboard is optional, for when you want a bigger view of your reminders, calendar and memories.",
+    a: "No. Amiva works inside WhatsApp, the app you already use every day. The web dashboard is optional, for when you want a bigger view of your reminders, calendar and memories.",
   },
   {
     q: "What can I ask Amiva to do?",
@@ -15,11 +15,11 @@ const faqs = [
   },
   {
     q: "Is my data private?",
-    a: "Yes. Your data is encrypted, never used to train AI models, and you can see, export or permanently delete everything from the privacy centre. Important actions — like sending an email — always require your explicit approval first.",
+    a: "Yes. Your data is encrypted, never used to train AI models, and you can see, export or permanently delete everything from the privacy centre. Important actions, like sending an email, always require your explicit approval first.",
   },
   {
     q: "How much does it cost?",
-    a: "Amiva has a free plan to get organised, and a Pro plan for unlimited use with email features. Pricing is in your local currency — see the pricing section for details.",
+    a: "Amiva has a free plan to get organised, and a Pro plan for unlimited use with email features. Pricing is in your local currency. See the pricing section for details.",
   },
 ];
 

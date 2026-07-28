@@ -122,7 +122,7 @@ export default function RegisterPage() {
             <p className="mt-1 text-xs text-danger">{errors.phone}</p>
           ) : (
             <p className="mt-1 text-xs text-ink-muted">
-              The number you use for WhatsApp — Amiva will meet you there.
+              The number you use for WhatsApp. Amiva will meet you there.
             </p>
           )}
         </div>
@@ -170,7 +170,7 @@ export default function RegisterPage() {
               <option key={tz}>{tz}</option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-ink-muted">Detected automatically — change if it&apos;s wrong.</p>
+          <p className="mt-1 text-xs text-ink-muted">Detected automatically. Change it if it&apos;s wrong.</p>
         </div>
         <div>
           <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-muted">

@@ -82,7 +82,7 @@ export const events: CalendarEvent[] = [
   },
   {
     id: "evt_02",
-    title: "Investor sync — Tunde",
+    title: "Investor sync with Tunde",
     start_at: iso(13, 0),
     end_at: iso(13, 30),
     all_day: false,
@@ -93,7 +93,7 @@ export const events: CalendarEvent[] = [
   },
   {
     id: "evt_03",
-    title: "Design review — onboarding flow",
+    title: "Design review: onboarding flow",
     start_at: iso(15, 0),
     end_at: iso(16, 0),
     all_day: false,
@@ -186,7 +186,7 @@ export const tasks: Task[] = [
     due_date: iso(17, 0).slice(0, 10),
     priority: "high",
     status: "open",
-    project: "Client — Kemi",
+    project: "Client: Kemi",
     subtasks: [
       { id: "sub_01", title: "Draft pricing section", completed: true },
       { id: "sub_02", title: "Final review", completed: false },
@@ -217,7 +217,7 @@ export const pendingConfirmations: PendingConfirmation[] = [
     id: "cnf_01",
     action_type: "calendar.reschedule",
     summary:
-      "Move 'Investor sync — Tunde' to Fri 1 Aug, 9:00–9:30 AM (WAT). Attendees will be notified.",
+      "Move 'Investor sync with Tunde' to Fri 1 Aug, 9:00–9:30 AM (WAT). Attendees will be notified.",
     risk: "medium",
     expires_at: iso(23, 59),
   },
@@ -250,7 +250,7 @@ export const weekEvents: CalendarEvent[] = [
   },
   {
     id: "evt_06",
-    title: "Flight to Nairobi — KQ533",
+    title: "Flight to Nairobi (KQ533)",
     start_at: iso(9, 15, 3),
     end_at: iso(13, 30, 3),
     all_day: false,
@@ -261,7 +261,7 @@ export const weekEvents: CalendarEvent[] = [
   },
   {
     id: "evt_07",
-    title: "Client dinner — Kemi",
+    title: "Client dinner with Kemi",
     start_at: iso(19, 0, 2),
     end_at: iso(20, 30, 2),
     all_day: false,
@@ -272,7 +272,7 @@ export const weekEvents: CalendarEvent[] = [
   },
   {
     id: "evt_08",
-    title: "Deep work — proposal",
+    title: "Deep work: proposal",
     start_at: iso(10, 0, -1),
     end_at: iso(12, 0, -1),
     all_day: false,
@@ -347,7 +347,7 @@ export const memories: Memory[] = [
   },
   {
     id: "mem_06",
-    content: "App idea: recurring 'money dates' feature — weekly finance check-in with summary of spending vs budget.",
+    content: "App idea: recurring 'money dates' feature: weekly finance check-in with summary of spending vs budget.",
     category: "ideas",
     tags: ["product"],
     source_channel: "web",
@@ -453,7 +453,7 @@ export const chatSeed: ChatMessage[] = [
   {
     id: "msg_02",
     role: "assistant",
-    text: "Done — I'll remind you Friday 31 Jul, 9:00 AM (WAT).",
+    text: "Done. I'll remind you Friday 31 Jul, 9:00 AM (WAT).",
     resource: { kind: "reminder", title: "Pay rent", meta: "Fri 31 Jul · 9:00 AM WAT · WhatsApp" },
     at: iso(9, 40),
   },
@@ -486,7 +486,7 @@ export type EmailThreadSummary = {
 export const emailThreads: EmailThreadSummary[] = [
   {
     id: "thr_01",
-    subject: "Contract renewal — action needed",
+    subject: "Contract renewal: action needed",
     from: { name: "Kemi A.", email: "kemi@client.com" },
     summary: "Kemi needs the signed renewal by Friday; legal flagged clause 4 for review.",
     importance: "high",
@@ -496,7 +496,7 @@ export const emailThreads: EmailThreadSummary[] = [
   },
   {
     id: "thr_02",
-    subject: "Your e-ticket — KQ533 LOS→NBO",
+    subject: "Your e-ticket: KQ533 LOS→NBO",
     from: { name: "Kenya Airways", email: "noreply@kenya-airways.com" },
     summary: "E-ticket confirmed for the day after tomorrow, 9:15 AM departure. Booking ref 6HJQZP.",
     importance: "normal",
@@ -516,7 +516,7 @@ export const emailThreads: EmailThreadSummary[] = [
   },
   {
     id: "thr_04",
-    subject: "Team offsite — venue options",
+    subject: "Team offsite: venue options",
     from: { name: "Abraham O.", email: "abraham@amiva.app" },
     summary: "Three venue options for the August offsite; Abraham needs your pick by Wednesday.",
     importance: "normal",
@@ -543,7 +543,7 @@ export const auditEvents: AuditEvent[] = [
     id: "aud_01",
     action: "email.send",
     module: "email",
-    summary: "Sent reply to kemi@client.com — “Re: Contract renewal”",
+    summary: "Sent reply to kemi@client.com: “Re: Contract renewal”",
     risk: "high",
     channel: "web",
     result: "success",
@@ -554,7 +554,7 @@ export const auditEvents: AuditEvent[] = [
     id: "aud_02",
     action: "reminder.create",
     module: "reminders",
-    summary: "Created reminder “Pay NEPA bill” — every last Friday, 10:00 AM",
+    summary: "Created reminder “Pay NEPA bill”, every last Friday at 10:00 AM",
     risk: "low",
     channel: "whatsapp",
     result: "success",
@@ -564,7 +564,7 @@ export const auditEvents: AuditEvent[] = [
     id: "aud_03",
     action: "calendar.reschedule",
     module: "calendar",
-    summary: "Moved “Investor sync — Tunde” to Fri 9:00 AM; attendees notified",
+    summary: "Moved “Investor sync with Tunde” to Fri 9:00 AM; attendees notified",
     risk: "medium",
     channel: "whatsapp",
     result: "success",
@@ -575,7 +575,7 @@ export const auditEvents: AuditEvent[] = [
     id: "aud_04",
     action: "memory.save",
     module: "memory",
-    summary: "Saved memory “Nairobi trip — Sarova Stanley…” under Travel",
+    summary: "Saved memory “Nairobi trip: Sarova Stanley…” under Travel",
     risk: "low",
     channel: "whatsapp",
     result: "success",
@@ -585,7 +585,7 @@ export const auditEvents: AuditEvent[] = [
     id: "aud_05",
     action: "calendar.create",
     module: "calendar",
-    summary: "Created “Client dinner — Kemi” — provider timeout, retried and failed",
+    summary: "Created “Client dinner with Kemi”: provider timeout, retried and failed",
     risk: "medium",
     channel: "web",
     result: "failure",

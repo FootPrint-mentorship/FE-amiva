@@ -27,12 +27,12 @@ const steps = [
   {
     icon: Link2,
     title: "Connect your tools",
-    body: "Link Google Calendar and Gmail securely — you choose exactly what Amiva can see.",
+    body: "Link Google Calendar and Gmail securely. You choose exactly what Amiva can see.",
   },
   {
     icon: Sparkles,
     title: "Ask for anything",
-    body: "“Remind me…”, “Schedule…”, “Remember…”, “Find…” — Amiva handles the rest.",
+    body: "Say “remind me”, “schedule”, “remember” or “find”. Amiva handles the rest.",
   },
 ];
 
@@ -40,7 +40,7 @@ const features = [
   {
     icon: AlarmClock,
     title: "Reminders that actually reach you",
-    body: "Set it in one sentence — get it on WhatsApp, email or both. One-time, daily, weekly or custom schedules, with snooze and reschedule right from the chat.",
+    body: "Set it in one sentence and get it on WhatsApp, email or both. One-time, daily, weekly or custom schedules, with snooze and reschedule right from the chat.",
     example: "“Remind me to pay NEPA every last Friday of the month”",
   },
   {
@@ -52,7 +52,7 @@ const features = [
   {
     icon: Brain,
     title: "A memory that never forgets",
-    body: "Tell Amiva once — account numbers, sizes, ideas, addresses — and find it forever with a plain question. You control everything it remembers.",
+    body: "Tell Amiva once, whether it's account numbers, sizes, ideas or addresses, and find it forever with a plain question. You control everything it remembers.",
     example: "“What's my landlord's account number?”",
   },
   {
@@ -64,7 +64,7 @@ const features = [
   {
     icon: ListChecks,
     title: "Tasks and lists from voice notes",
-    body: "Send a voice note on the go — Amiva turns it into tasks, shopping lists and checklists you can tick off from WhatsApp or the web.",
+    body: "Send a voice note on the go and Amiva turns it into tasks, shopping lists and checklists you can tick off from WhatsApp or the web.",
     example: "“Add rice, beans and titus to my shopping list”",
   },
 ];
@@ -73,12 +73,12 @@ const trust = [
   {
     icon: ShieldCheck,
     title: "You approve every important action",
-    body: "Sending email, cancelling meetings, deleting data — Amiva always asks first.",
+    body: "Sending email, cancelling meetings, deleting data: Amiva always asks first.",
   },
   {
     icon: Trash2,
     title: "Your data is yours",
-    body: "Encrypted, never used to train AI models, and deletable — completely — whenever you choose.",
+    body: "Encrypted, never used to train AI models, and completely deletable whenever you choose.",
   },
   {
     icon: ScrollText,
@@ -99,7 +99,7 @@ export default function HomePage() {
               <span className="text-indigo-900">on WhatsApp.</span>
             </h1>
             <p className="mt-5 max-w-[480px] text-lg leading-relaxed text-ink-muted">
-              Reminders, calendar, email and memory — managed through one
+              Reminders, calendar, email and memory, managed through one
               natural conversation. Amiva remembers, plans and follows through,
               so you don&apos;t have to.
             </p>

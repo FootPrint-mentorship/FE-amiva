@@ -10,11 +10,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Amiva — Your personal chief of staff, on WhatsApp",
+    default: "Amiva | Your personal chief of staff, on WhatsApp",
     template: "%s · Amiva",
   },
   description:
-    "Reminders, calendar, email and memory — managed through one natural conversation on WhatsApp, with a web dashboard for everything else.",
+    "Reminders, calendar, email and memory, managed through one natural conversation on WhatsApp, with a web dashboard for everything else.",
 };
 
 export default function RootLayout({

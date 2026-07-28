@@ -92,7 +92,7 @@ export default function SettingsPage() {
             <Field label="Preferred name" defaultValue={user.preferred_name} hint="What Amiva calls you" />
           </div>
           <Field label="Email" defaultValue="ada@example.com" disabled hint="Contact support to change your email" />
-          <Field label="Phone" defaultValue="+234 801 234 5678" disabled hint="Linked to your WhatsApp — manage under Integrations" />
+          <Field label="Phone" defaultValue="+234 801 234 5678" disabled hint="Linked to your WhatsApp. Manage it under Integrations" />
           <div>
             <p className="mb-1.5 text-sm font-medium text-navy">Timezone</p>
             <select defaultValue={user.timezone} className="h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] text-navy">

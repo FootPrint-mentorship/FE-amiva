@@ -35,7 +35,7 @@ describe("Activity page (audit trail — PRD trust feature)", () => {
 
   it("failed actions state that no change was made (PRD: no claimed success)", async () => {
     render(<ActivityPage />);
-    await userEvent.click(screen.getByText(/Client dinner — Kemi/));
+    await userEvent.click(screen.getByText(/Client dinner with Kemi/));
     expect(screen.getByText(/no change was made/)).toBeInTheDocument();
   });
 });

@@ -19,7 +19,7 @@ function LinkContent() {
         <h1 className="text-xl font-semibold text-navy">Link expired</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
           This linking link has expired or was already used. Ask Amiva for a
-          new one in WhatsApp — just say <strong>&quot;link my account&quot;</strong>.
+          new one in WhatsApp by saying <strong>&quot;link my account&quot;</strong>.
         </p>
       </Card>
     );

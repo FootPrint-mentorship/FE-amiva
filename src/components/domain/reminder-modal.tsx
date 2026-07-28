@@ -88,7 +88,7 @@ export function ReminderModal({
     if (chans.length === 0) return setError("Pick at least one delivery channel.");
     const dueAt = new Date(`${date}T${time}:00`);
     if (recurrence === "None" && dueAt.getTime() < Date.now())
-      return setError("That time is in the past — pick a future time.");
+      return setError("That time is in the past. Pick a future time.");
     onCreate({
       id: initial?.id ?? `rem_${Date.now()}`,
       title: title.trim(),

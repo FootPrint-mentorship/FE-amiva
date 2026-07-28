@@ -8,7 +8,7 @@ const FIND_TIMEOUT = { timeout: 3000 }; // draft generation mocks ~900ms latency
 async function connectAndOpenKemiThread() {
   render(<EmailPage />);
   await userEvent.click(screen.getByRole("button", { name: "Connect Gmail" }));
-  await userEvent.click(screen.getByText("Contract renewal — action needed"));
+  await userEvent.click(screen.getByText("Contract renewal: action needed"));
 }
 
 describe("Email page", () => {
@@ -16,14 +16,14 @@ describe("Email page", () => {
     render(<EmailPage />);
     expect(screen.getByRole("heading", { name: "Connect Gmail" })).toBeInTheDocument();
     expect(screen.getByText(/Nothing is ever sent without your approval/)).toBeInTheDocument();
-    expect(screen.queryByText("Contract renewal — action needed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Contract renewal: action needed")).not.toBeInTheDocument();
   });
 
   it("after connecting, shows the AI overview and thread summaries with importance reasons", async () => {
     render(<EmailPage />);
     await userEvent.click(screen.getByRole("button", { name: "Connect Gmail" }));
     expect(screen.getByText(/4 threads worth your attention/)).toBeInTheDocument();
-    expect(screen.getByText("Contract renewal — action needed")).toBeInTheDocument();
+    expect(screen.getByText("Contract renewal: action needed")).toBeInTheDocument();
     expect(screen.getAllByText("Important").length).toBe(2); // two high-importance threads
     expect(screen.getAllByLabelText("Open in Gmail").length).toBe(4); // originals always linked
   });
@@ -45,7 +45,7 @@ describe("Email page", () => {
 
     const body = await screen.findByLabelText("Draft body", undefined, FIND_TIMEOUT);
     expect(body).toHaveTextContent(/Agree, but legal reviews clause 4 first/);
-    expect(screen.getByText("Draft — not sent")).toBeInTheDocument();
+    expect(screen.getByText("Not sent yet")).toBeInTheDocument();
 
     // Step 1: Approve & send does NOT send — it opens the confirmation
     await userEvent.click(screen.getByRole("button", { name: /Approve & send/ }));
@@ -55,7 +55,7 @@ describe("Email page", () => {
     // Backing out keeps the draft unsent
     await userEvent.click(screen.getByRole("button", { name: "Not yet" }));
     expect(screen.queryByText(/Reply sent/)).not.toBeInTheDocument();
-    expect(screen.getByText("Draft — not sent")).toBeInTheDocument();
+    expect(screen.getByText("Not sent yet")).toBeInTheDocument();
 
     // Step 2: only the explicit confirmation sends
     await userEvent.click(screen.getByRole("button", { name: /Approve & send/ }));

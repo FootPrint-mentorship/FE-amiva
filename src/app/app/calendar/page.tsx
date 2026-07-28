@@ -438,7 +438,7 @@ export default function CalendarPage() {
               <CalendarDays className="size-8 text-violet-300" aria-hidden />
               <p className="font-medium text-navy">No upcoming events</p>
               <p className="max-w-[320px] text-sm text-ink-muted">
-                Ask Amiva to schedule something — “book lunch with Kemi on Thursday”.
+                Ask Amiva to schedule something, like “book lunch with Kemi on Thursday”.
               </p>
             </Card>
           ) : (

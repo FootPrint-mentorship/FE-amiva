@@ -88,7 +88,7 @@ export default function RemindersPage() {
             Reminders
           </h1>
           <p className="text-sm text-ink-muted">
-            Delivered on WhatsApp, email or both — exactly when you asked.
+            Delivered on WhatsApp, email or both, exactly when you asked.
           </p>
         </div>
         <Button onClick={() => setCreating(true)}>
@@ -134,7 +134,7 @@ export default function RemindersPage() {
           <Clock3 className="size-8 text-violet-300" aria-hidden />
           <p className="font-medium text-navy">Nothing here yet</p>
           <p className="max-w-[320px] text-sm text-ink-muted">
-            Ask Amiva on WhatsApp — “remind me to call Ada tomorrow at 10” —
+            Say “remind me to call Ada tomorrow at 10” to Amiva on WhatsApp,
             or create one right here.
           </p>
           <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>

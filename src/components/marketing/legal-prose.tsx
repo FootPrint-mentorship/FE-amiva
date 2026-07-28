@@ -16,7 +16,7 @@ export function LegalProse({
     <div className="mx-auto w-full max-w-[760px] px-5 py-14">
       {draft && (
         <p className="mb-6 rounded-[10px] border border-warning/50 bg-warning/10 px-4 py-2.5 text-sm text-navy">
-          <strong>Draft v0.1</strong> — placeholder content pending legal
+          <strong>Draft v0.1</strong>: placeholder content pending legal
           review. Do not submit for provider verification until counsel signs
           off.
         </p>
