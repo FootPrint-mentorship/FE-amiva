@@ -14,6 +14,7 @@ import {
   Send,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { setAuthed } from "@/lib/session";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -47,23 +48,35 @@ export default function OnboardingPage() {
   const [tried, setTried] = useState(false);
 
   const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
+  const back = () => setStep((s) => Math.max(s - 1, 0));
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-soft px-5 py-10">
       <Logo size={30} />
 
-      {/* Progress dots */}
+      {/* Progress dots (visited steps are clickable) */}
       <div className="mt-8 flex items-center gap-2" aria-label={`Step ${step + 1} of ${steps.length}: ${steps[step]}`}>
-        {steps.map((s, i) => (
-          <span
-            key={s}
+        {steps.map((label, i) => (
+          <button
+            key={label}
+            aria-label={`Go to step ${i + 1}: ${label}`}
+            disabled={i >= step}
+            onClick={() => setStep(i)}
             className={cn(
               "h-2 rounded-full transition-all",
-              i === step ? "w-8 bg-indigo-900" : i < step ? "w-2 bg-cyan-500" : "w-2 bg-line"
+              i === step ? "w-8 bg-indigo-900" : i < step ? "w-2 cursor-pointer bg-cyan-500" : "w-2 bg-line"
             )}
           />
         ))}
       </div>
+      {step > 0 && (
+        <button
+          onClick={back}
+          className="mt-3 cursor-pointer text-sm font-medium text-ink-muted hover:text-navy"
+        >
+          ← Back
+        </button>
+      )}
 
       <div className="mt-8 w-full max-w-140">
         {/* Step 1 — Welcome */}
@@ -307,7 +320,7 @@ export default function OnboardingPage() {
             <Button
               className="mt-6 w-full"
               size="lg"
-              onClick={() => router.push("/app/today")}
+              onClick={() => { setAuthed(true); router.push("/app/today"); }}
             >
               Go to my dashboard
             </Button>

@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 import { chatSeed, fmtTime, type ChatMessage } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { confirmationsStore, resolveConfirmation } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
 
 const resourceIcons = {
   reminder: AlarmClock,
@@ -24,6 +27,7 @@ const examplePrompts = [
 ];
 
 export default function ChatPage() {
+  const confirmations = useStore(confirmationsStore);
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
@@ -120,26 +124,55 @@ export default function ChatPage() {
                 </div>
               )}
 
-              {/* Embedded confirmation */}
-              {m.confirmation && (
-                <div className="rounded-xl border border-warning/50 bg-warning/10 p-3.5">
-                  <div className="flex items-start gap-2">
-                    <ShieldAlert className="mt-0.5 size-4 shrink-0 text-[#9a6a1d]" aria-hidden />
-                    <div>
-                      <p className="text-sm text-navy">{m.confirmation.summary}</p>
-                      <Chip tone="warning" className="mt-1.5">
-                        Needs your approval
-                      </Chip>
+              {/* Embedded confirmation, live from the shared store */}
+              {m.confirmation &&
+                (() => {
+                  const live = confirmations.find((c) => c.id === m.confirmation!.id);
+                  const status = live?.status ?? "pending";
+                  return (
+                    <div className="rounded-xl border border-warning/50 bg-warning/10 p-3.5">
+                      <div className="flex items-start gap-2">
+                        <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
+                        <div>
+                          <p className="text-sm text-navy">{m.confirmation.summary}</p>
+                          <Chip
+                            tone={status === "approved" ? "success" : status === "rejected" ? "neutral" : "warning"}
+                            className="mt-1.5"
+                          >
+                            {status === "approved"
+                              ? "Approved"
+                              : status === "rejected"
+                              ? "Rejected"
+                              : "Needs your approval"}
+                          </Chip>
+                        </div>
+                      </div>
+                      {status === "pending" && (
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              resolveConfirmation(m.confirmation!.id, "approved");
+                              toast("Approved. Amiva is on it.");
+                            }}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              resolveConfirmation(m.confirmation!.id, "rejected");
+                              toast("Rejected. Nothing was changed.", { tone: "info" });
+                            }}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Button size="sm">Approve</Button>
-                    <Button size="sm" variant="ghost">
-                      Reject
-                    </Button>
-                  </div>
-                </div>
-              )}
+                  );
+                })()}
             </div>
           </div>
         ))}

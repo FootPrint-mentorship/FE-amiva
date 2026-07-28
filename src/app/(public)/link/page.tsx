@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import { setAuthed } from "@/lib/session";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ function LinkContent() {
   const confirm = () => {
     setLinking(true);
     // Mock: POST /link/whatsapp/verify {token} → dashboard
-    setTimeout(() => router.push("/app/today"), 800);
+    setTimeout(() => { setAuthed(true); router.push("/app/today") }, 800);
   };
 
   return (

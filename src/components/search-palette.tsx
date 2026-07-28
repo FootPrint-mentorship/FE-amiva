@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Search,
   Sparkles,
@@ -11,6 +11,8 @@ import {
   CornerDownLeft,
 } from "lucide-react";
 import { Chip } from "@/components/ui/chip";
+import { Modal } from "@/components/ui/modal";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const sources = ["Memories", "Email", "Calendar", "Tasks"] as const;
@@ -109,20 +111,20 @@ function mockSearch(q: string): Result {
 }
 
 /** Mounted only while open — state resets naturally on each open. */
+const citationRoutes = {
+  memory: "/app/memories",
+  email: "/app/email",
+  event: "/app/calendar",
+  task: "/app/tasks",
+} as const;
+
 export function SearchPalette({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const [q, setQ] = useState("");
   const [enabled, setEnabled] = useState<string[]>(["Memories", "Calendar", "Tasks"]);
   const [result, setResult] = useState<Result | null>(null);
   const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   const run = (text?: string) => {
     const query = (text ?? q).trim();
@@ -136,9 +138,8 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[12vh]" role="dialog" aria-label="Search or ask Amiva">
-      <div className="absolute inset-0 bg-navy/40" onClick={onClose} />
-      <div className="relative w-full max-w-160 overflow-hidden rounded-2xl bg-white shadow-pop">
+    <Modal label="Search or ask Amiva" position="top" onClose={onClose} panelClassName="w-full max-w-160">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-pop">
         {/* Input row */}
         <div className="flex items-center gap-3 border-b border-line px-4">
           <Search className="size-4.5 shrink-0 text-ink-muted" aria-hidden />
@@ -230,6 +231,10 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
                       return (
                         <button
                           key={i}
+                          onClick={() => {
+                            router.push(citationRoutes[c.source_type]);
+                            onClose();
+                          }}
                           className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] border border-line px-3 py-2.5 text-left hover:border-indigo-300"
                         >
                           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50">
@@ -265,6 +270,6 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

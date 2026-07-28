@@ -83,13 +83,26 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 | Calendar (`/app/calendar`) | ✅ done (mock) — Day/Week/Agenda views, event view modal + cancel confirm, create/edit modal with overlap warning |
 | Memories (`/app/memories`) | ✅ done (mock) — search, filters, favorites, new-memory modal, inline edit, permanent-delete confirm |
 | Search overlay (⌘K + top bar) | ✅ done (mock canned answers with citations; Email source disabled until Gmail) |
-| Email (`/app/email`) | ✅ done (mock) — connect state, summary index, thread view, AI draft + approval-gated send |
+| Email (`/app/email`) | ✅ done (mock) — connect state shared with Settings, working range filter, suggested actions create real tasks/events, AI draft + approval-gated send |
 | Activity (`/app/activity`) | ✅ done (mock) — filters, risk chips, expandable approval details |
-| Settings (`/app/settings`) | ✅ done (mock) — Profile, Notifications matrix + quiet hours, Integrations, Security, Privacy/danger zone |
+| Settings (`/app/settings`) | ✅ done (mock) — store-backed Profile + theme control, Notifications matrix, working Integrations with disconnect confirms, honest Security stubs |
+| Confirmation tray + notifications panel (top bar) | ✅ done — shared store, badges sync across Today/Chat/tray |
+| Auth guard + sign out | ✅ done (mock localStorage session) |
+| Dark mode (app shell) | ✅ done — token remap, Settings → Appearance |
+| Toasts, focus-trapped modals, snooze/skip, reschedule slots, list/memory/task editing | ✅ done (fix-all pass, 28 Jul 2026) |
 | Auth (`/login`, `/register`, `/verify`, `/forgot-password`, `/link`) | ✅ done (mock submits — no real API) |
 | Onboarding wizard (`/onboarding`, 5 steps) | ✅ done (mock; Google connect buttons simulate) |
 | Test suite (Vitest + RTL, 17 files / 114 tests) | ✅ green — see Testing section |
 | Real API client, TanStack Query, SSE | ❌ blocked on backend |
+
+## Architecture notes (post fix-all pass, 28 Jul 2026)
+
+- **Shared state**: `src/lib/store.ts` (tiny `useSyncExternalStore` wrapper) + `src/lib/stores.ts` (reminders, tasks, lists, memories, events, confirmations, notifications, settings). State survives client-side navigation and syncs across surfaces (top-bar badges ↔ Today banner ↔ Chat cards ↔ tray). In-memory only; a reload reseeds. Tests call `resetAllStores()` between cases (wired in setup).
+- **Dialogs**: every dialog/drawer renders through `src/components/ui/modal.tsx` (backdrop, Escape, focus trap, focus restore). Its focus/keyboard effect is deliberately mount-only with an `onCloseRef` — re-running it per render yanks focus mid-typing and a space then "clicks" the Close button. Don't add `onClose` to its dep array.
+- **Toasts**: `toast()` from `src/components/ui/toast.tsx`; `<Toaster/>` lives in the root layout. Supports an action (used for undo on task completion).
+- **Mock auth**: `src/lib/session.ts` localStorage flag. The app layout redirects to /login without it; login/verify/link/onboarding set it; sidebar has sign-out. Replace with real tokens when the backend lands.
+- **Dark mode**: `.theme-dark` on the app root remaps the brand tokens in globals.css (no per-component dark: variants). Controlled from Settings → Appearance (system/light/dark; system follows `prefers-color-scheme`). Marketing pages stay light by design. Never hardcode hex for themable ink — use tokens (`text-warning-ink`, not `text-[#9a6a1d]`).
+- **Local dates**: never key calendar days or task due-dates with `toISOString()` — it shifts a day for UTC+ users. Use the local `dayKey`/`localToday` helpers (bug found and fixed on 28 Jul).
 
 ## Known non-issues
 
@@ -97,8 +110,9 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 
 ## Known intentional shortcuts
 
-- Interactions are optimistic-only: state changes live in component `useState`, nothing persists across navigation.
-- The confirmations bell and notifications bell in the top bar are display-only.
+- Stores are in-memory: state persists across navigation but not across a full reload (the API layer replaces this).
+- Settings' password/MFA buttons and per-device sign-out give honest "arrives with live accounts" toasts rather than fake flows.
+- AI suggestions (subtasks, list items) and search answers are canned; drafts are template-generated.
 - `launch.json` for Claude Code preview lives in the session workspace, not this repo; plain `npm run dev` works everywhere.
 
 ## Next steps (in order, from the spec's build order §9)

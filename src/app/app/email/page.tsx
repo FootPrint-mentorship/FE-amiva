@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 import { emailThreads, fmtDay, fmtTime, type EmailThreadSummary } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { settingsStore, tasksStore, eventsStore } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
 
 const ranges = ["Today", "Last 24h", "This week"] as const;
 
@@ -29,8 +32,27 @@ const actionChip = {
 type Draft = { to: string; subject: string; body: string };
 
 export default function EmailPage() {
-  const [connected, setConnected] = useState(false);
+  const settings = useStore(settingsStore);
+  const connected = settings.integrations.gmail;
+  const setConnected = (on: boolean) =>
+    settingsStore.set((cur) => ({
+      ...cur,
+      integrations: { ...cur.integrations, gmail: on },
+    }));
   const [range, setRange] = useState<(typeof ranges)[number]>("This week");
+  const [actionsTaken, setActionsTaken] = useState<string[]>([]);
+  const [now] = useState(() => Date.now()); // page-load clock, stable across renders
+
+  const cutoff =
+    range === "Today"
+      ? new Date(new Date(now).setHours(0, 0, 0, 0)).getTime()
+      : range === "Last 24h"
+      ? now - 24 * 3600000
+      : now - 7 * 24 * 3600000;
+  const visibleThreads = emailThreads.filter(
+    (t) => new Date(t.last_message_at).getTime() >= cutoff
+  );
+  const highCount = visibleThreads.filter((t) => t.importance === "high").length;
   const [openThread, setOpenThread] = useState<EmailThreadSummary | null>(null);
   const [instruction, setInstruction] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -65,7 +87,7 @@ export default function EmailPage() {
               </p>
             ))}
           </div>
-          <Button className="mt-6 w-full" size="lg" onClick={() => setConnected(true)}>
+          <Button className="mt-6 w-full" size="lg" onClick={() => { setConnected(true); toast("Gmail connected. Amiva reads only what you allow."); }}>
             Connect Gmail
           </Button>
           <p className="mt-3 text-xs text-ink-muted">
@@ -80,6 +102,7 @@ export default function EmailPage() {
   if (openThread) {
     const closeThread = () => {
       setOpenThread(null);
+      setActionsTaken([]);
       setDraft(null);
       setInstruction("");
       setConfirmingSend(false);
@@ -138,14 +161,64 @@ export default function EmailPage() {
         <Card className="p-4">
           <p className="mb-3 text-sm font-semibold text-navy">Suggested actions</p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={actionsTaken.includes("task")}
+              onClick={() => {
+                const friday = new Date();
+                friday.setDate(friday.getDate() + ((5 - friday.getDay() + 7) % 7 || 7));
+                tasksStore.set((cur) => [
+                  {
+                    id: `tsk_${Date.now()}`,
+                    title: `Follow up: ${openThread.subject}`,
+                    due_date: friday.toISOString().slice(0, 10),
+                    priority: "high" as const,
+                    status: "open" as const,
+                    project: null,
+                    subtasks: [],
+                  },
+                  ...cur,
+                ]);
+                setActionsTaken((cur) => [...cur, "task"]);
+                toast("Task created in your Tasks.");
+              }}
+            >
               <CheckSquare className="size-4" aria-hidden />
-              Create task: follow up by Friday
+              {actionsTaken.includes("task") ? "Task created ✓" : "Create task: follow up by Friday"}
             </Button>
             {openThread.suggested_action === "schedule" && (
-              <Button variant="secondary" size="sm">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={actionsTaken.includes("event")}
+                onClick={() => {
+                  const start = new Date();
+                  start.setDate(start.getDate() + 7);
+                  start.setHours(10, 0, 0, 0);
+                  const end = new Date(start.getTime() + 30 * 60000);
+                  eventsStore.set((cur) => [
+                    ...cur,
+                    {
+                      id: `evt_${Date.now()}`,
+                      title: "Call with Amara (Flux Ventures)",
+                      start_at: start.toISOString(),
+                      end_at: end.toISOString(),
+                      all_day: false,
+                      location: null,
+                      conference_url: "https://meet.google.com/new",
+                      attendees: [
+                        { email: "amara@fluxventures.com", name: "Amara", response_status: "needsAction" },
+                      ],
+                      status: "confirmed" as const,
+                    },
+                  ]);
+                  setActionsTaken((cur) => [...cur, "event"]);
+                  toast("Call added to your calendar for next week.");
+                }}
+              >
                 <CalendarPlus className="size-4" aria-hidden />
-                Schedule call with Amara
+                {actionsTaken.includes("event") ? "Call scheduled ✓" : "Schedule call with Amara"}
               </Button>
             )}
           </div>
@@ -275,15 +348,21 @@ export default function EmailPage() {
         <div className="flex gap-3">
           <Sparkles className="mt-0.5 size-5 shrink-0 text-cyan-600" aria-hidden />
           <p className="text-sm leading-relaxed text-navy">
-            {`${emailThreads.length} threads`} worth your attention this week, 2 of them high
-            priority. Kemi&apos;s contract renewal has a Friday deadline, and Tunde
-            introduced you to an investor who wants a call.
+            {`${visibleThreads.length} ${visibleThreads.length === 1 ? "thread" : "threads"}`}{" "}
+            worth your attention {range === "This week" ? "this week" : range === "Today" ? "today" : "in the last 24 hours"}
+            {highCount > 0 && `, ${highCount} high priority`}. Amiva only summarises;
+            your inbox stays exactly as it is in Gmail.
           </p>
         </div>
       </Card>
 
+      {visibleThreads.length === 0 && (
+        <Card className="p-10 text-center text-sm text-ink-muted">
+          Nothing needs your attention in this window. Try a wider range.
+        </Card>
+      )}
       <div className="space-y-2">
-        {emailThreads.map((t) => (
+        {visibleThreads.map((t) => (
           <Card
             key={t.id}
             className="flex cursor-pointer items-start gap-4 px-4 py-3.5 transition-colors hover:border-indigo-300"

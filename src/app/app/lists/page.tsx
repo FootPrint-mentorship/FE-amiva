@@ -1,10 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ShoppingCart, Luggage, BookOpen, Clapperboard, Lightbulb, ListChecks, Plus, LayoutTemplate } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShoppingCart, Luggage, BookOpen, Clapperboard, Lightbulb, ListChecks, Plus, LayoutTemplate, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { todoLists, fmtDay, type TodoList } from "@/lib/mock";
+import { Modal } from "@/components/ui/modal";
+import { toast } from "@/components/ui/toast";
+import { useStore } from "@/lib/store";
+import { listsStore } from "@/lib/stores";
+import { fmtDay, type TodoList } from "@/lib/mock";
 
 const listIcons = {
   shopping: ShoppingCart,
@@ -14,6 +20,8 @@ const listIcons = {
   ideas: Lightbulb,
   custom: ListChecks,
 } as const;
+
+const listTypes = ["shopping", "packing", "reading", "watch", "ideas", "custom"] as const;
 
 function ListCard({ list }: { list: TodoList }) {
   const Icon = listIcons[list.type];
@@ -44,8 +52,41 @@ function ListCard({ list }: { list: TodoList }) {
 }
 
 export default function ListsPage() {
-  const active = todoLists.filter((l) => !l.is_template && !l.archived);
-  const templates = todoLists.filter((l) => l.is_template);
+  const router = useRouter();
+  const lists = useStore(listsStore);
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState("");
+  const [type, setType] = useState<TodoList["type"]>("custom");
+  const [bulk, setBulk] = useState("");
+
+  const active = lists.filter((l) => !l.is_template && !l.archived);
+  const templates = lists.filter((l) => l.is_template);
+
+  const createList = () => {
+    if (!name.trim()) return;
+    const id = `lst_${Date.now()}`;
+    listsStore.set((cur) => [
+      {
+        id,
+        name: name.trim(),
+        type,
+        is_template: false,
+        archived: false,
+        items: bulk
+          .split("\n")
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .map((text, i) => ({ id: `itm_${Date.now()}_${i}`, text, completed: false, position: i })),
+        updated_at: new Date().toISOString(),
+      },
+      ...cur,
+    ]);
+    setCreating(false);
+    setName("");
+    setBulk("");
+    toast("List created.");
+    router.push(`/app/lists/${id}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -56,7 +97,7 @@ export default function ListsPage() {
             Shopping, packing, ideas. Update them from WhatsApp or right here.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setCreating(true)}>
           <Plus className="size-4" aria-hidden />
           New list
         </Button>
@@ -80,6 +121,60 @@ export default function ListsPage() {
             ))}
           </div>
         </section>
+      )}
+
+      {creating && (
+        <Modal label="New list" onClose={() => setCreating(false)} panelClassName="w-full max-w-120">
+          <Card className="p-6">
+            <button
+              aria-label="Close"
+              onClick={() => setCreating(false)}
+              className="absolute right-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+            <h2 className="text-lg font-semibold text-navy">New list</h2>
+            <div className="mt-5 space-y-4">
+              <label className="block text-sm font-medium text-navy">
+                Name
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Weekend market run"
+                  autoFocus
+                  className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-3.5 text-[15px] font-normal text-navy placeholder:text-ink-muted focus:border-indigo-300"
+                />
+              </label>
+              <div>
+                <p className="mb-1.5 text-sm font-medium text-navy">Type</p>
+                <select
+                  aria-label="List type"
+                  value={type}
+                  onChange={(e) => setType(e.target.value as TodoList["type"])}
+                  className="h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] capitalize text-navy"
+                >
+                  {listTypes.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <label className="block text-sm font-medium text-navy">
+                Items <span className="font-normal text-ink-muted">(optional, one per line)</span>
+                <textarea
+                  value={bulk}
+                  onChange={(e) => setBulk(e.target.value)}
+                  rows={4}
+                  placeholder={"Rice 5kg\nBeans\nPalm oil"}
+                  className="mt-1.5 w-full rounded-[10px] border border-line bg-white p-3 text-sm font-normal text-navy placeholder:text-ink-muted focus:border-indigo-300"
+                />
+              </label>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
+                <Button disabled={!name.trim()} onClick={createList}>Create list</Button>
+              </div>
+            </div>
+          </Card>
+        </Modal>
       )}
     </div>
   );

@@ -15,8 +15,12 @@ import {
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
-import { memories as seed, fmtDay, type Memory } from "@/lib/mock";
+import { fmtDay, type Memory } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { memoriesStore } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
 
 const categories = ["all", "personal", "work", "people", "travel", "finance", "ideas", "other"] as const;
 
@@ -31,7 +35,8 @@ const categoryTone = {
 } as const;
 
 export default function MemoriesPage() {
-  const [items, setItems] = useState(seed);
+  const items = useStore(memoriesStore);
+  const setItems = memoriesStore.set;
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof categories)[number]>("all");
   const [favOnly, setFavOnly] = useState(false);
@@ -71,6 +76,18 @@ export default function MemoriesPage() {
     setItems((cur) => cur.filter((m) => m.id !== id));
     setOpen(null);
     setConfirmDelete(false);
+    toast("Memory permanently deleted.", { tone: "info" });
+  };
+
+  const exportAll = () => {
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "amiva-memories.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("Memories exported as JSON.");
   };
 
   return (
@@ -83,7 +100,7 @@ export default function MemoriesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={exportAll}>
             <Download className="size-4" aria-hidden />
             Export all
           </Button>
@@ -129,7 +146,7 @@ export default function MemoriesPage() {
           className={cn(
             "ml-auto flex cursor-pointer items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
             favOnly
-              ? "bg-warning/20 text-[#9a6a1d]"
+              ? "bg-warning/20 text-warning-ink"
               : "border border-line bg-white text-ink-muted hover:border-indigo-300"
           )}
         >
@@ -193,9 +210,8 @@ export default function MemoriesPage() {
 
       {/* New memory modal */}
       {creating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="New memory">
-          <div className="absolute inset-0 bg-navy/30" onClick={() => setCreating(false)} />
-          <Card className="relative w-full max-w-120 p-6">
+        <Modal label="New memory" onClose={() => setCreating(false)} panelClassName="w-full max-w-120">
+          <Card className="p-6">
             <button
               aria-label="Close"
               onClick={() => setCreating(false)}
@@ -253,14 +269,17 @@ export default function MemoriesPage() {
               </Button>
             </div>
           </Card>
-        </div>
+        </Modal>
       )}
 
       {/* Detail modal */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Memory detail">
-          <div className="absolute inset-0 bg-navy/30" onClick={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }} />
-          <Card className="relative w-full max-w-120 p-6">
+        <Modal
+          label="Memory detail"
+          onClose={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }}
+          panelClassName="w-full max-w-120"
+        >
+          <Card className="p-6">
             <button
               aria-label="Close"
               onClick={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }}
@@ -339,7 +358,7 @@ export default function MemoriesPage() {
               </div>
             )}
           </Card>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -1,7 +1,10 @@
 import { cn } from "@/lib/cn";
-import { HTMLAttributes } from "react";
+import { HTMLAttributes, Ref } from "react";
 
-export function Card({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
+export function Card({
+  className,
+  ...rest
+}: HTMLAttributes<HTMLDivElement> & { ref?: Ref<HTMLDivElement> }) {
   return (
     <div
       className={cn(

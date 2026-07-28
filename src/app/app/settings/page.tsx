@@ -20,8 +20,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Field } from "@/components/ui/field";
+import { Modal } from "@/components/ui/modal";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
-import { user } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { settingsStore } from "@/lib/stores";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: UserRound },
@@ -38,28 +41,33 @@ const notifChannels = ["WhatsApp", "Email", "Push"] as const;
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<TabId>("profile");
-  const [tone, setTone] = useState<"Neutral" | "Warm" | "Formal" | "Brief">("Warm");
-  const [matrix, setMatrix] = useState<Record<string, string[]>>({
-    Reminders: ["WhatsApp", "Email"],
-    Tasks: ["WhatsApp"],
-    "Daily agenda": ["WhatsApp"],
-    "Product updates": ["Email"],
-  });
-  const [quietHours, setQuietHours] = useState(true);
-  const [saved, setSaved] = useState(false);
+  const settings = useStore(settingsStore);
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
+  const { matrix, quietHours, tone } = settings;
+  const setTone = (t: typeof settings.tone) => settingsStore.set((c) => ({ ...c, tone: t }));
+  const setQuietHours = (fn: (q: boolean) => boolean) =>
+    settingsStore.set((c) => ({ ...c, quietHours: fn(c.quietHours) }));
 
   const toggleCell = (row: string, ch: string) => {
     if (ch === "Push") return; // mobile app is Release 2
-    setMatrix((m) => ({
-      ...m,
-      [row]: m[row].includes(ch) ? m[row].filter((x) => x !== ch) : [...m[row], ch],
+    settingsStore.set((c) => ({
+      ...c,
+      matrix: {
+        ...c.matrix,
+        [row]: c.matrix[row].includes(ch)
+          ? c.matrix[row].filter((x) => x !== ch)
+          : [...c.matrix[row], ch],
+      },
     }));
   };
 
-  const save = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+  const save = () => toast("Saved. Your preferences are up to date.");
+
+  const setIntegration = (key: "whatsapp" | "calendar" | "gmail", on: boolean) =>
+    settingsStore.set((c) => ({
+      ...c,
+      integrations: { ...c.integrations, [key]: on },
+    }));
 
   return (
     <div className="space-y-5">
@@ -88,14 +96,27 @@ export default function SettingsPage() {
       {tab === "profile" && (
         <Card className="max-w-140 space-y-4 p-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Full name" defaultValue="Ada Obi" />
-            <Field label="Preferred name" defaultValue={user.preferred_name} hint="What Amiva calls you" />
+            <Field
+              label="Full name"
+              value={settings.fullName}
+              onChange={(e) => settingsStore.set((c) => ({ ...c, fullName: e.target.value }))}
+            />
+            <Field
+              label="Preferred name"
+              value={settings.preferredName}
+              onChange={(e) => settingsStore.set((c) => ({ ...c, preferredName: e.target.value }))}
+              hint="What Amiva calls you"
+            />
           </div>
           <Field label="Email" defaultValue="ada@example.com" disabled hint="Contact support to change your email" />
           <Field label="Phone" defaultValue="+234 801 234 5678" disabled hint="Linked to your WhatsApp. Manage it under Integrations" />
           <div>
             <p className="mb-1.5 text-sm font-medium text-navy">Timezone</p>
-            <select defaultValue={user.timezone} className="h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] text-navy">
+            <select
+              value={settings.timezone}
+              onChange={(e) => settingsStore.set((c) => ({ ...c, timezone: e.target.value }))}
+              className="h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] text-navy"
+            >
               {["Africa/Lagos", "Africa/Nairobi", "Africa/Accra", "Africa/Johannesburg"].map((tz) => (
                 <option key={tz}>{tz}</option>
               ))}
@@ -119,7 +140,28 @@ export default function SettingsPage() {
               ))}
             </div>
           </div>
-          <Button onClick={save}>{saved ? "Saved ✓" : "Save changes"}</Button>
+          <div>
+            <p className="mb-2 text-sm font-medium text-navy">Appearance</p>
+            <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
+              {(["system", "light", "dark"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => settingsStore.set((c) => ({ ...c, theme: t }))}
+                  aria-pressed={settings.theme === t}
+                  className={cn(
+                    "cursor-pointer rounded-[9px] px-4 py-1.5 text-sm font-medium capitalize transition-colors",
+                    settings.theme === t
+                      ? "bg-white text-indigo-900 shadow-card"
+                      : "text-ink-muted hover:text-navy"
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-ink-muted">System follows your device setting.</p>
+          </div>
+          <Button onClick={save}>Save changes</Button>
         </Card>
       )}
 
@@ -192,55 +234,110 @@ export default function SettingsPage() {
               </button>
             </label>
           </div>
-          <Button className="mt-6" onClick={save}>{saved ? "Saved ✓" : "Save preferences"}</Button>
+          <Button className="mt-6" onClick={save}>Save preferences</Button>
         </Card>
       )}
 
       {/* Integrations */}
       {tab === "integrations" && (
         <div className="max-w-160 space-y-3">
-          {[
-            {
-              icon: MessageCircle,
-              name: "WhatsApp",
-              detail: "+234 801 •••• 678 · linked",
-              status: "connected",
-              action: "Unlink",
-            },
-            {
-              icon: CalendarDays,
-              name: "Google Calendar",
-              detail: "ada@gmail.com · 2 calendars selected",
-              status: "connected",
-              action: "Disconnect",
-            },
-            {
-              icon: Mail,
-              name: "Gmail",
-              detail: "Summaries, drafts and follow-ups",
-              status: "not connected",
-              action: "Connect",
-            },
-          ].map((i) => (
-            <Card key={i.name} className="flex items-center gap-4 p-5">
-              <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-50">
-                <i.icon className="size-5 text-indigo-900" aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2 font-semibold text-navy">
-                  {i.name}
-                  {i.status === "connected" && <Chip tone="success">Connected</Chip>}
-                </p>
-                <p className="text-sm text-ink-muted">{i.detail}</p>
-              </div>
-              <Button variant={i.status === "connected" ? "ghost" : "primary"} size="sm">
-                {i.action}
-              </Button>
-            </Card>
-          ))}
+          {(
+            [
+              {
+                key: "whatsapp" as const,
+                icon: MessageCircle,
+                name: "WhatsApp",
+                detail: "+234 801 •••• 678",
+                offDetail: "Link the number you chat from",
+                disconnectLabel: "Unlink",
+                consequence: "Amiva stops replying on WhatsApp until you link a number again.",
+              },
+              {
+                key: "calendar" as const,
+                icon: CalendarDays,
+                name: "Google Calendar",
+                detail: "ada@gmail.com · 2 calendars selected",
+                offDetail: "Events, conflict checks and agenda summaries",
+                disconnectLabel: "Disconnect",
+                consequence: "Calendar features stop working and Amiva loses access to your events immediately.",
+              },
+              {
+                key: "gmail" as const,
+                icon: Mail,
+                name: "Gmail",
+                detail: "ada@gmail.com · inbox summaries active",
+                offDetail: "Summaries, drafts and follow-ups",
+                disconnectLabel: "Disconnect",
+                consequence: "Email summaries and drafts stop working and access is revoked immediately.",
+              },
+            ]
+          ).map((i) => {
+            const on = settings.integrations[i.key];
+            return (
+              <Card key={i.name} className="flex items-center gap-4 p-5">
+                <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-50">
+                  <i.icon className="size-5 text-indigo-900" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-2 font-semibold text-navy">
+                    {i.name}
+                    {on && <Chip tone="success">Connected</Chip>}
+                  </p>
+                  <p className="text-sm text-ink-muted">{on ? i.detail : i.offDetail}</p>
+                </div>
+                {on ? (
+                  <Button variant="ghost" size="sm" onClick={() => setDisconnecting(i.key)}>
+                    {i.disconnectLabel}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setIntegration(i.key, true);
+                      toast(`${i.name} connected.`);
+                    }}
+                  >
+                    Connect
+                  </Button>
+                )}
+              </Card>
+            );
+          })}
           <p className="text-xs text-ink-muted">
             Disconnecting revokes Amiva&apos;s access immediately. Features that depend on the integration stop working until you reconnect.
           </p>
+
+          {disconnecting && (
+            <Modal label="Confirm disconnect" onClose={() => setDisconnecting(null)} panelClassName="w-full max-w-110">
+              <Card className="p-6">
+                <h2 className="text-lg font-semibold text-navy">
+                  Disconnect {disconnecting === "whatsapp" ? "WhatsApp" : disconnecting === "calendar" ? "Google Calendar" : "Gmail"}?
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+                  {disconnecting === "whatsapp"
+                    ? "Amiva stops replying on WhatsApp until you link a number again."
+                    : disconnecting === "calendar"
+                    ? "Calendar features stop working and Amiva loses access to your events immediately."
+                    : "Email summaries and drafts stop working and access is revoked immediately."}
+                </p>
+                <div className="mt-5 flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setDisconnecting(null)}>
+                    Keep it connected
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      setIntegration(disconnecting as "whatsapp" | "calendar" | "gmail", false);
+                      setDisconnecting(null);
+                      toast("Disconnected. Access was revoked.", { tone: "info" });
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+              </Card>
+            </Modal>
+          )}
         </div>
       )}
 
@@ -250,8 +347,20 @@ export default function SettingsPage() {
           <Card className="p-6">
             <p className="font-semibold text-navy">Password &amp; MFA</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm">Change password</Button>
-              <Button variant="secondary" size="sm">Set up two-factor authentication</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => toast("Password changes arrive with live accounts.", { tone: "info" })}
+              >
+                Change password
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => toast("Two-factor setup arrives with live accounts.", { tone: "info" })}
+              >
+                Set up two-factor authentication
+              </Button>
             </div>
           </Card>
           <Card className="p-6">
@@ -268,7 +377,13 @@ export default function SettingsPage() {
                     <p className="text-xs text-ink-muted">{s.meta}</p>
                   </div>
                   {!s.meta.startsWith("This") && (
-                    <Button variant="ghost" size="sm">Sign out</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toast("Signed out on that device.", { tone: "info" })}
+                    >
+                      Sign out
+                    </Button>
                   )}
                 </div>
               ))}

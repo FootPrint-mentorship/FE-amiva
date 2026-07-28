@@ -5,8 +5,12 @@ import { Plus, Flag, X, Sparkles, CheckSquare } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
-import { fmtDay, tasks as seed, type Task } from "@/lib/mock";
+import { fmtDay, type Task } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { tasksStore } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
 
 const tabs = ["Today", "Upcoming", "Overdue", "Completed"] as const;
 type Tab = (typeof tabs)[number];
@@ -18,8 +22,14 @@ const priorityTone = {
   low: "neutral",
 } as const;
 
+function localToday() {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 function matches(t: Task, tab: Tab) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
   switch (tab) {
     case "Today":
       return t.status === "open" && t.due_date === today;
@@ -34,17 +44,55 @@ function matches(t: Task, tab: Tab) {
 
 export default function TasksPage() {
   const [tab, setTab] = useState<Tab>("Today");
-  const [items, setItems] = useState(seed);
+  const items = useStore(tasksStore);
+  const setItems = tasksStore.set;
+  const [suggesting, setSuggesting] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [quickTitle, setQuickTitle] = useState("");
 
   const visible = useMemo(() => items.filter((t) => matches(t, tab)), [items, tab]);
   const open = items.find((t) => t.id === openId) ?? null;
 
-  const complete = (id: string) =>
+  const complete = (id: string) => {
     setItems((cur) =>
       cur.map((t) => (t.id === id ? { ...t, status: "completed" as const } : t))
     );
+    toast("Task completed.", {
+      action: {
+        label: "Undo",
+        onClick: () =>
+          setItems((cur) =>
+            cur.map((t) => (t.id === id ? { ...t, status: "open" as const } : t))
+          ),
+      },
+    });
+  };
+
+  const patch = (id: string, changes: Partial<Task>) =>
+    setItems((cur) => cur.map((t) => (t.id === id ? { ...t, ...changes } : t)));
+
+  const suggestSubtasks = (t: Task) => {
+    setSuggesting(true);
+    setTimeout(() => {
+      const ideas = [
+        `Outline what “${t.title.toLowerCase()}” needs`,
+        "Draft the first version",
+        "Review and send",
+      ].filter((title) => !t.subtasks.some((s) => s.title === title));
+      patch(t.id, {
+        subtasks: [
+          ...t.subtasks,
+          ...ideas.map((title, i) => ({
+            id: `sub_${Date.now()}_${i}`,
+            title,
+            completed: false,
+          })),
+        ],
+      });
+      setSuggesting(false);
+      toast(`Added ${ideas.length} suggested subtasks. Edit or delete freely.`);
+    }, 700);
+  };
 
   const toggleSubtask = (taskId: string, subId: string) =>
     setItems((cur) =>
@@ -67,7 +115,7 @@ export default function TasksPage() {
       {
         id: `tsk_${Date.now()}`,
         title,
-        due_date: new Date().toISOString().slice(0, 10),
+        due_date: localToday(),
         priority: "medium" as const,
         status: "open" as const,
         project: null,
@@ -182,13 +230,7 @@ export default function TasksPage() {
                 )}
                 {t.project && <Chip tone="indigo">{t.project}</Chip>}
                 {t.due_date && (
-                  <Chip
-                    tone={
-                      t.due_date < new Date().toISOString().slice(0, 10)
-                        ? "danger"
-                        : "neutral"
-                    }
-                  >
+                  <Chip tone={t.due_date < localToday() ? "danger" : "neutral"}>
                     {fmtDay(`${t.due_date}T12:00:00Z`)}
                   </Chip>
                 )}
@@ -212,12 +254,8 @@ export default function TasksPage() {
 
       {/* Detail drawer */}
       {open && (
-        <div className="fixed inset-0 z-50" role="dialog" aria-label={open.title}>
-          <div
-            className="absolute inset-0 bg-navy/30"
-            onClick={() => setOpenId(null)}
-          />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-120 flex-col bg-white shadow-pop">
+        <Modal label={open.title} position="right" onClose={() => setOpenId(null)}>
+          <div className="flex h-screen w-screen max-w-120 flex-col bg-white shadow-pop">
             <div className="flex items-start justify-between gap-4 border-b border-line p-5">
               <div>
                 <h2 className="text-lg font-semibold text-navy">{open.title}</h2>
@@ -238,6 +276,46 @@ export default function TasksPage() {
               </button>
             </div>
             <div className="flex-1 space-y-5 overflow-y-auto p-5">
+              <section className="grid grid-cols-2 gap-3">
+                <label className="text-sm font-medium text-navy">
+                  Due date
+                  <input
+                    type="date"
+                    value={open.due_date ?? ""}
+                    onChange={(e) => patch(open.id, { due_date: e.target.value || null })}
+                    className="mt-1.5 h-10 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal text-navy"
+                  />
+                </label>
+                <label className="text-sm font-medium text-navy">
+                  Project
+                  <input
+                    value={open.project ?? ""}
+                    placeholder="None"
+                    onChange={(e) => patch(open.id, { project: e.target.value || null })}
+                    className="mt-1.5 h-10 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal text-navy placeholder:text-ink-muted"
+                  />
+                </label>
+                <div className="col-span-2">
+                  <p className="mb-1.5 text-sm font-medium text-navy">Priority</p>
+                  <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
+                    {(["low", "medium", "high", "urgent"] as const).map((pr) => (
+                      <button
+                        key={pr}
+                        aria-pressed={open.priority === pr}
+                        onClick={() => patch(open.id, { priority: pr })}
+                        className={cn(
+                          "cursor-pointer rounded-[9px] px-3 py-1 text-xs font-medium capitalize transition-colors",
+                          open.priority === pr
+                            ? "bg-white text-indigo-900 shadow-card"
+                            : "text-ink-muted hover:text-navy"
+                        )}
+                      >
+                        {pr}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
               <section>
                 <h3 className="mb-2 text-sm font-semibold text-ink-muted">Subtasks</h3>
                 {open.subtasks.length === 0 ? (
@@ -270,7 +348,13 @@ export default function TasksPage() {
                     ))}
                   </ul>
                 )}
-                <Button variant="secondary" size="sm" className="mt-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="mt-3"
+                  loading={suggesting}
+                  onClick={() => suggestSubtasks(open)}
+                >
                   <Sparkles className="size-4" aria-hidden />
                   Suggest subtasks
                 </Button>
@@ -292,7 +376,7 @@ export default function TasksPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

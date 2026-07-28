@@ -2,11 +2,25 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, ChevronDown, Copy, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
-import { todoLists } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { newId } from "@/lib/id";
+import { listsStore } from "@/lib/stores";
+import type { TodoList } from "@/lib/mock";
+
+const suggestionsByType: Record<TodoList["type"], string[]> = {
+  shopping: ["Tomatoes", "Onions", "Cooking gas", "Detergent"],
+  packing: ["Chargers and power bank", "Toiletries", "Medication", "Travel documents"],
+  reading: ["Atomic Habits", "The Lean Startup", "Company of One"],
+  watch: ["A documentary for the weekend", "That series everyone mentions"],
+  ideas: ["Write it down before it fades", "One improvement for this week"],
+  custom: ["First step", "Next step", "Wrap up"],
+};
 
 export default function ListDetailPage({
   params,
@@ -14,12 +28,14 @@ export default function ListDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const seed = todoLists.find((l) => l.id === id);
-  const [items, setItems] = useState(seed?.items ?? []);
+  const router = useRouter();
+  const lists = useStore(listsStore);
+  const list = lists.find((l) => l.id === id);
   const [newText, setNewText] = useState("");
   const [showDone, setShowDone] = useState(true);
+  const [suggesting, setSuggesting] = useState(false);
 
-  if (!seed) {
+  if (!list) {
     return (
       <Card className="p-12 text-center">
         <p className="font-medium text-navy">List not found</p>
@@ -30,22 +46,73 @@ export default function ListDetailPage({
     );
   }
 
+  const items = list.items;
   const open = items.filter((i) => !i.completed);
   const done = items.filter((i) => i.completed);
 
-  const toggle = (itemId: string) =>
-    setItems((cur) =>
-      cur.map((i) => (i.id === itemId ? { ...i, completed: !i.completed } : i))
+  const patchItems = (next: TodoList["items"]) =>
+    listsStore.set((cur) =>
+      cur.map((l) =>
+        l.id === id ? { ...l, items: next, updated_at: new Date().toISOString() } : l
+      )
     );
+
+  const toggle = (itemId: string) =>
+    patchItems(items.map((i) => (i.id === itemId ? { ...i, completed: !i.completed } : i)));
 
   const add = () => {
     const text = newText.trim();
     if (!text) return;
-    setItems((cur) => [
-      ...cur,
-      { id: `itm_${Date.now()}`, text, completed: false, position: cur.length },
+    patchItems([
+      ...items,
+      { id: newId("itm"), text, completed: false, position: items.length },
     ]);
     setNewText("");
+  };
+
+  const duplicate = () => {
+    const copyId = newId("lst");
+    listsStore.set((cur) => [
+      {
+        ...list,
+        id: copyId,
+        name: `${list.name} (copy)`,
+        is_template: false,
+        items: list.items.map((i, idx) => ({
+          ...i,
+          id: newId("itm"),
+          completed: false,
+        })),
+        updated_at: new Date().toISOString(),
+      },
+      ...cur,
+    ]);
+    toast("List duplicated with items reset.");
+    router.push(`/app/lists/${copyId}`);
+  };
+
+  const suggest = () => {
+    setSuggesting(true);
+    setTimeout(() => {
+      const fresh = suggestionsByType[list.type]
+        .filter((text) => !items.some((i) => i.text.toLowerCase() === text.toLowerCase()))
+        .slice(0, 3);
+      if (fresh.length === 0) {
+        toast("No new suggestions for this list right now.", { tone: "info" });
+      } else {
+        patchItems([
+          ...items,
+          ...fresh.map((text, i) => ({
+            id: newId("itm"),
+            text,
+            completed: false,
+            position: items.length + i,
+          })),
+        ]);
+        toast(`Added ${fresh.length} suggestions. Remove any you don't need.`);
+      }
+      setSuggesting(false);
+    }, 700);
   };
 
   return (
@@ -60,9 +127,9 @@ export default function ListDetailPage({
         </Link>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">
-            {seed.name}
+            {list.name}
           </h1>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={duplicate}>
             <Copy className="size-4" aria-hidden />
             Duplicate
           </Button>
@@ -113,7 +180,7 @@ export default function ListDetailPage({
       </Card>
 
       {/* AI suggest */}
-      <Button variant="ghost" size="sm">
+      <Button variant="ghost" size="sm" loading={suggesting} onClick={suggest}>
         <Sparkles className="size-4" aria-hidden />
         Suggest items
       </Button>

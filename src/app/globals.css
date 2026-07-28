@@ -31,6 +31,8 @@
   --color-ink: #131628;
   --color-ink-muted: #6b6f80;
   --color-line: #e3e5f0;
+  --color-scrim: #131628;
+  --color-warning-ink: #9a6a1d;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
@@ -39,6 +41,35 @@
 
   --shadow-card: 0 1px 3px rgb(19 22 40 / 0.08);
   --shadow-pop: 0 8px 30px rgb(19 22 40 / 0.12);
+}
+
+/*
+ * Dark theme, scoped to the app shell (`.theme-dark` on the app root).
+ * The brand tokens above are remapped, so utility classes like bg-white or
+ * text-navy flip without per-component dark: variants. Marketing pages stay
+ * light for MVP per the frontend spec.
+ */
+.theme-dark {
+  --color-white: #1c2038;
+  --color-soft: #131628;
+  --color-navy: #e6e8f4;
+  --color-ink: #e6e8f4;
+  --color-ink-muted: #9aa0b5;
+  --color-line: #2a2f4a;
+  --color-warning-ink: #e8c07a;
+  --color-indigo-50: #262c4a;
+  --color-indigo-100: #303761;
+  --color-indigo-200: #3c4477;
+  --color-indigo-300: #5d55a8;
+  --color-indigo-700: #837cc8;
+  --color-indigo-800: #5d55a8;
+  --color-indigo-900: #6f68b8;
+  --color-violet-100: #32385c;
+  --color-violet-300: #736dbb;
+  --color-violet-500: #a49fce;
+  --color-violet-700: #b8b3de;
+  --color-cyan-600: #74d0e2;
+  color-scheme: dark;
 }
 
 body {

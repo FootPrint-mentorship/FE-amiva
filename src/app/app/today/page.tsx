@@ -20,11 +20,17 @@ import {
   agendaSummary,
   events,
   fmtTime,
-  pendingConfirmations,
-  reminders as seedReminders,
-  tasks as seedTasks,
   user,
 } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import {
+  confirmationsStore,
+  remindersStore,
+  resolveConfirmation,
+  tasksStore,
+} from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
+import { cn } from "@/lib/cn";
 
 const priorityTone = {
   urgent: "danger",
@@ -34,11 +40,12 @@ const priorityTone = {
 } as const;
 
 export default function TodayPage() {
-  const [reminders, setReminders] = useState(
-    seedReminders.filter((r) => r.status === "scheduled")
-  );
-  const [tasks, setTasks] = useState(seedTasks);
-  const [confirmations, setConfirmations] = useState(pendingConfirmations);
+  const allReminders = useStore(remindersStore);
+  const allTasks = useStore(tasksStore);
+  const confirmations = useStore(confirmationsStore).filter((c) => c.status === "pending");
+  const reminders = allReminders.filter((r) => r.status === "scheduled");
+  const tasks = allTasks.filter((t) => t.status === "open");
+  const [now] = useState(() => Date.now());
 
   const greeting =
     new Date().getHours() < 12
@@ -68,16 +75,29 @@ export default function TodayPage() {
       {confirmations.length > 0 && (
         <Card className="border-warning/40 bg-warning/10 p-4">
           <div className="flex flex-wrap items-center gap-3">
-            <ShieldAlert className="size-5 text-[#9a6a1d]" aria-hidden />
+            <ShieldAlert className="size-5 text-warning-ink" aria-hidden />
             <p className="flex-1 text-sm text-navy">
               <span className="font-semibold">1 action needs your approval:</span>{" "}
               {confirmations[0].summary}
             </p>
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => setConfirmations([])}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  resolveConfirmation(confirmations[0].id, "approved");
+                  toast("Approved. Amiva is on it.");
+                }}
+              >
                 Approve
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setConfirmations([])}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  resolveConfirmation(confirmations[0].id, "rejected");
+                  toast("Rejected. Nothing was changed.", { tone: "info" });
+                }}
+              >
                 Reject
               </Button>
             </div>
@@ -108,7 +128,10 @@ export default function TodayPage() {
           </div>
           <ol className="space-y-3">
             {events.map((e) => (
-              <li key={e.id} className="flex gap-3">
+              <li
+                key={e.id}
+                className={cn("flex gap-3", new Date(e.end_at).getTime() < now && "opacity-50")}
+              >
                 <div className="w-16 shrink-0 pt-0.5 text-right">
                   <p className="text-sm font-medium tabular-nums text-navy">
                     {fmtTime(e.start_at)}
@@ -118,7 +141,12 @@ export default function TodayPage() {
                   </p>
                 </div>
                 <div className="min-w-0 flex-1 rounded-[10px] border border-line bg-soft px-3 py-2">
-                  <p className="truncate text-sm font-medium text-navy">{e.title}</p>
+                  <p className="truncate text-sm font-medium text-navy">
+                    {e.title}
+                    {new Date(e.end_at).getTime() < now && (
+                      <span className="ml-1.5 text-xs font-normal text-ink-muted">ended</span>
+                    )}
+                  </p>
                   <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-muted">
                     {e.conference_url ? (
                       <>
@@ -173,7 +201,9 @@ export default function TodayPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() =>
-                      setReminders((cur) => cur.filter((x) => x.id !== r.id))
+                      remindersStore.set((cur) =>
+                        cur.map((x) => (x.id === r.id ? { ...x, status: "completed" as const } : x))
+                      )
                     }
                   >
                     <Check className="size-4" aria-hidden />
@@ -201,9 +231,20 @@ export default function TodayPage() {
               <li key={t.id} className="flex items-center gap-3">
                 <button
                   aria-label={`Complete ${t.title}`}
-                  onClick={() =>
-                    setTasks((cur) => cur.filter((x) => x.id !== t.id))
-                  }
+                  onClick={() => {
+                    tasksStore.set((cur) =>
+                      cur.map((x) => (x.id === t.id ? { ...x, status: "completed" as const } : x))
+                    );
+                    toast("Task completed.", {
+                      action: {
+                        label: "Undo",
+                        onClick: () =>
+                          tasksStore.set((cur) =>
+                            cur.map((x) => (x.id === t.id ? { ...x, status: "open" as const } : x))
+                          ),
+                      },
+                    });
+                  }}
                   className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-indigo-300 hover:border-indigo-900 hover:bg-indigo-50"
                 />
                 <span className="min-w-0 flex-1 truncate text-sm text-navy">

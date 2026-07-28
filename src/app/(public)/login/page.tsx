@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { setAuthed } from "@/lib/session";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ export default function LoginPage() {
     setError("");
     setSubmitting(true);
     // Mock: POST /auth/login → dashboard
-    setTimeout(() => router.push("/app/today"), 600);
+    setTimeout(() => { setAuthed(true); router.push("/app/today") }, 600);
   };
 
   return (

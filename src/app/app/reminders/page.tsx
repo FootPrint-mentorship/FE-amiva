@@ -15,13 +15,10 @@ import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { ReminderModal } from "@/components/domain/reminder-modal";
 import { cn } from "@/lib/cn";
-import {
-  fmtDay,
-  fmtTime,
-  reminders as seed,
-  user,
-  type Reminder,
-} from "@/lib/mock";
+import { fmtDay, fmtTime, user, type Reminder } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { remindersStore } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
 
 const tabs = ["Upcoming", "Recurring", "Snoozed", "Completed"] as const;
 type Tab = (typeof tabs)[number];
@@ -41,7 +38,8 @@ function matches(r: Reminder, tab: Tab) {
 
 export default function RemindersPage() {
   const [tab, setTab] = useState<Tab>("Upcoming");
-  const [items, setItems] = useState(seed);
+  const items = useStore(remindersStore);
+  const setItems = remindersStore.set;
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Reminder | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -62,7 +60,41 @@ export default function RemindersPage() {
       )
     );
 
-  const remove = (id: string) => setItems((cur) => cur.filter((r) => r.id !== id));
+  const remove = (id: string) => {
+    setItems((cur) => cur.filter((r) => r.id !== id));
+    toast("Reminder deleted.", { tone: "info" });
+  };
+
+  const snooze = (id: string, until: Date, label: string) => {
+    setItems((cur) =>
+      cur.map((r) =>
+        r.id === id
+          ? {
+              ...r,
+              status: "snoozed" as const,
+              snoozed_until: until.toISOString(),
+              next_fire_at: until.toISOString(),
+            }
+          : r
+      )
+    );
+    toast(`Snoozed ${label}.`);
+  };
+
+  const skipNext = (r: Reminder) => {
+    const next = new Date(r.due_at);
+    if (r.rrule?.startsWith("FREQ=DAILY")) next.setDate(next.getDate() + 1);
+    else if (r.rrule?.startsWith("FREQ=WEEKLY")) next.setDate(next.getDate() + 7);
+    else next.setMonth(next.getMonth() + 1);
+    setItems((cur) =>
+      cur.map((x) =>
+        x.id === r.id
+          ? { ...x, due_at: next.toISOString(), next_fire_at: next.toISOString() }
+          : x
+      )
+    );
+    toast(`Skipped. Next: ${fmtDay(next.toISOString())} at ${fmtTime(next.toISOString())}.`);
+  };
 
   const visible = useMemo(() => items.filter((r) => matches(r, tab)), [items, tab]);
 
@@ -164,7 +196,7 @@ export default function RemindersPage() {
                   <div className="min-w-0 flex-1">
                     <p
                       className={cn(
-                        "truncate text-[15px] font-medium text-navy",
+                        "line-clamp-2 text-[15px] font-medium text-navy",
                         r.status === "completed" && "line-through"
                       )}
                     >
@@ -218,7 +250,7 @@ export default function RemindersPage() {
                           />
                           <div
                             role="menu"
-                            className="absolute right-0 top-9 z-40 w-40 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-pop"
+                            className="absolute right-0 top-9 z-40 w-52 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-pop"
                           >
                             <button
                               role="menuitem"
@@ -227,6 +259,38 @@ export default function RemindersPage() {
                             >
                               Edit
                             </button>
+                            <button
+                              role="menuitem"
+                              className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
+                              onClick={() => {
+                                setMenuFor(null);
+                                snooze(r.id, new Date(Date.now() + 3600000), "for 1 hour");
+                              }}
+                            >
+                              Snooze 1 hour
+                            </button>
+                            <button
+                              role="menuitem"
+                              className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
+                              onClick={() => {
+                                setMenuFor(null);
+                                const tmrw = new Date();
+                                tmrw.setDate(tmrw.getDate() + 1);
+                                tmrw.setHours(9, 0, 0, 0);
+                                snooze(r.id, tmrw, "until tomorrow 9:00 AM");
+                              }}
+                            >
+                              Snooze until tomorrow
+                            </button>
+                            {r.rrule && (
+                              <button
+                                role="menuitem"
+                                className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
+                                onClick={() => { setMenuFor(null); skipNext(r); }}
+                              >
+                                Skip next
+                              </button>
+                            )}
                             <button
                               role="menuitem"
                               className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"

@@ -2,8 +2,10 @@ import "@testing-library/jest-dom/vitest";
 import { vi, beforeEach, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 import React from "react";
+import { resetAllStores } from "@/lib/store";
 
 afterEach(cleanup);
+beforeEach(() => resetAllStores()); // shared stores must not leak between tests
 
 // jsdom lacks scrollIntoView (used by the chat thread autoscroll).
 Element.prototype.scrollIntoView = vi.fn();

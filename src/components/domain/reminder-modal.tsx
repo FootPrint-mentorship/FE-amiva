@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
@@ -51,7 +52,7 @@ export function ReminderModal({
   const init = initial ? parseRecurrence(initial.rrule) : null;
   const initParts = initial ? toLocalParts(initial.due_at) : null;
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [date, setDate] = useState(initParts?.date ?? today.toISOString().slice(0, 10));
+  const [date, setDate] = useState(initParts?.date ?? toLocalParts(today.toISOString()).date);
   const [time, setTime] = useState(initParts?.time ?? "09:00");
   const [recurrence, setRecurrence] = useState<Recurrence>(init?.kind ?? "None");
   const [byDays, setByDays] = useState<string[]>(init?.byDays ?? ["MO"]);
@@ -107,9 +108,8 @@ export function ReminderModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={initial ? "Edit reminder" : "New reminder"}>
-      <div className="absolute inset-0 bg-navy/30" onClick={onClose} />
-      <Card className="relative max-h-[90vh] w-full max-w-120 overflow-y-auto p-6">
+    <Modal label={initial ? "Edit reminder" : "New reminder"} onClose={onClose} panelClassName="w-full max-w-120">
+      <Card className="max-h-[90vh] overflow-y-auto p-6">
         <button
           aria-label="Close"
           onClick={onClose}
@@ -236,6 +236,6 @@ export function ReminderModal({
           </div>
         </div>
       </Card>
-    </div>
+    </Modal>
   );
 }
