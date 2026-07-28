@@ -18,7 +18,7 @@ export default function MarketingLayout({
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <header className="sticky top-0 z-40 border-b border-line bg-white/85 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-[1140px] items-center justify-between px-5">
+        <div className="mx-auto flex h-16 w-full max-w-285 items-center justify-between px-5">
           <Link href="/" aria-label="Amiva home">
             <Logo size={30} />
           </Link>
@@ -49,10 +49,10 @@ export default function MarketingLayout({
       <main className="flex-1">{children}</main>
 
       <footer className="bg-navy text-white">
-        <div className="mx-auto grid w-full max-w-[1140px] gap-10 px-5 py-14 md:grid-cols-4">
+        <div className="mx-auto grid w-full max-w-285 gap-10 px-5 py-14 md:grid-cols-4">
           <div className="space-y-3">
             <Logo variant="light" size={28} />
-            <p className="max-w-[220px] text-sm text-white/60">
+            <p className="max-w-55 text-sm text-white/60">
               Your personal chief of staff, on WhatsApp.
             </p>
           </div>

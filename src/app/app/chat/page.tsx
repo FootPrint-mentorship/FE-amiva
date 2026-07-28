@@ -59,7 +59,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-8.5rem)] max-w-[760px] flex-col">
+    <div className="mx-auto flex h-[calc(100vh-8.5rem)] max-w-190 flex-col">
       {/* Thread */}
       <div
         className="flex-1 space-y-4 overflow-y-auto pb-4"
@@ -77,7 +77,7 @@ export default function ChatPage() {
                 alt=""
                 width={30}
                 height={30}
-                className="mt-1 size-[30px] shrink-0 rounded-full"
+                className="mt-1 size-7.5 shrink-0 rounded-full"
               />
             )}
             <div className={cn("max-w-[78%] space-y-2", m.role === "user" && "items-end")}>
@@ -102,7 +102,7 @@ export default function ChatPage() {
 
               {/* Embedded resource card */}
               {m.resource && (
-                <div className="flex items-center gap-3 rounded-[12px] border border-line bg-white px-3.5 py-2.5 shadow-card">
+                <div className="flex items-center gap-3 rounded-xl border border-line bg-white px-3.5 py-2.5 shadow-card">
                   {(() => {
                     const Icon = resourceIcons[m.resource.kind];
                     return (
@@ -122,7 +122,7 @@ export default function ChatPage() {
 
               {/* Embedded confirmation */}
               {m.confirmation && (
-                <div className="rounded-[12px] border border-warning/50 bg-warning/10 p-3.5">
+                <div className="rounded-xl border border-warning/50 bg-warning/10 p-3.5">
                   <div className="flex items-start gap-2">
                     <ShieldAlert className="mt-0.5 size-4 shrink-0 text-[#9a6a1d]" aria-hidden />
                     <div>
@@ -151,7 +151,7 @@ export default function ChatPage() {
               alt=""
               width={30}
               height={30}
-              className="size-[30px] rounded-full"
+              className="size-7.5 rounded-full"
             />
             <div className="rounded-2xl rounded-tl-sm border border-line bg-white px-4 py-3 shadow-card">
               <span className="inline-flex gap-1">
@@ -185,7 +185,7 @@ export default function ChatPage() {
       )}
 
       {/* Composer */}
-      <div className="flex items-end gap-2 rounded-[16px] border border-line bg-white p-2 shadow-card">
+      <div className="flex items-end gap-2 rounded-2xl border border-line bg-white p-2 shadow-card">
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

@@ -109,7 +109,7 @@ export function ReminderModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={initial ? "Edit reminder" : "New reminder"}>
       <div className="absolute inset-0 bg-navy/30" onClick={onClose} />
-      <Card className="relative max-h-[90vh] w-full max-w-[480px] overflow-y-auto p-6">
+      <Card className="relative max-h-[90vh] w-full max-w-120 overflow-y-auto p-6">
         <button
           aria-label="Close"
           onClick={onClose}
@@ -150,7 +150,7 @@ export function ReminderModal({
           {/* Recurrence */}
           <div>
             <p className="mb-2 text-sm font-medium text-navy">Repeats</p>
-            <div className="flex w-fit gap-1 rounded-[12px] bg-indigo-50 p-1">
+            <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
               {recurrences.map((r) => (
                 <button
                   key={r}

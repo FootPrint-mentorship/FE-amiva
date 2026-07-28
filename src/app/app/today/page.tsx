@@ -109,7 +109,7 @@ export default function TodayPage() {
           <ol className="space-y-3">
             {events.map((e) => (
               <li key={e.id} className="flex gap-3">
-                <div className="w-[64px] shrink-0 pt-0.5 text-right">
+                <div className="w-16 shrink-0 pt-0.5 text-right">
                   <p className="text-sm font-medium tabular-nums text-navy">
                     {fmtTime(e.start_at)}
                   </p>

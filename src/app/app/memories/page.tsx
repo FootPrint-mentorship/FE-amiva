@@ -145,7 +145,7 @@ export default function MemoriesPage() {
           <p className="font-medium text-navy">
             {q ? "I couldn't find that" : "No memories yet"}
           </p>
-          <p className="max-w-[340px] text-sm text-ink-muted">
+          <p className="max-w-85 text-sm text-ink-muted">
             {q
               ? `Nothing matches “${q}” in the sources you've allowed. Try different words.`
               : "Tell Amiva “remember that…” on WhatsApp, or add one here."}
@@ -195,7 +195,7 @@ export default function MemoriesPage() {
       {creating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="New memory">
           <div className="absolute inset-0 bg-navy/30" onClick={() => setCreating(false)} />
-          <Card className="relative w-full max-w-[480px] p-6">
+          <Card className="relative w-full max-w-120 p-6">
             <button
               aria-label="Close"
               onClick={() => setCreating(false)}
@@ -260,7 +260,7 @@ export default function MemoriesPage() {
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Memory detail">
           <div className="absolute inset-0 bg-navy/30" onClick={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }} />
-          <Card className="relative w-full max-w-[480px] p-6">
+          <Card className="relative w-full max-w-120 p-6">
             <button
               aria-label="Close"
               onClick={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }}
@@ -287,7 +287,7 @@ export default function MemoriesPage() {
             </p>
 
             {confirmDelete ? (
-              <div className="mt-5 rounded-[12px] border border-danger/40 bg-danger/5 p-4">
+              <div className="mt-5 rounded-xl border border-danger/40 bg-danger/5 p-4">
                 <p className="text-sm font-medium text-navy">Delete this memory permanently?</p>
                 <p className="mt-1 text-xs text-ink-muted">
                   This cannot be undone. The memory and its search index entry are removed immediately.

@@ -86,7 +86,7 @@ export default function SettingsPage() {
 
       {/* Profile */}
       {tab === "profile" && (
-        <Card className="max-w-[560px] space-y-4 p-6">
+        <Card className="max-w-140 space-y-4 p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Full name" defaultValue="Ada Obi" />
             <Field label="Preferred name" defaultValue={user.preferred_name} hint="What Amiva calls you" />
@@ -103,7 +103,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <p className="mb-2 text-sm font-medium text-navy">Amiva&apos;s tone</p>
-            <div className="flex w-fit gap-1 rounded-[12px] bg-indigo-50 p-1">
+            <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
               {(["Neutral", "Warm", "Formal", "Brief"] as const).map((t) => (
                 <button
                   key={t}
@@ -125,7 +125,7 @@ export default function SettingsPage() {
 
       {/* Notifications */}
       {tab === "notifications" && (
-        <Card className="max-w-[640px] p-6">
+        <Card className="max-w-160 p-6">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-ink-muted">
@@ -198,7 +198,7 @@ export default function SettingsPage() {
 
       {/* Integrations */}
       {tab === "integrations" && (
-        <div className="max-w-[640px] space-y-3">
+        <div className="max-w-160 space-y-3">
           {[
             {
               icon: MessageCircle,
@@ -223,7 +223,7 @@ export default function SettingsPage() {
             },
           ].map((i) => (
             <Card key={i.name} className="flex items-center gap-4 p-5">
-              <span className="flex size-11 items-center justify-center rounded-[12px] bg-indigo-50">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-50">
                 <i.icon className="size-5 text-indigo-900" aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
@@ -246,7 +246,7 @@ export default function SettingsPage() {
 
       {/* Security */}
       {tab === "security" && (
-        <div className="max-w-[640px] space-y-4">
+        <div className="max-w-160 space-y-4">
           <Card className="p-6">
             <p className="font-semibold text-navy">Password &amp; MFA</p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -279,7 +279,7 @@ export default function SettingsPage() {
 
       {/* Privacy */}
       {tab === "privacy" && (
-        <div className="max-w-[640px] space-y-4">
+        <div className="max-w-160 space-y-4">
           <Card className="p-6">
             <p className="font-semibold text-navy">Your data</p>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                 ["Tasks", 3],
                 ["Lists", 4],
               ].map(([k, n]) => (
-                <div key={k} className="rounded-[12px] bg-soft p-3 text-center">
+                <div key={k} className="rounded-xl bg-soft p-3 text-center">
                   <p className="text-xl font-bold tabular-nums text-navy">{n}</p>
                   <p className="text-xs text-ink-muted">{k}</p>
                 </div>

@@ -11,7 +11,7 @@ export function ComingSoon({ title, note }: { title: string; note: string }) {
           <Hammer className="size-6 text-violet-500" aria-hidden />
         </span>
         <p className="font-medium text-navy">In design</p>
-        <p className="max-w-[380px] text-sm leading-relaxed text-ink-muted">{note}</p>
+        <p className="max-w-95 text-sm leading-relaxed text-ink-muted">{note}</p>
       </Card>
     </div>
   );

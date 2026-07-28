@@ -49,7 +49,7 @@ export default function ListDetailPage({
   };
 
   return (
-    <div className="mx-auto max-w-[680px] space-y-5">
+    <div className="mx-auto max-w-170 space-y-5">
       <div>
         <Link
           href="/app/lists"

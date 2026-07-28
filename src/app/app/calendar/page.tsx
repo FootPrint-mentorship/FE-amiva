@@ -213,7 +213,7 @@ export default function CalendarPage() {
       {creating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={editingId ? "Edit event" : "New event"}>
           <div className="absolute inset-0 bg-navy/30" onClick={() => { setCreating(false); setEditingId(null); setDraftError(""); }} />
-          <Card className="relative max-h-[90vh] w-full max-w-[480px] overflow-y-auto p-6">
+          <Card className="relative max-h-[90vh] w-full max-w-120 overflow-y-auto p-6">
             <button
               aria-label="Close"
               onClick={() => { setCreating(false); setEditingId(null); setDraftError(""); }}
@@ -328,7 +328,7 @@ export default function CalendarPage() {
             {daysShown[0].toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
           </p>
         </div>
-        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
+        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
           {views.map((v) => (
             <button
               key={v}
@@ -349,7 +349,7 @@ export default function CalendarPage() {
       {/* Grid views */}
       {view !== "Agenda" ? (
         <Card className="overflow-x-auto">
-          <div className="min-w-[640px]">
+          <div className="min-w-160">
             {/* Day headers */}
             <div
               className="grid border-b border-line"
@@ -437,7 +437,7 @@ export default function CalendarPage() {
             <Card className="flex flex-col items-center gap-3 p-12 text-center">
               <CalendarDays className="size-8 text-violet-300" aria-hidden />
               <p className="font-medium text-navy">No upcoming events</p>
-              <p className="max-w-[320px] text-sm text-ink-muted">
+              <p className="max-w-80 text-sm text-ink-muted">
                 Ask Amiva to schedule something, like “book lunch with Kemi on Thursday”.
               </p>
             </Card>
@@ -456,7 +456,7 @@ export default function CalendarPage() {
                         className="flex cursor-pointer items-center gap-4 px-4 py-3 hover:border-indigo-300"
                         onClick={() => setOpenEvent(e)}
                       >
-                        <div className="w-[86px] shrink-0 text-right">
+                        <div className="w-21.5 shrink-0 text-right">
                           <p className="text-sm font-semibold tabular-nums text-navy">
                             {fmtTime(e.start_at)}
                           </p>
@@ -498,7 +498,7 @@ export default function CalendarPage() {
       {openEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={openEvent.title}>
           <div className="absolute inset-0 bg-navy/30" onClick={() => { setOpenEvent(null); setCancelling(false); }} />
-          <Card className="relative w-full max-w-[440px] p-6">
+          <Card className="relative w-full max-w-110 p-6">
             <button
               aria-label="Close"
               onClick={() => { setOpenEvent(null); setCancelling(false); }}
@@ -540,7 +540,7 @@ export default function CalendarPage() {
             </div>
 
             {cancelling ? (
-              <div className="mt-5 rounded-[12px] border border-danger/40 bg-danger/5 p-4">
+              <div className="mt-5 rounded-xl border border-danger/40 bg-danger/5 p-4">
                 <p className="text-sm font-medium text-navy">Cancel this event?</p>
                 <p className="mt-1 text-xs text-ink-muted">
                   {openEvent.attendees.length > 0

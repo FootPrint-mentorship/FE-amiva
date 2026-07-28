@@ -138,7 +138,7 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[12vh]" role="dialog" aria-label="Search or ask Amiva">
       <div className="absolute inset-0 bg-navy/40" onClick={onClose} />
-      <div className="relative w-full max-w-[640px] overflow-hidden rounded-[16px] bg-white shadow-pop">
+      <div className="relative w-full max-w-160 overflow-hidden rounded-2xl bg-white shadow-pop">
         {/* Input row */}
         <div className="flex items-center gap-3 border-b border-line px-4">
           <Search className="size-4.5 shrink-0 text-ink-muted" aria-hidden />
@@ -201,7 +201,7 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
           ) : result ? (
             <div className="space-y-4">
               <div className={cn(
-                "rounded-[12px] border p-4",
+                "rounded-xl border p-4",
                 result.not_found ? "border-line bg-soft" : "border-cyan-500/30 bg-cyan-500/8"
               )}>
                 <div className="flex items-start gap-2.5">

@@ -120,7 +120,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </button>
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex h-9 w-full max-w-[420px] cursor-pointer items-center gap-2 rounded-[10px] border border-line bg-soft px-3 text-sm text-ink-muted hover:border-indigo-300"
+            className="flex h-9 w-full max-w-105 cursor-pointer items-center gap-2 rounded-[10px] border border-line bg-soft px-3 text-sm text-ink-muted hover:border-indigo-300"
           >
             <Search className="size-4" aria-hidden />
             Search or ask Amiva…
@@ -148,7 +148,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-6 md:px-8">
+        <main className="mx-auto w-full max-w-300 flex-1 px-4 py-6 md:px-8">
           {children}
         </main>
       </div>
@@ -159,7 +159,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {drawerOpen && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-label="Navigation">
           <div className="absolute inset-0 bg-navy/40" onClick={() => setDrawerOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[270px] flex-col bg-white shadow-pop">
+          <div className="absolute inset-y-0 left-0 flex w-67.5 flex-col bg-white shadow-pop">
             <div className="flex items-center justify-between px-5 py-4">
               <span className="flex items-center gap-2.5">
                 <Image src="/brand/mark.svg" alt="" width={28} height={28} className="rounded-[22%]" />

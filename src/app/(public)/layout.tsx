@@ -15,10 +15,10 @@ export default function PublicLayout({
           <Logo variant="light" size={32} />
         </Link>
         <div>
-          <p className="max-w-[360px] text-3xl font-semibold leading-snug text-white">
+          <p className="max-w-90 text-3xl font-semibold leading-snug text-white">
             Manage your life and work from one conversation.
           </p>
-          <p className="mt-4 max-w-[360px] text-white/60">
+          <p className="mt-4 max-w-90 text-white/60">
             Reminders, calendar, email and memory, handled by your personal
             chief of staff on WhatsApp.
           </p>
@@ -31,7 +31,7 @@ export default function PublicLayout({
         <Link href="/" className="mb-8 lg:hidden" aria-label="Amiva home">
           <Logo size={32} />
         </Link>
-        <div className="w-full max-w-[420px]">{children}</div>
+        <div className="w-full max-w-105">{children}</div>
       </main>
     </div>
   );

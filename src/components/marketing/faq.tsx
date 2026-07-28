@@ -26,7 +26,7 @@ const faqs = [
 export function FaqAccordion() {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <div className="mx-auto max-w-[720px] divide-y divide-line rounded-[16px] border border-line bg-white shadow-card">
+    <div className="mx-auto max-w-180 divide-y divide-line rounded-2xl border border-line bg-white shadow-card">
       {faqs.map((f, i) => (
         <div key={f.q}>
           <button

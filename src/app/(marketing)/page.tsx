@@ -92,13 +92,13 @@ export default function HomePage() {
     <>
       {/* 1 · Hero */}
       <section className="bg-gradient-to-b from-soft to-white">
-        <div className="mx-auto grid w-full max-w-[1140px] items-center gap-12 px-5 py-16 md:grid-cols-2 md:py-24">
+        <div className="mx-auto grid w-full max-w-285 items-center gap-12 px-5 py-16 md:grid-cols-2 md:py-24">
           <div>
             <h1 className="text-[clamp(2.5rem,5vw,3.5rem)] font-bold leading-[1.08] tracking-tight text-navy">
               Your personal chief of staff,{" "}
               <span className="text-indigo-900">on WhatsApp.</span>
             </h1>
-            <p className="mt-5 max-w-[480px] text-lg leading-relaxed text-ink-muted">
+            <p className="mt-5 max-w-120 text-lg leading-relaxed text-ink-muted">
               Reminders, calendar, email and memory, managed through one
               natural conversation. Amiva remembers, plans and follows through,
               so you don&apos;t have to.
@@ -114,7 +114,7 @@ export default function HomePage() {
 
       {/* 2 · How it works */}
       <section className="border-t border-line bg-white">
-        <div className="mx-auto w-full max-w-[1140px] px-5 py-20">
+        <div className="mx-auto w-full max-w-285 px-5 py-20">
           <h2 className="text-center text-3xl font-semibold tracking-tight text-navy">
             Up and running in one minute
           </h2>
@@ -122,7 +122,7 @@ export default function HomePage() {
             {steps.map((s, i) => (
               <div
                 key={s.title}
-                className="rounded-[16px] border border-line bg-soft p-6"
+                className="rounded-2xl border border-line bg-soft p-6"
               >
                 <div className="flex items-center gap-3">
                   <span className="flex size-9 items-center justify-center rounded-full bg-indigo-900 text-sm font-semibold text-white">
@@ -142,7 +142,7 @@ export default function HomePage() {
 
       {/* 3 · Feature tour */}
       <section id="features" className="border-t border-line bg-white scroll-mt-16">
-        <div className="mx-auto w-full max-w-[1140px] px-5 py-20">
+        <div className="mx-auto w-full max-w-285 px-5 py-20">
           <h2 className="text-center text-3xl font-semibold tracking-tight text-navy">
             One conversation. Everything handled.
           </h2>
@@ -155,13 +155,13 @@ export default function HomePage() {
                 }`}
               >
                 <div>
-                  <div className="flex size-11 items-center justify-center rounded-[12px] bg-indigo-50">
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-indigo-50">
                     <f.icon className="size-5 text-indigo-900" aria-hidden />
                   </div>
                   <h3 className="mt-4 text-xl font-semibold text-navy">
                     {f.title}
                   </h3>
-                  <p className="mt-3 max-w-[440px] leading-relaxed text-ink-muted">
+                  <p className="mt-3 max-w-110 leading-relaxed text-ink-muted">
                     {f.body}
                   </p>
                   <a
@@ -173,7 +173,7 @@ export default function HomePage() {
                     Try it on WhatsApp →
                   </a>
                 </div>
-                <div className="rounded-[16px] border border-line bg-soft p-8">
+                <div className="rounded-2xl border border-line bg-soft p-8">
                   <p className="rounded-xl rounded-tr-sm bg-[#d9fdd3] px-4 py-3 text-[15px] text-[#111b21] shadow-sm md:ml-10">
                     {f.example}
                   </p>
@@ -186,7 +186,7 @@ export default function HomePage() {
 
       {/* 4 · Trust band */}
       <section className="bg-indigo-900 text-white">
-        <div className="mx-auto grid w-full max-w-[1140px] gap-10 px-5 py-16 md:grid-cols-3">
+        <div className="mx-auto grid w-full max-w-285 gap-10 px-5 py-16 md:grid-cols-3">
           {trust.map((t) => (
             <div key={t.title}>
               <t.icon className="size-6 text-cyan-500" aria-hidden />
@@ -209,12 +209,12 @@ export default function HomePage() {
 
       {/* 5 · Pricing teaser */}
       <section id="pricing" className="bg-white scroll-mt-16">
-        <div className="mx-auto w-full max-w-[1140px] px-5 py-20">
+        <div className="mx-auto w-full max-w-285 px-5 py-20">
           <h2 className="text-center text-3xl font-semibold tracking-tight text-navy">
             Simple pricing, local currency
           </h2>
-          <div className="mx-auto mt-12 grid max-w-[760px] gap-6 md:grid-cols-2">
-            <div className="rounded-[16px] border border-line bg-white p-7 shadow-card">
+          <div className="mx-auto mt-12 grid max-w-190 gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-line bg-white p-7 shadow-card">
               <p className="font-semibold text-navy">Free</p>
               <p className="mt-1 text-3xl font-bold text-navy">₦0</p>
               <p className="text-sm text-ink-muted">Get organised</p>
@@ -234,7 +234,7 @@ export default function HomePage() {
                 Start on WhatsApp
               </a>
             </div>
-            <div className="relative rounded-[16px] border-2 border-indigo-900 bg-white p-7 shadow-pop">
+            <div className="relative rounded-2xl border-2 border-indigo-900 bg-white p-7 shadow-pop">
               <span className="absolute -top-3 left-6 rounded-full bg-cyan-500 px-3 py-0.5 text-xs font-semibold text-navy">
                 Most popular
               </span>
@@ -267,7 +267,7 @@ export default function HomePage() {
 
       {/* 6 · FAQ */}
       <section id="faq" className="border-t border-line bg-soft scroll-mt-16">
-        <div className="mx-auto w-full max-w-[1140px] px-5 py-20">
+        <div className="mx-auto w-full max-w-285 px-5 py-20">
           <h2 className="text-center text-3xl font-semibold tracking-tight text-navy">
             Questions, answered
           </h2>
@@ -279,8 +279,8 @@ export default function HomePage() {
 
       {/* 7 · Final CTA */}
       <section className="bg-navy">
-        <div className="mx-auto flex w-full max-w-[1140px] flex-col items-center px-5 py-20 text-center">
-          <h2 className="max-w-[560px] text-3xl font-semibold tracking-tight text-white">
+        <div className="mx-auto flex w-full max-w-285 flex-col items-center px-5 py-20 text-center">
+          <h2 className="max-w-140 text-3xl font-semibold tracking-tight text-white">
             Start in the chat you already use.
           </h2>
           <CtaPair className="mt-8 justify-center" invert />

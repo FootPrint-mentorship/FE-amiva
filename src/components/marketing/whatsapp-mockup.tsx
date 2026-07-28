@@ -27,7 +27,7 @@ export function WhatsAppMockup() {
   return (
     <div
       aria-hidden
-      className="mx-auto w-[300px] rounded-[38px] border-[10px] border-navy bg-navy shadow-pop"
+      className="mx-auto w-75 rounded-[38px] border-10 border-navy bg-navy shadow-pop"
     >
       <div className="overflow-hidden rounded-[28px]">
         {/* chat header */}
@@ -45,7 +45,7 @@ export function WhatsAppMockup() {
           </div>
         </div>
         {/* thread */}
-        <div className="flex min-h-[380px] flex-col gap-2 bg-[#ece5dd] p-3">
+        <div className="flex min-h-95 flex-col gap-2 bg-[#ece5dd] p-3">
           <UserBubble>Remind me to pay rent on Friday morning</UserBubble>
           <AmivaBubble>
             ⏰ Done. I&apos;ll remind you <b>Fri 31 Jul, 9:00 AM (WAT)</b>:

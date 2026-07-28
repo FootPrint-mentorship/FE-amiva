@@ -22,7 +22,7 @@ function ListCard({ list }: { list: TodoList }) {
     <Link href={`/app/lists/${list.id}`}>
       <Card className="h-full p-5 transition-colors hover:border-indigo-300">
         <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-[12px] bg-indigo-50">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-50">
             <Icon className="size-5 text-indigo-900" aria-hidden />
           </span>
           <div className="min-w-0">

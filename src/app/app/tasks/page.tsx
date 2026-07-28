@@ -106,7 +106,7 @@ export default function TasksPage() {
       </div>
 
       {/* Tabs */}
-      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
+      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
         {tabs.map((t) => {
           const count = items.filter((x) => matches(x, t)).length;
           return (
@@ -138,7 +138,7 @@ export default function TasksPage() {
         <Card className="flex flex-col items-center gap-3 p-12 text-center">
           <CheckSquare className="size-8 text-violet-300" aria-hidden />
           <p className="font-medium text-navy">No tasks here</p>
-          <p className="max-w-[320px] text-sm text-ink-muted">
+          <p className="max-w-80 text-sm text-ink-muted">
             Nothing in “{tab}”. Add one above, or tell Amiva on WhatsApp.
           </p>
         </Card>
@@ -217,7 +217,7 @@ export default function TasksPage() {
             className="absolute inset-0 bg-navy/30"
             onClick={() => setOpenId(null)}
           />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-[480px] flex-col bg-white shadow-pop">
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-120 flex-col bg-white shadow-pop">
             <div className="flex items-start justify-between gap-4 border-b border-line p-5">
               <div>
                 <h2 className="text-lg font-semibold text-navy">{open.title}</h2>

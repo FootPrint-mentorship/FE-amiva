@@ -65,7 +65,7 @@ export default function OnboardingPage() {
         ))}
       </div>
 
-      <div className="mt-8 w-full max-w-[560px]">
+      <div className="mt-8 w-full max-w-140">
         {/* Step 1 — Welcome */}
         {step === 0 && (
           <Card className="p-8 text-center">
@@ -74,7 +74,7 @@ export default function OnboardingPage() {
             </h1>
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {capabilities.map((c) => (
-                <div key={c.title} className="rounded-[12px] bg-soft p-4 text-left">
+                <div key={c.title} className="rounded-xl bg-soft p-4 text-left">
                   <c.icon className="size-5 text-violet-500" aria-hidden />
                   <p className="mt-2 font-semibold text-navy">{c.title}</p>
                   <p className="mt-1 text-xs leading-relaxed text-ink-muted">{c.body}</p>
@@ -283,14 +283,14 @@ export default function OnboardingPage() {
               </Button>
             </div>
             {tried && (
-              <div className="mt-4 rounded-[12px] border border-line bg-soft p-4">
+              <div className="mt-4 rounded-xl border border-line bg-soft p-4">
                 <p className="text-sm text-navy">
                   ⏰ Done, {prefs.preferredName}. I&apos;ll remind you{" "}
                   <strong>tomorrow at 6:00 PM (WAT)</strong>: &quot;Call Mum&quot;.
                 </p>
               </div>
             )}
-            <div className="mt-6 rounded-[12px] bg-[#d9fdd3]/60 p-4">
+            <div className="mt-6 rounded-xl bg-[#d9fdd3]/60 p-4">
               <p className="flex items-center gap-2 text-sm font-medium text-navy">
                 <MessageCircle className="size-4 text-[#075e54]" aria-hidden />
                 Prefer WhatsApp? Say hello and Amiva will link your chat:

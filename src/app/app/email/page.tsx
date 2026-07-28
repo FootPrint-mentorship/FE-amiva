@@ -41,19 +41,19 @@ export default function EmailPage() {
   /* ---- Not-connected state ---- */
   if (!connected) {
     return (
-      <div className="mx-auto max-w-[560px] space-y-5 pt-8">
+      <div className="mx-auto max-w-140 space-y-5 pt-8">
         <Card className="p-8 text-center">
-          <span className="mx-auto flex size-14 items-center justify-center rounded-[16px] bg-indigo-50">
+          <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-indigo-50">
             <Mail className="size-7 text-indigo-900" aria-hidden />
           </span>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
             Connect Gmail
           </h1>
-          <p className="mx-auto mt-2 max-w-[400px] text-sm leading-relaxed text-ink-muted">
+          <p className="mx-auto mt-2 max-w-100 text-sm leading-relaxed text-ink-muted">
             Get a daily summary of what matters, extract tasks and meetings
             from threads, and reply faster with drafts written in your tone.
           </p>
-          <div className="mx-auto mt-5 max-w-[400px] space-y-2 text-left">
+          <div className="mx-auto mt-5 max-w-100 space-y-2 text-left">
             {[
               "Amiva reads only the folders you allow",
               "Nothing is ever sent without your approval",
@@ -102,7 +102,7 @@ export default function EmailPage() {
     };
 
     return (
-      <div className="mx-auto max-w-[720px] space-y-5">
+      <div className="mx-auto max-w-180 space-y-5">
         <button
           onClick={closeThread}
           className="inline-flex cursor-pointer items-center gap-1 text-sm text-ink-muted hover:text-navy"
@@ -192,7 +192,7 @@ export default function EmailPage() {
               />
             </div>
             {confirmingSend ? (
-              <div className="mt-4 rounded-[12px] border border-warning/50 bg-warning/10 p-4">
+              <div className="mt-4 rounded-xl border border-warning/50 bg-warning/10 p-4">
                 <p className="text-sm font-medium text-navy">
                   Send this reply to <strong>{draft.to}</strong>?
                 </p>
@@ -253,7 +253,7 @@ export default function EmailPage() {
             ada@gmail.com · summaries only, your inbox stays in Gmail
           </p>
         </div>
-        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
+        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
           {ranges.map((r) => (
             <button
               key={r}

@@ -109,7 +109,7 @@ export default function RemindersPage() {
       )}
 
       {/* Tabs */}
-      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
+      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
         {tabs.map((t) => (
           <button
             key={t}
@@ -133,7 +133,7 @@ export default function RemindersPage() {
         <Card className="flex flex-col items-center gap-3 p-12 text-center">
           <Clock3 className="size-8 text-violet-300" aria-hidden />
           <p className="font-medium text-navy">Nothing here yet</p>
-          <p className="max-w-[320px] text-sm text-ink-muted">
+          <p className="max-w-80 text-sm text-ink-muted">
             Say “remind me to call Ada tomorrow at 10” to Amiva on WhatsApp,
             or create one right here.
           </p>
@@ -155,7 +155,7 @@ export default function RemindersPage() {
                     r.status === "completed" && "opacity-60"
                   )}
                 >
-                  <div className="w-[76px] shrink-0 text-right">
+                  <div className="w-19 shrink-0 text-right">
                     <p className="text-sm font-semibold tabular-nums text-navy">
                       {fmtTime(r.due_at)}
                     </p>
@@ -218,7 +218,7 @@ export default function RemindersPage() {
                           />
                           <div
                             role="menu"
-                            className="absolute right-0 top-9 z-40 w-40 overflow-hidden rounded-[12px] border border-line bg-white py-1 shadow-pop"
+                            className="absolute right-0 top-9 z-40 w-40 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-pop"
                           >
                             <button
                               role="menuitem"
