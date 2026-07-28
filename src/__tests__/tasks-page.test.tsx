@@ -14,11 +14,22 @@ describe("Tasks page", () => {
     expect(screen.queryByText("Book flight to Nairobi")).not.toBeInTheDocument();
   });
 
-  it("tabs filter tasks; Upcoming holds the flight task", async () => {
+  it("tabs filter tasks; Upcoming holds the flight task and the former lists", async () => {
     render(<TasksPage />);
     await userEvent.click(screen.getByRole("tab", { name: /Upcoming/ }));
     expect(screen.getByText("Book flight to Nairobi")).toBeInTheDocument();
+    expect(screen.getByText("Weekly shopping")).toBeInTheDocument(); // migrated list
     expect(screen.queryByText("Send proposal to Kemi")).not.toBeInTheDocument();
+  });
+
+  it("category chips filter tasks (lists replacement)", async () => {
+    render(<TasksPage />);
+    await userEvent.click(screen.getByRole("tab", { name: /Upcoming/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Shopping" }));
+    expect(screen.getByText("Weekly shopping")).toBeInTheDocument();
+    expect(screen.queryByText("Book flight to Nairobi")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "All categories" }));
+    expect(screen.getByText("Book flight to Nairobi")).toBeInTheDocument();
   });
 
   it("quick-add creates a task due today", async () => {

@@ -13,7 +13,7 @@ Frontend for **Amiva**, an AI personal assistant ("chief of staff") delivered th
 | Document | What it is |
 |---|---|
 | `AMIVA-FRONTEND-SPEC.md` (this folder) | **The source of truth for everything built here.** Design tokens, per-screen specs (Purpose/Route/Data/Layout/States/Acceptance), component inventory, build order. Follow it; if you deviate, update it. |
-| `../AMIVA-BACKEND-SPEC.md` | The API contract this frontend consumes: every endpoint, request/response shape, error codes. Mock data mirrors these shapes exactly. |
+| `../BE-amiva/AMIVA-BACKEND-SPEC.md` | The API contract this frontend consumes (the backend project now lives in `../BE-amiva/`): every endpoint, request/response shape, error codes. Mock data mirrors these shapes exactly. |
 | `../Amiva Product Requirements Document (PRD) v1.0.pdf` | Product requirements (the why). |
 | `../Amiva Brand Guideline.pdf` | Brand identity. Tokens already extracted into `src/app/globals.css`. |
 
@@ -77,22 +77,21 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 | App shell (sidebar, top bar) | ✅ done |
 | Today (`/app/today`) | ✅ done (mock) |
 | Reminders (`/app/reminders`) | ✅ done (mock) — create + edit modal (recurrence builder; unchanged RRULEs preserved verbatim), pause/delete menu |
-| Tasks (`/app/tasks`) | ✅ done (mock) — detail drawer included |
-| Lists (`/app/lists`, `/app/lists/[id]`) | ✅ done (mock) |
+| Tasks (`/app/tasks`) | ✅ done (mock) — categories (lists replacement), editable drawer |
+| Lists | 🗑 removed (28 Jul review) — migrated into Tasks categories + subtasks |
 | Chat (`/app/chat`) | ✅ done (mock echo assistant) |
 | Calendar (`/app/calendar`) | ✅ done (mock) — Day/Week/Agenda views, event view modal + cancel confirm, create/edit modal with overlap warning |
 | Memories (`/app/memories`) | ✅ done (mock) — search, filters, favorites, new-memory modal, inline edit, permanent-delete confirm |
 | Search overlay (⌘K + top bar) | ✅ done (mock canned answers with citations; Email source disabled until Gmail) |
 | Email (`/app/email`) | ✅ done (mock) — connect state shared with Settings, working range filter, suggested actions create real tasks/events, AI draft + approval-gated send |
-| Activity (`/app/activity`) | ✅ done (mock) — filters, risk chips, expandable approval details |
-| Settings (`/app/settings`) | ✅ done (mock) — store-backed Profile + theme control, Notifications matrix, working Integrations with disconnect confirms, honest Security stubs |
+| Settings (`/app/settings`) | ✅ done (mock) — Profile (verified badges + phone OTP), Features toggles, verification-gated Notifications matrix, Integrations, Security stubs, Activity tab (moved from sidebar), Privacy. Tone removed |
 | Confirmation tray + notifications panel (top bar) | ✅ done — shared store, badges sync across Today/Chat/tray |
 | Auth guard + sign out | ✅ done (mock localStorage session) |
 | Dark mode (app shell) | ✅ done — token remap, Settings → Appearance |
 | Toasts, focus-trapped modals, snooze/skip, reschedule slots, list/memory/task editing | ✅ done (fix-all pass, 28 Jul 2026) |
-| Auth (`/login`, `/register`, `/verify`, `/forgot-password`, `/link`) | ✅ done (mock submits — no real API) |
-| Onboarding wizard (`/onboarding`, 5 steps) | ✅ done (mock; Google connect buttons simulate) |
-| Test suite (Vitest + RTL, 17 files / 114 tests) | ✅ green — see Testing section |
+| Auth (`/login`, `/register`, `/complete-profile`, `/forgot-password`, `/link`) | ✅ done (mock) — Google sign-in, email-or-phone login, inline email OTP at signup (`/verify` removed), password toggles |
+| Onboarding wizard (`/onboarding`, 6 steps incl. skippable phone verify) | ✅ done (mock) — skip-all, back button, animated brand panel |
+| Test suite (Vitest + RTL, 16 files / 120 tests) | ✅ green — see Testing section |
 | Real API client, TanStack Query, SSE | ❌ blocked on backend |
 
 ## Architecture notes (post fix-all pass, 28 Jul 2026)
@@ -102,6 +101,8 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 - **Toasts**: `toast()` from `src/components/ui/toast.tsx`; `<Toaster/>` lives in the root layout. Supports an action (used for undo on task completion).
 - **Mock auth**: `src/lib/session.ts` localStorage flag. The app layout redirects to /login without it; login/verify/link/onboarding set it; sidebar has sign-out. Replace with real tokens when the backend lands.
 - **Dark mode**: `.theme-dark` on the app root remaps the brand tokens in globals.css (no per-component dark: variants). Controlled from Settings → Appearance (system/light/dark; system follows `prefers-color-scheme`). Marketing pages stay light by design. Never hardcode hex for themable ink — use tokens (`text-warning-ink`, not `text-[#9a6a1d]`).
+- **Custom Select**: `components/ui/select.tsx` replaces every native `<select>`. Timezones from `lib/timezones.ts` (Intl-based, no endpoint). Phone inputs digits-only via `PhoneField`. Passwords via `PasswordField`.
+- **Verified channels**: `settings.emailVerified/phoneVerified` gate reminder-modal channels and the notifications matrix; nothing sends to unverified media. All 28 Jul review amendments: frontend spec §10.
 - **Local dates**: never key calendar days or task due-dates with `toISOString()` — it shifts a day for UTC+ users. Use the local `dayKey`/`localToday` helpers (bug found and fixed on 28 Jul).
 
 ## Known non-issues

@@ -63,8 +63,8 @@ const features = [
   },
   {
     icon: ListChecks,
-    title: "Tasks and lists from voice notes",
-    body: "Send a voice note on the go and Amiva turns it into tasks, shopping lists and checklists you can tick off from WhatsApp or the web.",
+    title: "Tasks and checklists from voice notes",
+    body: "Send a voice note on the go and Amiva turns it into organised tasks and checklists you can tick off from WhatsApp or the web.",
     example: "“Add rice, beans and titus to my shopping list”",
   },
 ];
@@ -219,7 +219,7 @@ export default function HomePage() {
               <p className="mt-1 text-3xl font-bold text-navy">₦0</p>
               <p className="text-sm text-ink-muted">Get organised</p>
               <ul className="mt-5 space-y-2.5 text-sm text-ink-muted">
-                {["WhatsApp + web dashboard", "Reminders & lists", "Google Calendar", "Personal memory (starter)"].map((x) => (
+                {["WhatsApp + web dashboard", "Reminders & tasks", "Google Calendar", "Personal memory (starter)"].map((x) => (
                   <li key={x} className="flex gap-2">
                     <Check className="size-4 shrink-0 text-success" aria-hidden /> {x}
                   </li>

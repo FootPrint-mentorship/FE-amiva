@@ -1,23 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { PasswordField } from "@/components/ui/password-field";
+import { PhoneField } from "@/components/ui/phone-field";
+import { Select } from "@/components/ui/select";
+import { OtpInput } from "@/components/ui/otp-input";
+import { GoogleButton, OrDivider } from "@/components/ui/google-button";
+import { toast } from "@/components/ui/toast";
+import { setAuthed } from "@/lib/session";
+import { startGoogleSignIn } from "@/lib/google";
+import { detectTimezone, timezoneOptions } from "@/lib/timezones";
+import { settingsStore } from "@/lib/stores";
 import { cn } from "@/lib/cn";
-
-const countryCodes = ["+234", "+254", "+233", "+27", "+255", "+256"];
-const timezones = [
-  "Africa/Lagos",
-  "Africa/Nairobi",
-  "Africa/Accra",
-  "Africa/Johannesburg",
-  "Africa/Dar_es_Salaam",
-  "Africa/Kampala",
-  "Europe/London",
-];
 
 function strength(pw: string) {
   let s = 0;
@@ -28,39 +28,81 @@ function strength(pw: string) {
   return s; // 0–4
 }
 
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+
 export default function RegisterPage() {
   const router = useRouter();
-  const detectedTz = useMemo(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-    []
-  );
   const [form, setForm] = useState({
     name: "",
     email: "",
     cc: "+234",
     phone: "",
     password: "",
-    timezone: timezones.includes(detectedTz) ? detectedTz : "Africa/Lagos",
+    timezone: detectTimezone(),
     consent: false,
   });
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Inline email verification (email is confirmed during registration)
+  const [emailStage, setEmailStage] = useState<"idle" | "sent" | "verified">("idle");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [sending, setSending] = useState(false);
+
   const pwScore = strength(form.password);
   const pwLabel = ["Too short", "Weak", "Okay", "Good", "Strong"][pwScore];
+
+  const sendEmailCode = () => {
+    if (!EMAIL_RE.test(form.email)) {
+      setErrors((e) => ({ ...e, email: "Enter a valid email address first." }));
+      return;
+    }
+    setErrors(({ email: _email, ...rest }) => rest);
+    setSending(true);
+    setTimeout(() => {
+      setSending(false);
+      setEmailStage("sent");
+      toast(`Code sent to ${form.email}.`);
+    }, 600);
+  };
+
+  const confirmEmailCode = (code: string) => {
+    setEmailOtp(code);
+    if (code.length === 6) {
+      setEmailStage("verified");
+      toast("Email verified.");
+    }
+  };
 
   const submit = () => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = "Your name is required.";
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) errs.email = "Enter a valid email address.";
-    if (form.phone.replace(/\D/g, "").length < 7) errs.phone = "Enter a valid phone number.";
+    if (!EMAIL_RE.test(form.email)) errs.email = "Enter a valid email address.";
+    else if (emailStage !== "verified") errs.email = "Verify your email to continue.";
+    if (form.phone.length < 7) errs.phone = "Enter a valid phone number.";
     if (form.password.length < 8) errs.password = "Use at least 8 characters.";
     if (!form.consent) errs.consent = "Please accept the terms to continue.";
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setSubmitting(true);
-    // Mock: POST /auth/register → verification step
-    setTimeout(() => router.push("/verify"), 700);
+    // Mock: POST /auth/register (email already verified inline)
+    setTimeout(() => {
+      settingsStore.set((c) => ({
+        ...c,
+        fullName: form.name.trim(),
+        preferredName: form.name.trim().split(" ")[0],
+        timezone: form.timezone,
+        emailVerified: true,
+        phoneVerified: false, // phone verifies during onboarding (skippable)
+      }));
+      setAuthed(true);
+      router.push("/onboarding");
+    }, 700);
+  };
+
+  const google = () => {
+    startGoogleSignIn();
+    router.push("/complete-profile");
   };
 
   return (
@@ -75,7 +117,12 @@ export default function RegisterPage() {
         </Link>
       </p>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-6">
+        <GoogleButton onClick={google} />
+        <OrDivider />
+      </div>
+
+      <div className="space-y-4">
         <Field
           label="Full name"
           placeholder="Ada Obi"
@@ -83,53 +130,62 @@ export default function RegisterPage() {
           error={errors.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
-        <Field
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          value={form.email}
-          error={errors.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
+
+        {/* Email + inline verification */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-navy">
-            WhatsApp phone number
-          </label>
-          <div className="flex gap-2">
-            <select
-              aria-label="Country code"
-              value={form.cc}
-              onChange={(e) => setForm({ ...form, cc: e.target.value })}
-              className="h-11 rounded-[10px] border border-line bg-white px-2.5 text-[15px] text-navy"
-            >
-              {countryCodes.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-            <input
-              aria-label="Phone number"
-              inputMode="tel"
-              placeholder="801 234 5678"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className={cn(
-                "h-11 flex-1 rounded-[10px] border bg-white px-3.5 text-[15px] text-navy placeholder:text-ink-muted",
-                errors.phone ? "border-danger" : "border-line focus:border-indigo-300"
-              )}
+          <div className="flex items-end gap-2">
+            <Field
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              className="min-w-0 flex-1"
+              value={form.email}
+              error={errors.email}
+              disabled={emailStage === "verified"}
+              onChange={(e) => {
+                setForm({ ...form, email: e.target.value });
+                setEmailStage("idle");
+                setEmailOtp("");
+              }}
             />
+            {emailStage !== "verified" && (
+              <Button
+                variant="secondary"
+                className="mb-[1px] shrink-0"
+                loading={sending}
+                onClick={sendEmailCode}
+              >
+                {emailStage === "sent" ? "Resend code" : "Send code"}
+              </Button>
+            )}
           </div>
-          {errors.phone ? (
-            <p className="mt-1 text-xs text-danger">{errors.phone}</p>
-          ) : (
-            <p className="mt-1 text-xs text-ink-muted">
-              The number you use for WhatsApp. Amiva will meet you there.
+          {emailStage === "sent" && (
+            <div className="mt-3 rounded-xl border border-line bg-soft p-3.5">
+              <p className="mb-2 text-xs text-ink-muted">
+                Enter the 6-digit code we sent to your email.
+              </p>
+              <OtpInput value={emailOtp} onChange={confirmEmailCode} label="Email code" />
+            </div>
+          )}
+          {emailStage === "verified" && (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-success">
+              <Check className="size-3.5" aria-hidden /> Email verified
             </p>
           )}
         </div>
+
+        <PhoneField
+          cc={form.cc}
+          phone={form.phone}
+          onCcChange={(cc) => setForm({ ...form, cc })}
+          onPhoneChange={(phone) => setForm({ ...form, phone })}
+          hint="The number you use for WhatsApp. Amiva will meet you there."
+          error={errors.phone}
+        />
+
         <div>
-          <Field
+          <PasswordField
             label="Password"
-            type="password"
             placeholder="At least 8 characters"
             value={form.password}
             error={errors.password}
@@ -143,11 +199,7 @@ export default function RegisterPage() {
                     key={i}
                     className={cn(
                       "flex-1 rounded-full",
-                      i < pwScore
-                        ? pwScore <= 2
-                          ? "bg-warning"
-                          : "bg-success"
-                        : "bg-line"
+                      i < pwScore ? (pwScore <= 2 ? "bg-warning" : "bg-success") : "bg-line"
                     )}
                   />
                 ))}
@@ -156,22 +208,21 @@ export default function RegisterPage() {
             </div>
           )}
         </div>
+
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-navy">
-            Timezone
-          </label>
-          <select
-            aria-label="Timezone"
+          <p className="mb-1.5 text-sm font-medium text-navy">Timezone</p>
+          <Select
+            label="Timezone"
             value={form.timezone}
-            onChange={(e) => setForm({ ...form, timezone: e.target.value })}
-            className="h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] text-navy"
-          >
-            {[...new Set([form.timezone, ...timezones])].map((tz) => (
-              <option key={tz}>{tz}</option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-ink-muted">Detected automatically. Change it if it&apos;s wrong.</p>
+            onChange={(timezone) => setForm({ ...form, timezone })}
+            options={timezoneOptions()}
+            searchable
+          />
+          <p className="mt-1 text-xs text-ink-muted">
+            Detected automatically. Change it if it&apos;s wrong.
+          </p>
         </div>
+
         <div>
           <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-muted">
             <input
@@ -194,6 +245,7 @@ export default function RegisterPage() {
           </label>
           {errors.consent && <p className="mt-1 text-xs text-danger">{errors.consent}</p>}
         </div>
+
         <Button className="w-full" size="lg" loading={submitting} onClick={submit}>
           Create account
         </Button>

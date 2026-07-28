@@ -38,8 +38,19 @@ export type Task = {
   priority: "low" | "medium" | "high" | "urgent";
   status: "open" | "completed";
   project: string | null;
+  category: string | null;
   subtasks: { id: string; title: string; completed: boolean }[];
 };
+
+export const taskCategories = [
+  "Personal",
+  "Work",
+  "Shopping",
+  "Travel",
+  "Finance",
+  "Reading",
+  "Errands",
+] as const;
 
 export type PendingConfirmation = {
   id: string;
@@ -187,6 +198,7 @@ export const tasks: Task[] = [
     priority: "high",
     status: "open",
     project: "Client: Kemi",
+    category: "Work",
     subtasks: [
       { id: "sub_01", title: "Draft pricing section", completed: true },
       { id: "sub_02", title: "Final review", completed: false },
@@ -198,7 +210,8 @@ export const tasks: Task[] = [
     due_date: iso(17, 0).slice(0, 10),
     priority: "medium",
     status: "open",
-    project: "Finance",
+    project: null,
+    category: "Finance",
     subtasks: [],
   },
   {
@@ -208,7 +221,52 @@ export const tasks: Task[] = [
     priority: "urgent",
     status: "open",
     project: null,
+    category: "Travel",
     subtasks: [],
+  },
+  // Former "lists" now live here as categorised checklist tasks.
+  {
+    id: "tsk_04",
+    title: "Weekly shopping",
+    due_date: null,
+    priority: "low",
+    status: "open",
+    project: null,
+    category: "Shopping",
+    subtasks: [
+      { id: "sub_10", title: "Rice 5kg", completed: true },
+      { id: "sub_11", title: "Beans", completed: true },
+      { id: "sub_12", title: "Titus fish", completed: false },
+      { id: "sub_13", title: "Palm oil", completed: false },
+      { id: "sub_14", title: "Garri", completed: false },
+    ],
+  },
+  {
+    id: "tsk_05",
+    title: "Nairobi trip packing",
+    due_date: null,
+    priority: "medium",
+    status: "open",
+    project: null,
+    category: "Travel",
+    subtasks: [
+      { id: "sub_15", title: "Passport", completed: false },
+      { id: "sub_16", title: "Chargers and power bank", completed: false },
+      { id: "sub_17", title: "Business cards", completed: false },
+    ],
+  },
+  {
+    id: "tsk_06",
+    title: "Books to read",
+    due_date: null,
+    priority: "low",
+    status: "open",
+    project: null,
+    category: "Reading",
+    subtasks: [
+      { id: "sub_18", title: "The Mom Test", completed: true },
+      { id: "sub_19", title: "Zero to One", completed: false },
+    ],
   },
 ];
 
@@ -364,73 +422,6 @@ export const memories: Memory[] = [
     favorite: false,
     archived: false,
     created_at: iso(8, 45, -30),
-  },
-];
-
-export type TodoList = {
-  id: string;
-  name: string;
-  type: "shopping" | "packing" | "reading" | "watch" | "ideas" | "custom";
-  is_template: boolean;
-  archived: boolean;
-  items: { id: string; text: string; completed: boolean; position: number }[];
-  updated_at: string;
-};
-
-export const todoLists: TodoList[] = [
-  {
-    id: "lst_01",
-    name: "Weekly shopping",
-    type: "shopping",
-    is_template: false,
-    archived: false,
-    items: [
-      { id: "itm_01", text: "Rice 5kg", completed: true, position: 0 },
-      { id: "itm_02", text: "Beans", completed: true, position: 1 },
-      { id: "itm_03", text: "Titus fish", completed: false, position: 2 },
-      { id: "itm_04", text: "Palm oil", completed: false, position: 3 },
-      { id: "itm_05", text: "Garri", completed: false, position: 4 },
-    ],
-    updated_at: iso(12, 0),
-  },
-  {
-    id: "lst_02",
-    name: "Nairobi trip packing",
-    type: "packing",
-    is_template: false,
-    archived: false,
-    items: [
-      { id: "itm_06", text: "Passport", completed: false, position: 0 },
-      { id: "itm_07", text: "Chargers + power bank", completed: false, position: 1 },
-      { id: "itm_08", text: "Business cards", completed: false, position: 2 },
-    ],
-    updated_at: iso(9, 30, -1),
-  },
-  {
-    id: "lst_03",
-    name: "Books to read",
-    type: "reading",
-    is_template: false,
-    archived: false,
-    items: [
-      { id: "itm_09", text: "The Mom Test", completed: true, position: 0 },
-      { id: "itm_10", text: "Zero to One", completed: false, position: 1 },
-    ],
-    updated_at: iso(20, 0, -3),
-  },
-  {
-    id: "lst_04",
-    name: "Travel checklist",
-    type: "packing",
-    is_template: true,
-    archived: false,
-    items: [
-      { id: "itm_11", text: "Passport / ID", completed: false, position: 0 },
-      { id: "itm_12", text: "Tickets", completed: false, position: 1 },
-      { id: "itm_13", text: "Toiletries", completed: false, position: 2 },
-      { id: "itm_14", text: "Medication", completed: false, position: 3 },
-    ],
-    updated_at: iso(8, 0, -14),
   },
 ];
 

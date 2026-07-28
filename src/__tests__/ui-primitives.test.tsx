@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Field } from "@/components/ui/field";
+import { Select } from "@/components/ui/select";
 
 describe("Button", () => {
   it("fires onClick", async () => {
@@ -59,5 +61,52 @@ describe("Field", () => {
   it("shows hint text when there is no error", () => {
     render(<Field label="Phone" hint="The number you use for WhatsApp" />);
     expect(screen.getByText("The number you use for WhatsApp")).toBeInTheDocument();
+  });
+});
+
+function SelectHarness({ searchable = false }: { searchable?: boolean }) {
+  const [value, setValue] = useState<string | null>(null);
+  return (
+    <Select
+      label="Timezone"
+      value={value}
+      onChange={setValue}
+      searchable={searchable}
+      options={[
+        { value: "Africa/Lagos", label: "Africa/Lagos", hint: "UTC+01:00" },
+        { value: "Africa/Nairobi", label: "Africa/Nairobi", hint: "UTC+03:00" },
+        { value: "Europe/London", label: "Europe/London", hint: "UTC+01:00" },
+      ]}
+    />
+  );
+}
+
+describe("Select (custom dropdown)", () => {
+  it("opens a listbox and picks an option", async () => {
+    render(<SelectHarness />);
+    const trigger = screen.getByRole("combobox", { name: "Timezone" });
+    expect(trigger).toHaveTextContent("Select…");
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole("option", { name: /Africa\/Nairobi/ }));
+    expect(trigger).toHaveTextContent("Africa/Nairobi");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument(); // closed after pick
+  });
+
+  it("supports keyboard: arrows + Enter select without a mouse", async () => {
+    render(<SelectHarness />);
+    const trigger = screen.getByRole("combobox", { name: "Timezone" });
+    trigger.focus();
+    await userEvent.keyboard("{ArrowDown}"); // opens
+    await userEvent.keyboard("{ArrowDown}{Enter}");
+    expect(trigger).toHaveTextContent("Africa/Nairobi");
+  });
+
+  it("search filters long lists", async () => {
+    render(<SelectHarness searchable />);
+    await userEvent.click(screen.getByRole("combobox", { name: "Timezone" }));
+    await userEvent.type(screen.getByLabelText("Search Timezone"), "lond");
+    expect(screen.getAllByRole("option").length).toBe(1);
+    await userEvent.click(screen.getByRole("option", { name: /Europe\/London/ }));
+    expect(screen.getByRole("combobox", { name: "Timezone" })).toHaveTextContent("Europe/London");
   });
 });

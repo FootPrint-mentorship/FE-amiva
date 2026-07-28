@@ -176,6 +176,7 @@ export default function EmailPage() {
                     priority: "high" as const,
                     status: "open" as const,
                     project: null,
+                    category: "Work",
                     subtasks: [],
                   },
                   ...cur,

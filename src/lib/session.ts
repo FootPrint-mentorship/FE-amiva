@@ -21,3 +21,23 @@ export function setAuthed(on: boolean) {
     /* private mode: session lasts for the tab only */
   }
 }
+
+const PROFILE_KEY = "amiva_profile_complete";
+
+export function isProfileComplete(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(PROFILE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setProfileComplete(on: boolean) {
+  try {
+    if (on) window.localStorage.setItem(PROFILE_KEY, "1");
+    else window.localStorage.removeItem(PROFILE_KEY);
+  } catch {
+    /* private mode */
+  }
+}

@@ -2,28 +2,49 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { setAuthed } from "@/lib/session";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { PasswordField } from "@/components/ui/password-field";
+import { GoogleButton, OrDivider } from "@/components/ui/google-button";
+import { setAuthed, isProfileComplete } from "@/lib/session";
+import { startGoogleSignIn } from "@/lib/google";
+
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const PHONE_RE = /^\+?\d{7,15}$/;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const submit = () => {
-    if (!/^\S+@\S+\.\S+$/.test(email) || !password) {
-      setError("Enter your email and password.");
+    const id = identifier.trim().replace(/[\s()-]/g, "");
+    const valid = EMAIL_RE.test(id) || PHONE_RE.test(id);
+    if (!valid || !password) {
+      setError("Enter your email or phone number, and your password.");
       return;
     }
     setError("");
     setSubmitting(true);
-    // Mock: POST /auth/login → dashboard
-    setTimeout(() => { setAuthed(true); router.push("/app/today") }, 600);
+    // Mock: POST /auth/login — identifier may be email or phone (E.164)
+    setTimeout(() => {
+      setAuthed(true);
+      router.push("/app/today");
+    }, 600);
+  };
+
+  const google = () => {
+    startGoogleSignIn();
+    if (isProfileComplete()) {
+      setAuthed(true);
+      router.push("/app/today");
+    } else {
+      router.push("/complete-profile");
+    }
   };
 
   return (
@@ -38,20 +59,25 @@ export default function LoginPage() {
         </Link>
       </p>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-6">
+        <GoogleButton onClick={google} />
+        <OrDivider />
+      </div>
+
+      <div className="space-y-4">
         <Field
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          label="Email or phone number"
+          placeholder="you@example.com or 08012345678"
+          autoComplete="username"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
         <div>
-          <Field
+          <PasswordField
             label="Password"
-            type="password"
             placeholder="••••••••"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}

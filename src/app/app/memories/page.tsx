@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { fmtDay, type Memory } from "@/lib/mock";
 import { useStore } from "@/lib/store";
@@ -231,16 +232,17 @@ export default function MemoriesPage() {
             />
             <div className="mt-3">
               <p className="mb-1.5 text-sm font-medium text-navy">Category</p>
-              <select
+              <Select
+                label="Category"
                 value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value as typeof newCategory)}
-                className="h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] capitalize text-navy"
-              >
-                <option value="auto">Let Amiva decide</option>
-                {categories.filter((c) => c !== "all").map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                onChange={(v) => setNewCategory(v as typeof newCategory)}
+                options={[
+                  { value: "auto", label: "Let Amiva decide" },
+                  ...categories
+                    .filter((c) => c !== "all")
+                    .map((c) => ({ value: c, label: c[0].toUpperCase() + c.slice(1) })),
+                ]}
+              />
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>

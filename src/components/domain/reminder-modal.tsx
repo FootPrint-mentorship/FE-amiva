@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { user, type Reminder } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { settingsStore } from "@/lib/stores";
 
 const recurrences = ["None", "Daily", "Weekly", "Monthly"] as const;
 type Recurrence = (typeof recurrences)[number];
@@ -59,6 +61,11 @@ export function ReminderModal({
   const [chans, setChans] = useState<string[]>(initial?.channels ?? ["whatsapp"]);
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [error, setError] = useState("");
+  const settings = useStore(settingsStore);
+  const channelVerified: Record<string, boolean> = {
+    whatsapp: settings.phoneVerified,
+    email: settings.emailVerified,
+  };
 
   // If the user didn't touch recurrence while editing, keep the original rrule verbatim
   // (our builder can't reproduce every form, e.g. "last Friday of the month").
@@ -198,21 +205,27 @@ export function ReminderModal({
             <div className="flex gap-2">
               {channels.map((c) => {
                 const on = chans.includes(c.id);
+                const verified = channelVerified[c.id];
                 return (
                   <button
                     key={c.id}
                     aria-pressed={on}
+                    disabled={!verified}
+                    title={verified ? undefined : `Verify your ${c.id === "whatsapp" ? "phone" : "email"} to enable ${c.label}`}
                     onClick={() =>
                       setChans((cur) => (on ? cur.filter((x) => x !== c.id) : [...cur, c.id]))
                     }
                     className={cn(
-                      "cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
-                      on
-                        ? "border-indigo-900 bg-indigo-900 text-white"
-                        : "border-line bg-white text-ink-muted hover:border-indigo-300"
+                      "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                      !verified
+                        ? "cursor-not-allowed border-line bg-soft text-ink-muted/60"
+                        : on
+                        ? "cursor-pointer border-indigo-900 bg-indigo-900 text-white"
+                        : "cursor-pointer border-line bg-white text-ink-muted hover:border-indigo-300"
                     )}
                   >
                     {c.label}
+                    {!verified && " (verify first)"}
                   </button>
                 );
               })}

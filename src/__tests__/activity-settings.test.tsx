@@ -1,78 +1,101 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ActivityPage from "@/app/app/activity/page";
 import SettingsPage from "@/app/app/settings/page";
+import { settingsStore } from "@/lib/stores";
 
-describe("Activity page (audit trail — PRD trust feature)", () => {
-  it("lists actions with risk chips and results", () => {
-    render(<ActivityPage />);
-    expect(screen.getByText(/Sent reply to kemi@client.com/)).toBeInTheDocument();
-    expect(screen.getAllByText("high").length).toBe(3); // 2 risk chips + the filter option
-    expect(screen.getAllByLabelText("Succeeded").length).toBe(5);
-    expect(screen.getByLabelText("Failed")).toBeInTheDocument();
-  });
-
-  it("filters by risk", async () => {
-    render(<ActivityPage />);
-    await userEvent.selectOptions(screen.getByLabelText(/Risk/), "high");
-    expect(screen.getByText(/Sent reply to kemi@client.com/)).toBeInTheDocument();
-    expect(screen.getByText(/Permanently deleted 1 memory/)).toBeInTheDocument();
-    expect(screen.queryByText(/Pay NEPA bill/)).not.toBeInTheDocument();
-  });
-
-  it("filters by module and shows an empty state when nothing matches", async () => {
-    render(<ActivityPage />);
-    await userEvent.selectOptions(screen.getByLabelText(/Module/), "tasks");
-    expect(screen.getByText(/No activity matches these filters/)).toBeInTheDocument();
-  });
-
-  it("expanding a high-risk entry reveals who approved it", async () => {
-    render(<ActivityPage />);
-    await userEvent.click(screen.getByText(/Sent reply to kemi@client.com/));
-    expect(screen.getByText(/Approved by you via web/)).toBeInTheDocument();
-  });
-
-  it("failed actions state that no change was made (PRD: no claimed success)", async () => {
-    render(<ActivityPage />);
-    await userEvent.click(screen.getByText(/Client dinner with Kemi/));
-    expect(screen.getByText(/no change was made/)).toBeInTheDocument();
-  });
-});
+async function openTab(name: string) {
+  render(<SettingsPage />);
+  await userEvent.click(screen.getByRole("button", { name }));
+}
 
 describe("Settings page", () => {
-  it("switches between tabs", async () => {
+  it("switches between tabs, including the relocated Activity tab", async () => {
     render(<SettingsPage />);
     expect(screen.getByLabelText("Full name")).toBeInTheDocument(); // Profile default
     await userEvent.click(screen.getByRole("button", { name: "Integrations" }));
     expect(screen.getByText("Google Calendar")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Privacy" }));
     expect(screen.getByText("Danger zone")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Activity" }));
+    expect(screen.getByText(/Everything Amiva has done/)).toBeInTheDocument();
   });
 
-  it("notification matrix toggles cells; Push stays disabled until the mobile app ships", async () => {
+  it("has no Amiva tone setting any more", () => {
     render(<SettingsPage />);
-    await userEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    expect(screen.queryByText(/Amiva's tone/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Warm" })).not.toBeInTheDocument();
+  });
+
+  it("feature toggles switch modules off and on", async () => {
+    await openTab("Features");
+    const emailToggle = screen.getByRole("switch", { name: "Email feature" });
+    expect(emailToggle).toHaveAttribute("aria-checked", "true");
+    await userEvent.click(emailToggle);
+    expect(settingsStore.get().features.email).toBe(false);
+    await userEvent.click(emailToggle);
+    expect(settingsStore.get().features.email).toBe(true);
+  });
+
+  it("notification matrix toggles cells; Push stays disabled", async () => {
+    await openTab("Notifications");
     const cell = screen.getByLabelText("Tasks via Email: off");
     await userEvent.click(cell);
     expect(screen.getByLabelText("Tasks via Email: on")).toBeInTheDocument();
     expect(screen.getByLabelText(/Reminders via Push/)).toBeDisabled();
   });
 
-  it("quiet hours switch flips its checked state", async () => {
-    render(<SettingsPage />);
-    await userEvent.click(screen.getByRole("button", { name: "Notifications" }));
-    const toggle = screen.getByRole("switch");
-    expect(toggle).toHaveAttribute("aria-checked", "true");
-    await userEvent.click(toggle);
-    expect(toggle).toHaveAttribute("aria-checked", "false");
+  it("unverified channels are disabled in the matrix until verified (no sends to unverified media)", async () => {
+    settingsStore.set((c) => ({ ...c, phoneVerified: false }));
+    await openTab("Notifications");
+    const cell = screen.getByLabelText(/Reminders via WhatsApp/);
+    expect(cell).toBeDisabled();
+    expect(cell).toHaveAttribute("title", expect.stringMatching(/Verify your phone/));
   });
 
-  it("integrations show connected status and the right call to action", async () => {
+  it("an unverified phone can be verified from Profile via OTP", async () => {
+    settingsStore.set((c) => ({ ...c, phoneVerified: false }));
     render(<SettingsPage />);
-    await userEvent.click(screen.getByRole("button", { name: "Integrations" }));
+    expect(screen.getByText(/WhatsApp delivery is paused/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Verify now" }));
+    const first = screen.getByLabelText("Phone code digit 1");
+    await userEvent.click(first);
+    await userEvent.paste("123456");
+    expect(settingsStore.get().phoneVerified).toBe(true);
+  });
+
+  it("integrations show connected status and confirm before disconnecting", async () => {
+    await openTab("Integrations");
     expect(screen.getAllByText("Connected").length).toBe(2); // WhatsApp + Calendar
     expect(screen.getByRole("button", { name: "Connect" })).toBeInTheDocument(); // Gmail
-    expect(screen.getByText(/revokes Amiva's access immediately/)).toBeInTheDocument();
+    await userEvent.click(screen.getAllByRole("button", { name: "Disconnect" })[0]);
+    expect(screen.getByText(/Calendar features stop working/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Keep it connected" }));
+    expect(settingsStore.get().integrations.calendar).toBe(true);
+  });
+});
+
+describe("Activity log (inside Settings)", () => {
+  it("lists actions with risk chips and expandable approval details", async () => {
+    await openTab("Activity");
+    expect(screen.getByText(/Sent reply to kemi@client.com/)).toBeInTheDocument();
+    await userEvent.click(screen.getByText(/Sent reply to kemi@client.com/));
+    expect(screen.getByText(/Approved by you via web/)).toBeInTheDocument();
+  });
+
+  it("filters by risk through the custom dropdown", async () => {
+    await openTab("Activity");
+    await userEvent.click(screen.getByRole("combobox", { name: "Risk filter" }));
+    const listbox = screen.getByRole("listbox", { name: "Risk filter" });
+    await userEvent.click(within(listbox).getByRole("option", { name: "High" }));
+    expect(screen.getByText(/Sent reply to kemi@client.com/)).toBeInTheDocument();
+    expect(screen.getByText(/Permanently deleted 1 memory/)).toBeInTheDocument();
+    expect(screen.queryByText(/Pay NEPA bill/)).not.toBeInTheDocument();
+  });
+
+  it("failed actions state that no change was made", async () => {
+    await openTab("Activity");
+    await userEvent.click(screen.getByText(/Client dinner with Kemi/));
+    expect(screen.getByText(/no change was made/)).toBeInTheDocument();
   });
 });

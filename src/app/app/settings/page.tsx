@@ -15,22 +15,35 @@ import {
   Trash2,
   Laptop,
   Smartphone,
+  History,
+  ToggleLeft,
+  BadgeCheck,
+  MessageSquare,
+  AlarmClock,
+  CheckSquare,
+  Brain,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Field } from "@/components/ui/field";
 import { Modal } from "@/components/ui/modal";
+import { Select } from "@/components/ui/select";
+import { OtpInput } from "@/components/ui/otp-input";
 import { toast } from "@/components/ui/toast";
+import { ActivityLog } from "@/components/domain/activity-log";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/lib/store";
-import { settingsStore } from "@/lib/stores";
+import { settingsStore, type FeatureKey } from "@/lib/stores";
+import { timezoneOptions } from "@/lib/timezones";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: UserRound },
+  { id: "features", label: "Features", icon: ToggleLeft },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "integrations", label: "Integrations", icon: Plug },
   { id: "security", label: "Security", icon: Lock },
+  { id: "activity", label: "Activity", icon: History },
   { id: "privacy", label: "Privacy", icon: ShieldCheck },
 ] as const;
 
@@ -39,17 +52,51 @@ type TabId = (typeof tabs)[number]["id"];
 const notifRows = ["Reminders", "Tasks", "Daily agenda", "Product updates"] as const;
 const notifChannels = ["WhatsApp", "Email", "Push"] as const;
 
+const featureMeta: { key: FeatureKey; label: string; body: string; icon: typeof Mail }[] = [
+  { key: "chat", label: "Chat", body: "Talk to Amiva from the web, not just WhatsApp.", icon: MessageSquare },
+  { key: "reminders", label: "Reminders", body: "One-time and recurring reminders with delivery tracking.", icon: AlarmClock },
+  { key: "calendar", label: "Calendar", body: "Google Calendar events, conflicts and free slots.", icon: CalendarDays },
+  { key: "tasks", label: "Tasks", body: "Categorised tasks and checklists with subtasks.", icon: CheckSquare },
+  { key: "memories", label: "Memories", body: "Your personal, searchable memory.", icon: Brain },
+  { key: "email", label: "Email", body: "Inbox summaries and approval-gated replies.", icon: Mail },
+];
+
+function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; label: string }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={onChange}
+      className={cn(
+        "h-6 w-11 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors",
+        on ? "bg-indigo-900" : "bg-line"
+      )}
+    >
+      <span
+        className={cn(
+          "block size-5 rounded-full bg-white shadow-card transition-transform",
+          on && "translate-x-5"
+        )}
+      />
+    </button>
+  );
+}
+
 export default function SettingsPage() {
   const [tab, setTab] = useState<TabId>("profile");
   const settings = useStore(settingsStore);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
-  const { matrix, quietHours, tone } = settings;
-  const setTone = (t: typeof settings.tone) => settingsStore.set((c) => ({ ...c, tone: t }));
-  const setQuietHours = (fn: (q: boolean) => boolean) =>
-    settingsStore.set((c) => ({ ...c, quietHours: fn(c.quietHours) }));
+  const [verifyingPhone, setVerifyingPhone] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const { matrix, quietHours } = settings;
+
+  const save = () => toast("Saved. Your preferences are up to date.");
 
   const toggleCell = (row: string, ch: string) => {
     if (ch === "Push") return; // mobile app is Release 2
+    if (ch === "WhatsApp" && !settings.phoneVerified) return;
+    if (ch === "Email" && !settings.emailVerified) return;
     settingsStore.set((c) => ({
       ...c,
       matrix: {
@@ -61,13 +108,21 @@ export default function SettingsPage() {
     }));
   };
 
-  const save = () => toast("Saved. Your preferences are up to date.");
-
   const setIntegration = (key: "whatsapp" | "calendar" | "gmail", on: boolean) =>
     settingsStore.set((c) => ({
       ...c,
       integrations: { ...c.integrations, [key]: on },
     }));
+
+  const onPhoneOtp = (code: string) => {
+    setPhoneOtp(code);
+    if (code.length === 6) {
+      settingsStore.set((c) => ({ ...c, phoneVerified: true }));
+      setVerifyingPhone(false);
+      setPhoneOtp("");
+      toast("Phone verified. WhatsApp delivery is live.");
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -108,37 +163,47 @@ export default function SettingsPage() {
               hint="What Amiva calls you"
             />
           </div>
-          <Field label="Email" defaultValue="ada@example.com" disabled hint="Contact support to change your email" />
-          <Field label="Phone" defaultValue="+234 801 234 5678" disabled hint="Linked to your WhatsApp. Manage it under Integrations" />
           <div>
-            <p className="mb-1.5 text-sm font-medium text-navy">Timezone</p>
-            <select
-              value={settings.timezone}
-              onChange={(e) => settingsStore.set((c) => ({ ...c, timezone: e.target.value }))}
-              className="h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] text-navy"
-            >
-              {["Africa/Lagos", "Africa/Nairobi", "Africa/Accra", "Africa/Johannesburg"].map((tz) => (
-                <option key={tz}>{tz}</option>
-              ))}
-            </select>
+            <Field label="Email" defaultValue="ada@example.com" disabled />
+            <p className="mt-1 flex items-center gap-1.5 text-xs">
+              {settings.emailVerified ? (
+                <span className="flex items-center gap-1 font-medium text-success">
+                  <BadgeCheck className="size-3.5" aria-hidden /> Verified
+                </span>
+              ) : (
+                <span className="text-warning-ink">Not verified — check your inbox for the code.</span>
+              )}
+            </p>
           </div>
           <div>
-            <p className="mb-2 text-sm font-medium text-navy">Amiva&apos;s tone</p>
-            <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
-              {(["Neutral", "Warm", "Formal", "Brief"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTone(t)}
-                  aria-pressed={tone === t}
-                  className={cn(
-                    "cursor-pointer rounded-[9px] px-4 py-1.5 text-sm font-medium transition-colors",
-                    tone === t ? "bg-white text-indigo-900 shadow-card" : "text-ink-muted hover:text-navy"
-                  )}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            <Field label="Phone" defaultValue="+234 801 234 5678" disabled />
+            <p className="mt-1 flex items-center gap-2 text-xs">
+              {settings.phoneVerified ? (
+                <span className="flex items-center gap-1 font-medium text-success">
+                  <BadgeCheck className="size-3.5" aria-hidden /> Verified
+                </span>
+              ) : (
+                <>
+                  <span className="text-warning-ink">Not verified — WhatsApp delivery is paused.</span>
+                  <button
+                    onClick={() => setVerifyingPhone(true)}
+                    className="cursor-pointer font-medium text-indigo-900 hover:underline"
+                  >
+                    Verify now
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-navy">Timezone</p>
+            <Select
+              label="Timezone"
+              value={settings.timezone}
+              onChange={(timezone) => settingsStore.set((c) => ({ ...c, timezone }))}
+              options={timezoneOptions()}
+              searchable
+            />
           </div>
           <div>
             <p className="mb-2 text-sm font-medium text-navy">Appearance</p>
@@ -165,6 +230,46 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {/* Features */}
+      {tab === "features" && (
+        <Card className="max-w-160 p-6">
+          <p className="mb-4 text-sm text-ink-muted">
+            Switch off what you don&apos;t use. Disabled features leave the sidebar
+            and Amiva stops offering them; nothing is deleted.
+          </p>
+          <div className="divide-y divide-line">
+            {featureMeta.map((f) => (
+              <div key={f.key} className="flex items-center gap-4 py-3.5">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50">
+                  <f.icon className="size-5 text-indigo-900" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-navy">{f.label}</p>
+                  <p className="text-xs text-ink-muted">{f.body}</p>
+                </div>
+                <Toggle
+                  on={settings.features[f.key]}
+                  label={`${f.label} feature`}
+                  onChange={() => {
+                    const turningOff = settings.features[f.key];
+                    settingsStore.set((c) => ({
+                      ...c,
+                      features: { ...c.features, [f.key]: !c.features[f.key] },
+                    }));
+                    toast(
+                      turningOff
+                        ? `${f.label} switched off. Turn it back on any time.`
+                        : `${f.label} switched on.`,
+                      { tone: "info" }
+                    );
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Notifications */}
       {tab === "notifications" && (
         <Card className="max-w-160 p-6">
@@ -183,13 +288,22 @@ export default function SettingsPage() {
                   <td className="py-3 font-medium text-navy">{row}</td>
                   {notifChannels.map((ch) => {
                     const on = matrix[row].includes(ch);
-                    const disabled = ch === "Push";
+                    const unverified =
+                      (ch === "WhatsApp" && !settings.phoneVerified) ||
+                      (ch === "Email" && !settings.emailVerified);
+                    const disabled = ch === "Push" || unverified;
                     return (
                       <td key={ch} className="py-3 text-center">
                         <button
                           aria-label={`${row} via ${ch}: ${on ? "on" : "off"}`}
                           disabled={disabled}
-                          title={disabled ? "Mobile app coming soon" : undefined}
+                          title={
+                            ch === "Push"
+                              ? "Mobile app coming soon"
+                              : unverified
+                              ? `Verify your ${ch === "WhatsApp" ? "phone" : "email"} to enable`
+                              : undefined
+                          }
                           onClick={() => toggleCell(row, ch)}
                           className={cn(
                             "inline-flex size-6 items-center justify-center rounded-md border-2 transition-colors",
@@ -209,6 +323,9 @@ export default function SettingsPage() {
               ))}
             </tbody>
           </table>
+          <p className="mt-3 text-xs text-ink-muted">
+            Amiva never sends to a channel you haven&apos;t verified.
+          </p>
 
           <div className="mt-6 border-t border-line pt-5">
             <label className="flex cursor-pointer items-center justify-between">
@@ -216,22 +333,11 @@ export default function SettingsPage() {
                 <span className="block text-sm font-medium text-navy">Quiet hours</span>
                 <span className="text-xs text-ink-muted">22:00 – 07:00 · urgent reminders still come through</span>
               </span>
-              <button
-                role="switch"
-                aria-checked={quietHours}
-                onClick={() => setQuietHours((q) => !q)}
-                className={cn(
-                  "h-6 w-11 cursor-pointer rounded-full p-0.5 transition-colors",
-                  quietHours ? "bg-indigo-900" : "bg-line"
-                )}
-              >
-                <span
-                  className={cn(
-                    "block size-5 rounded-full bg-white shadow-card transition-transform",
-                    quietHours && "translate-x-5"
-                  )}
-                />
-              </button>
+              <Toggle
+                on={quietHours}
+                label="Quiet hours"
+                onChange={() => settingsStore.set((c) => ({ ...c, quietHours: !c.quietHours }))}
+              />
             </label>
           </div>
           <Button className="mt-6" onClick={save}>Save preferences</Button>
@@ -250,7 +356,6 @@ export default function SettingsPage() {
                 detail: "+234 801 •••• 678",
                 offDetail: "Link the number you chat from",
                 disconnectLabel: "Unlink",
-                consequence: "Amiva stops replying on WhatsApp until you link a number again.",
               },
               {
                 key: "calendar" as const,
@@ -259,7 +364,6 @@ export default function SettingsPage() {
                 detail: "ada@gmail.com · 2 calendars selected",
                 offDetail: "Events, conflict checks and agenda summaries",
                 disconnectLabel: "Disconnect",
-                consequence: "Calendar features stop working and Amiva loses access to your events immediately.",
               },
               {
                 key: "gmail" as const,
@@ -268,7 +372,6 @@ export default function SettingsPage() {
                 detail: "ada@gmail.com · inbox summaries active",
                 offDetail: "Summaries, drafts and follow-ups",
                 disconnectLabel: "Disconnect",
-                consequence: "Email summaries and drafts stop working and access is revoked immediately.",
               },
             ]
           ).map((i) => {
@@ -392,6 +495,9 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {/* Activity (moved here from the sidebar) */}
+      {tab === "activity" && <ActivityLog />}
+
       {/* Privacy */}
       {tab === "privacy" && (
         <div className="max-w-160 space-y-4">
@@ -401,8 +507,8 @@ export default function SettingsPage() {
               {[
                 ["Memories", 7],
                 ["Reminders", 5],
-                ["Tasks", 3],
-                ["Lists", 4],
+                ["Tasks", 6],
+                ["Events", 8],
               ].map(([k, n]) => (
                 <div key={k} className="rounded-xl bg-soft p-3 text-center">
                   <p className="text-xl font-bold tabular-nums text-navy">{n}</p>
@@ -430,6 +536,29 @@ export default function SettingsPage() {
             </Button>
           </Card>
         </div>
+      )}
+
+      {/* Phone verification modal */}
+      {verifyingPhone && (
+        <Modal label="Verify phone" onClose={() => setVerifyingPhone(false)} panelClassName="w-full max-w-110">
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold text-navy">Verify your phone</h2>
+            <p className="mt-2 text-sm text-ink-muted">
+              We sent a 6-digit code to your WhatsApp number — nowhere else.
+            </p>
+            <div className="mt-4">
+              <OtpInput value={phoneOtp} onChange={onPhoneOtp} label="Phone code" />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-4"
+              onClick={() => setVerifyingPhone(false)}
+            >
+              Cancel
+            </Button>
+          </Card>
+        </Modal>
       )}
     </div>
   );

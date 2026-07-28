@@ -86,9 +86,37 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-cyan-500);
-  outline-offset: 2px;
+  outline: 2px solid color-mix(in srgb, var(--color-indigo-500) 40%, transparent);
+  outline-offset: 1px;
+  border-radius: 6px;
 }
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--color-indigo-400);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo-500) 15%, transparent);
+}
+
+/* Brand panel ambience (auth + onboarding left side) */
+@keyframes panel-drift {
+  0% { transform: translate3d(-4%, -6%, 0) scale(1); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.08); }
+  100% { transform: translate3d(-4%, -6%, 0) scale(1); }
+}
+@keyframes bubble-cycle {
+  0%, 4% { opacity: 0; transform: translateY(14px); }
+  8%, 30% { opacity: 1; transform: translateY(0); }
+  34%, 100% { opacity: 0; transform: translateY(-10px); }
+}
+@keyframes mark-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.brand-panel-glow { animation: panel-drift 18s ease-in-out infinite; }
+.brand-bubble { opacity: 0; animation: bubble-cycle 15s ease-in-out infinite; }
+.brand-mark-float { animation: mark-float 7s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

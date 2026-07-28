@@ -9,10 +9,8 @@ import {
   AlarmClock,
   CalendarDays,
   CheckSquare,
-  ListChecks,
   Brain,
   Mail,
-  History,
   Settings,
   Search,
   Bell,
@@ -31,6 +29,7 @@ import {
   notificationsStore,
   resolveConfirmation,
   settingsStore,
+  type FeatureKey,
 } from "@/lib/stores";
 import { isAuthed, setAuthed } from "@/lib/session";
 import { SearchPalette } from "@/components/search-palette";
@@ -40,22 +39,30 @@ import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 
-const nav = [
+const nav: { href: string; label: string; icon: typeof Sun; feature?: FeatureKey }[] = [
   { href: "/app/today", label: "Today", icon: Sun },
-  { href: "/app/chat", label: "Chat", icon: MessageSquare },
-  { href: "/app/reminders", label: "Reminders", icon: AlarmClock },
-  { href: "/app/calendar", label: "Calendar", icon: CalendarDays },
-  { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/app/lists", label: "Lists", icon: ListChecks },
-  { href: "/app/memories", label: "Memories", icon: Brain },
-  { href: "/app/email", label: "Email", icon: Mail },
-  { href: "/app/activity", label: "Activity", icon: History },
+  { href: "/app/chat", label: "Chat", icon: MessageSquare, feature: "chat" },
+  { href: "/app/reminders", label: "Reminders", icon: AlarmClock, feature: "reminders" },
+  { href: "/app/calendar", label: "Calendar", icon: CalendarDays, feature: "calendar" },
+  { href: "/app/tasks", label: "Tasks", icon: CheckSquare, feature: "tasks" },
+  { href: "/app/memories", label: "Memories", icon: Brain, feature: "memories" },
+  { href: "/app/email", label: "Email", icon: Mail, feature: "email" },
 ];
 
-function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function NavLinks({
+  pathname,
+  features,
+  onNavigate,
+}: {
+  pathname: string;
+  features: Record<FeatureKey, boolean>;
+  onNavigate?: () => void;
+}) {
   return (
     <nav className="flex-1 space-y-0.5 px-3">
-      {nav.map((n) => {
+      {nav
+        .filter((n) => !n.feature || features[n.feature])
+        .map((n) => {
         const active = pathname.startsWith(n.href);
         return (
           <Link
@@ -73,7 +80,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
             {n.label}
           </Link>
         );
-      })}
+        })}
     </nav>
   );
 }
@@ -147,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Image src="/brand/mark.svg" alt="" width={30} height={30} className="rounded-[22%]" />
           <span className="text-lg font-semibold tracking-tight text-navy">Amiva</span>
         </Link>
-        <NavLinks pathname={pathname} />
+        <NavLinks pathname={pathname} features={settings.features} />
         <div className="border-t border-line p-3">
           <Link
             href="/app/settings"
@@ -360,7 +367,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <X className="size-4" aria-hidden />
               </button>
             </div>
-            <NavLinks pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+            <NavLinks pathname={pathname} features={settings.features} onNavigate={() => setDrawerOpen(false)} />
             <div className="border-t border-line p-3">
               <Link
                 href="/app/settings"

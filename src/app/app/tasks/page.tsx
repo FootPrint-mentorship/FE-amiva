@@ -7,7 +7,8 @@ import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
-import { fmtDay, type Task } from "@/lib/mock";
+import { fmtDay, taskCategories, type Task } from "@/lib/mock";
+import { Select } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
 import { tasksStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
@@ -44,13 +45,24 @@ function matches(t: Task, tab: Tab) {
 
 export default function TasksPage() {
   const [tab, setTab] = useState<Tab>("Today");
+  const [category, setCategory] = useState<string>("all");
   const items = useStore(tasksStore);
   const setItems = tasksStore.set;
   const [suggesting, setSuggesting] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [quickTitle, setQuickTitle] = useState("");
 
-  const visible = useMemo(() => items.filter((t) => matches(t, tab)), [items, tab]);
+  const visible = useMemo(
+    () =>
+      items.filter(
+        (t) => matches(t, tab) && (category === "all" || t.category === category)
+      ),
+    [items, tab, category]
+  );
+  const presentCategories = useMemo(
+    () => [...new Set(items.filter((t) => t.category).map((t) => t.category as string))],
+    [items]
+  );
   const open = items.find((t) => t.id === openId) ?? null;
 
   const complete = (id: string) => {
@@ -119,6 +131,7 @@ export default function TasksPage() {
         priority: "medium" as const,
         status: "open" as const,
         project: null,
+        category: null,
         subtasks: [],
       },
       ...cur,
@@ -181,6 +194,27 @@ export default function TasksPage() {
         })}
       </div>
 
+      {/* Category filter (former Lists live here as categories) */}
+      {presentCategories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {["all", ...presentCategories].map((c) => (
+            <button
+              key={c}
+              onClick={() => setCategory(c)}
+              aria-pressed={category === c}
+              className={cn(
+                "cursor-pointer rounded-full px-3.5 py-1.5 text-[13px] font-medium capitalize transition-colors",
+                category === c
+                  ? "bg-indigo-900 text-white"
+                  : "border border-line bg-white text-ink-muted hover:border-indigo-300"
+              )}
+            >
+              {c === "all" ? "All categories" : c}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Rows */}
       {visible.length === 0 ? (
         <Card className="flex flex-col items-center gap-3 p-12 text-center">
@@ -228,6 +262,7 @@ export default function TasksPage() {
                     {done}/{t.subtasks.length}
                   </span>
                 )}
+                {t.category && <Chip tone="cyan">{t.category}</Chip>}
                 {t.project && <Chip tone="indigo">{t.project}</Chip>}
                 {t.due_date && (
                   <Chip tone={t.due_date < localToday() ? "danger" : "neutral"}>
@@ -286,7 +321,20 @@ export default function TasksPage() {
                     className="mt-1.5 h-10 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal text-navy"
                   />
                 </label>
-                <label className="text-sm font-medium text-navy">
+                <div className="text-sm font-medium text-navy">
+                  Category
+                  <Select
+                    label="Category"
+                    value={open.category ?? "none"}
+                    onChange={(v) => patch(open.id, { category: v === "none" ? null : v })}
+                    options={[
+                      { value: "none", label: "None" },
+                      ...taskCategories.map((c) => ({ value: c, label: c })),
+                    ]}
+                    className="mt-1.5"
+                  />
+                </div>
+                <label className="col-span-2 text-sm font-medium text-navy">
                   Project
                   <input
                     value={open.project ?? ""}

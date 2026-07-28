@@ -305,4 +305,22 @@ Bell → dropdown panel (latest 10, `GET /notifications`) with mark-all-read; "V
 13. **Polish pass** — responsive audit at 360/768/1024/1440, a11y audit (axe + manual), empty/error states everywhere, dark mode audit, i18n extraction, marketing copy review against shipped features.
 
 ---
-*Amiva — Confidential. Version 1.1, July 2026. Companion: AMIVA-BACKEND-SPEC.md.*
+
+## 10. Amendments — 28 Jul 2026 product review (v1.2)
+
+Supersedes the sections referenced. Implemented in code; treat these as the current contract. (Backend spec now lives at `../BE-amiva/AMIVA-BACKEND-SPEC.md`, see its §11 for the API-side changes.)
+
+1. **Auth (§5):** "Continue with Google" on login + register (mocked until backend). Google sign-ups complete missing details on `/complete-profile` — phone is **required** there. Login accepts **email or phone** in one identifier field. All password inputs use `PasswordField` (show/hide toggle). Registration verifies email **inline** via OTP; the standalone `/verify` page is removed. Phone verification is a **skippable onboarding step** (OTP goes only to the channel being verified) and repeatable from Settings → Profile.
+2. **Verified-channel rule:** unverified channels are disabled with a "verify to enable" hint in the reminder modal and notifications matrix; nothing is ever dispatched to an unverified medium.
+3. **Custom dropdown (§8):** native `<select>` is banned; use `components/ui/select.tsx` (ARIA combobox/listbox, keyboard nav, optional search). Timezones come from `lib/timezones.ts` (`Intl.supportedValuesOf`, ~400 zones with UTC offsets) — no endpoint dependency.
+4. **Phone inputs:** numeric-only via `PhoneField` (country-code Select + digit filter).
+5. **Focus styles (§2):** hard cyan outline replaced by a soft indigo ring; inputs use border + tinted glow. Focus stays visible (WCAG).
+6. **Auth/onboarding brand panel:** animated `BrandPanel` (drifting glow, floating mark, cycling chat vignette). CSS-only.
+7. **Onboarding:** six steps (Welcome, Preferences, Verify phone, Calendar, Gmail, First action), back button, clickable completed dots, and a global "Skip onboarding" action.
+8. **Feature switching (new Settings tab):** per-user toggles for Chat/Reminders/Calendar/Tasks/Memories/Email; disabled features leave the sidebar.
+9. **Lists removed (§6.5 deleted):** the concept folds into Tasks — `Task.category`, category filter chips, checklist behaviour via subtasks. Existing lists migrated as categorised tasks (PRD MOD-07 folds into MOD-04).
+10. **Activity (§6.10):** moved from the sidebar into Settings → Activity.
+11. **Amiva tone setting removed** from Settings and the settings model.
+
+---
+*Amiva — Confidential. Version 1.2, July 2026. Companion: ../BE-amiva/AMIVA-BACKEND-SPEC.md.*

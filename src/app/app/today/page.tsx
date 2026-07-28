@@ -44,7 +44,12 @@ export default function TodayPage() {
   const allTasks = useStore(tasksStore);
   const confirmations = useStore(confirmationsStore).filter((c) => c.status === "pending");
   const reminders = allReminders.filter((r) => r.status === "scheduled");
-  const tasks = allTasks.filter((t) => t.status === "open");
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const d = new Date();
+  const todayStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const tasks = allTasks.filter(
+    (t) => t.status === "open" && t.due_date !== null && t.due_date <= todayStr
+  );
   const [now] = useState(() => Date.now());
 
   const greeting =

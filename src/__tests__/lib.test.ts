@@ -8,7 +8,6 @@ import {
   events,
   weekEvents,
   memories,
-  todoLists,
   emailThreads,
   auditEvents,
   chatSeed,
@@ -53,7 +52,6 @@ describe("mock data mirrors the API contract (AMIVA-BACKEND-SPEC §5)", () => {
       ...tasks.map((x) => x.id),
       ...weekEvents.map((x) => x.id),
       ...memories.map((x) => x.id),
-      ...todoLists.map((x) => x.id),
       ...emailThreads.map((x) => x.id),
       ...auditEvents.map((x) => x.id),
       ...chatSeed.map((x) => x.id),
@@ -67,7 +65,6 @@ describe("mock data mirrors the API contract (AMIVA-BACKEND-SPEC §5)", () => {
     for (const t of tasks) expect(t.id).toMatch(/^tsk_/);
     for (const e of weekEvents) expect(e.id).toMatch(/^evt_/);
     for (const m of memories) expect(m.id).toMatch(/^mem_/);
-    for (const l of todoLists) expect(l.id).toMatch(/^lst_/);
   });
 
   it("every recurring reminder has a human-readable recurrence (frontend never parses RRULEs)", () => {
@@ -93,11 +90,10 @@ describe("mock data mirrors the API contract (AMIVA-BACKEND-SPEC §5)", () => {
     for (const e of events) expect(weekIds.has(e.id), e.id).toBe(true);
   });
 
-  it("todo list item positions are unique per list", () => {
-    for (const l of todoLists) {
-      const pos = l.items.map((i) => i.position);
-      expect(new Set(pos).size, l.id).toBe(pos.length);
-    }
+  it("former lists live on as categorised checklist tasks", () => {
+    const shopping = tasks.find((t) => t.title === "Weekly shopping");
+    expect(shopping?.category).toBe("Shopping");
+    expect(shopping?.subtasks.length).toBeGreaterThan(2);
   });
 
   it("audit events carry approval details for high-risk successes", () => {

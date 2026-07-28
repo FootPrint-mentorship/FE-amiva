@@ -2,13 +2,11 @@ import { createStore } from "@/lib/store";
 import {
   reminders,
   tasks,
-  todoLists,
   memories,
   weekEvents,
   pendingConfirmations,
   type Reminder,
   type Task,
-  type TodoList,
   type Memory,
   type CalendarEvent,
   type PendingConfirmation,
@@ -18,7 +16,6 @@ import {
 
 export const remindersStore = createStore<Reminder[]>(reminders);
 export const tasksStore = createStore<Task[]>(tasks);
-export const listsStore = createStore<TodoList[]>(todoLists);
 export const memoriesStore = createStore<Memory[]>(memories);
 export const eventsStore = createStore<CalendarEvent[]>(weekEvents);
 
@@ -80,22 +77,27 @@ export const notificationsStore = createStore<AppNotification[]>(notifSeed);
 
 /* ---- settings (profile, notification prefs, integrations, theme) ---- */
 
+export type FeatureKey = "chat" | "reminders" | "calendar" | "tasks" | "memories" | "email";
+
 export type Settings = {
   fullName: string;
   preferredName: string;
   timezone: string;
-  tone: "Neutral" | "Warm" | "Formal" | "Brief";
+  emailVerified: boolean;
+  phoneVerified: boolean;
   matrix: Record<string, string[]>;
   quietHours: boolean;
   theme: "system" | "light" | "dark";
   integrations: { whatsapp: boolean; calendar: boolean; gmail: boolean };
+  features: Record<FeatureKey, boolean>;
 };
 
 export const settingsStore = createStore<Settings>({
   fullName: "Ada Obi",
   preferredName: "Ada",
   timezone: "Africa/Lagos",
-  tone: "Warm",
+  emailVerified: true,
+  phoneVerified: true,
   matrix: {
     Reminders: ["WhatsApp", "Email"],
     Tasks: ["WhatsApp"],
@@ -105,4 +107,12 @@ export const settingsStore = createStore<Settings>({
   quietHours: true,
   theme: "system",
   integrations: { whatsapp: true, calendar: true, gmail: false },
+  features: {
+    chat: true,
+    reminders: true,
+    calendar: true,
+    tasks: true,
+    memories: true,
+    email: true,
+  },
 });
