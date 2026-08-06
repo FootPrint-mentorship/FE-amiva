@@ -15,13 +15,18 @@ import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { ReminderModal } from "@/components/domain/reminder-modal";
 import { cn } from "@/lib/cn";
+import { fmtDay, fmtTime, user, type Reminder } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { remindersStore } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
 import {
-  fmtDay,
-  fmtTime,
-  reminders as seed,
-  user,
-  type Reminder,
-} from "@/lib/mock";
+  completeReminder,
+  deleteReminder,
+  saveReminder,
+  skipReminder,
+  snoozeReminder,
+  toggleReminderPause,
+} from "@/lib/data/collections";
 
 const tabs = ["Upcoming", "Recurring", "Snoozed", "Completed"] as const;
 type Tab = (typeof tabs)[number];
@@ -41,28 +46,44 @@ function matches(r: Reminder, tab: Tab) {
 
 export default function RemindersPage() {
   const [tab, setTab] = useState<Tab>("Upcoming");
-  const [items, setItems] = useState(seed);
+  const items = useStore(remindersStore);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Reminder | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
 
-  const upsert = (r: Reminder) =>
-    setItems((cur) =>
-      cur.some((x) => x.id === r.id)
-        ? cur.map((x) => (x.id === r.id ? r : x))
-        : [r, ...cur]
-    );
+  const fail = (err: unknown) =>
+    toast(err instanceof Error ? err.message : "That didn't go through. Try again.", {
+      tone: "error",
+    });
 
-  const togglePause = (id: string) =>
-    setItems((cur) =>
-      cur.map((r) =>
-        r.id === id
-          ? { ...r, status: (r.status === "paused" ? "scheduled" : "paused") as Reminder["status"] }
-          : r
-      )
-    );
+  const upsert = (r: Reminder, isNew: boolean) =>
+    saveReminder(r, isNew).catch(fail);
 
-  const remove = (id: string) => setItems((cur) => cur.filter((r) => r.id !== id));
+  const togglePause = (r: Reminder) =>
+    toggleReminderPause(r.id, r.status !== "paused").catch(fail);
+
+  const remove = (id: string) =>
+    deleteReminder(id)
+      .then(() => toast("Reminder deleted.", { tone: "info" }))
+      .catch(fail);
+
+  const snooze = (id: string, until: Date, label: string) =>
+    snoozeReminder(id, until)
+      .then(() => toast(`Snoozed ${label}.`))
+      .catch(fail);
+
+  const skipNext = (r: Reminder) => {
+    const next = new Date(r.due_at);
+    if (r.rrule?.startsWith("FREQ=DAILY")) next.setDate(next.getDate() + 1);
+    else if (r.rrule?.startsWith("FREQ=WEEKLY")) next.setDate(next.getDate() + 7);
+    else next.setMonth(next.getMonth() + 1);
+    skipReminder(r.id, next)
+      .then((saved) => {
+        const at = saved?.next_fire_at ?? next.toISOString();
+        toast(`Skipped. Next: ${fmtDay(at)} at ${fmtTime(at)}.`);
+      })
+      .catch(fail);
+  };
 
   const visible = useMemo(() => items.filter((r) => matches(r, tab)), [items, tab]);
 
@@ -75,10 +96,7 @@ export default function RemindersPage() {
     return [...map.entries()];
   }, [visible]);
 
-  const complete = (id: string) =>
-    setItems((cur) =>
-      cur.map((r) => (r.id === id ? { ...r, status: "completed" as const } : r))
-    );
+  const complete = (id: string) => completeReminder(id).catch(fail);
 
   return (
     <div className="space-y-5">
@@ -88,7 +106,7 @@ export default function RemindersPage() {
             Reminders
           </h1>
           <p className="text-sm text-ink-muted">
-            Delivered on WhatsApp, email or both — exactly when you asked.
+            Delivered on WhatsApp, email or both, exactly when you asked.
           </p>
         </div>
         <Button onClick={() => setCreating(true)}>
@@ -98,18 +116,18 @@ export default function RemindersPage() {
       </div>
 
       {creating && (
-        <ReminderModal onClose={() => setCreating(false)} onCreate={upsert} />
+        <ReminderModal onClose={() => setCreating(false)} onCreate={(r) => upsert(r, true)} />
       )}
       {editing && (
         <ReminderModal
           initial={editing}
           onClose={() => setEditing(null)}
-          onCreate={upsert}
+          onCreate={(r) => upsert(r, false)}
         />
       )}
 
       {/* Tabs */}
-      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
+      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
         {tabs.map((t) => (
           <button
             key={t}
@@ -133,8 +151,8 @@ export default function RemindersPage() {
         <Card className="flex flex-col items-center gap-3 p-12 text-center">
           <Clock3 className="size-8 text-violet-300" aria-hidden />
           <p className="font-medium text-navy">Nothing here yet</p>
-          <p className="max-w-[320px] text-sm text-ink-muted">
-            Ask Amiva on WhatsApp — “remind me to call Ada tomorrow at 10” —
+          <p className="max-w-80 text-sm text-ink-muted">
+            Say “remind me to call Ada tomorrow at 10” to Amiva on WhatsApp,
             or create one right here.
           </p>
           <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>
@@ -155,7 +173,7 @@ export default function RemindersPage() {
                     r.status === "completed" && "opacity-60"
                   )}
                 >
-                  <div className="w-[76px] shrink-0 text-right">
+                  <div className="w-19 shrink-0 text-right">
                     <p className="text-sm font-semibold tabular-nums text-navy">
                       {fmtTime(r.due_at)}
                     </p>
@@ -164,7 +182,7 @@ export default function RemindersPage() {
                   <div className="min-w-0 flex-1">
                     <p
                       className={cn(
-                        "truncate text-[15px] font-medium text-navy",
+                        "line-clamp-2 text-[15px] font-medium text-navy",
                         r.status === "completed" && "line-through"
                       )}
                     >
@@ -218,7 +236,7 @@ export default function RemindersPage() {
                           />
                           <div
                             role="menu"
-                            className="absolute right-0 top-9 z-40 w-40 overflow-hidden rounded-[12px] border border-line bg-white py-1 shadow-pop"
+                            className="absolute right-0 top-9 z-40 w-52 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-pop"
                           >
                             <button
                               role="menuitem"
@@ -230,7 +248,39 @@ export default function RemindersPage() {
                             <button
                               role="menuitem"
                               className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
-                              onClick={() => { setMenuFor(null); togglePause(r.id); }}
+                              onClick={() => {
+                                setMenuFor(null);
+                                snooze(r.id, new Date(Date.now() + 3600000), "for 1 hour");
+                              }}
+                            >
+                              Snooze 1 hour
+                            </button>
+                            <button
+                              role="menuitem"
+                              className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
+                              onClick={() => {
+                                setMenuFor(null);
+                                const tmrw = new Date();
+                                tmrw.setDate(tmrw.getDate() + 1);
+                                tmrw.setHours(9, 0, 0, 0);
+                                snooze(r.id, tmrw, "until tomorrow 9:00 AM");
+                              }}
+                            >
+                              Snooze until tomorrow
+                            </button>
+                            {r.rrule && (
+                              <button
+                                role="menuitem"
+                                className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
+                                onClick={() => { setMenuFor(null); skipNext(r); }}
+                              >
+                                Skip next
+                              </button>
+                            )}
+                            <button
+                              role="menuitem"
+                              className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
+                              onClick={() => { setMenuFor(null); togglePause(r); }}
                             >
                               {r.status === "paused" ? "Resume" : "Pause"}
                             </button>

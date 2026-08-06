@@ -30,13 +30,13 @@ const sections: LegalSection[] = [
     heading: "How we use your data",
     body: [
       "We process your data solely to provide Amiva's features: interpreting your requests, executing the actions you approve, delivering notifications on the channels you choose, and retrieving information you ask for.",
-      "We do not sell your personal data. We do not use your content — including email, calendar and memories — to train AI models.",
+      "We do not sell your personal data. We do not use your content, including email, calendar and memories, to train AI models.",
       "Consequential actions (sending email, cancelling meetings, deleting data, sharing information) always require your explicit approval before execution, and every such action is recorded in an activity log you can review.",
     ],
   },
   {
     id: "google-limited-use",
-    heading: "Google API Services — Limited Use disclosure",
+    heading: "Google API Services: Limited Use disclosure",
     body: [
       "Amiva's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including its Limited Use requirements.",
       "Specifically: Google user data is used only to provide user-facing features you request; it is not transferred to third parties except as necessary to provide those features, to comply with law, or as part of a merger or acquisition with prior notice; it is not used for advertising; and humans do not read it except with your explicit consent, for security purposes, to comply with law, or when the data is aggregated and anonymised.",

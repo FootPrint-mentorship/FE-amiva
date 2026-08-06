@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Search,
   Sparkles,
@@ -11,23 +11,12 @@ import {
   CornerDownLeft,
 } from "lucide-react";
 import { Chip } from "@/components/ui/chip";
+import { Modal } from "@/components/ui/modal";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { runSearch, type SearchResult } from "@/lib/data/search";
 
 const sources = ["Memories", "Email", "Calendar", "Tasks"] as const;
-
-type Citation = {
-  source_type: "memory" | "email" | "event" | "task";
-  title: string;
-  snippet: string;
-  date: string;
-};
-
-type Result = {
-  answer: string;
-  confidence: "high" | "medium" | "low";
-  citations: Citation[];
-  not_found: boolean;
-};
 
 const citationIcons = {
   memory: Brain,
@@ -36,109 +25,44 @@ const citationIcons = {
   task: CheckSquare,
 } as const;
 
-/** Mock of POST /search — canned answers keyed on keywords. */
-function mockSearch(q: string): Result {
-  const needle = q.toLowerCase();
-  if (needle.includes("landlord") || needle.includes("rent")) {
-    return {
-      answer:
-        "Your landlord's account is GTB 0123456789 (Musa Ibrahim). Rent is due on the last Friday of every month — your next reminder is set for Fri 31 Jul, 9:00 AM.",
-      confidence: "high",
-      citations: [
-        {
-          source_type: "memory",
-          title: "Landlord's account",
-          snippet: "GTB 0123456789, Musa Ibrahim. Rent due last Friday…",
-          date: "20 Jul",
-        },
-      ],
-      not_found: false,
-    };
-  }
-  if (needle.includes("flight") || needle.includes("nairobi")) {
-    return {
-      answer:
-        "Your Lagos → Nairobi flight is KQ533 on the day after tomorrow, departing 9:15 AM from MMA Terminal 1. You're staying at Sarova Stanley (ref 6HJQZP); James is picking you up.",
-      confidence: "high",
-      citations: [
-        {
-          source_type: "event",
-          title: "Flight to Nairobi — KQ533",
-          snippet: "9:15 AM · MMA Terminal 1",
-          date: "This week",
-        },
-        {
-          source_type: "memory",
-          title: "Nairobi trip",
-          snippet: "Sarova Stanley, booking ref 6HJQZP. Airport pickup…",
-          date: "24 Jul",
-        },
-      ],
-      not_found: false,
-    };
-  }
-  if (needle.includes("kemi")) {
-    return {
-      answer:
-        "The proposal for Kemi is due today (task, high priority — 1 of 2 subtasks done). Note: Kemi prefers WhatsApp voice notes for quick updates; formal documents by email.",
-      confidence: "medium",
-      citations: [
-        {
-          source_type: "task",
-          title: "Send proposal to Kemi",
-          snippet: "Due today · high priority",
-          date: "Today",
-        },
-        {
-          source_type: "memory",
-          title: "Kemi's preferences",
-          snippet: "Prefers WhatsApp voice notes over email…",
-          date: "23 Jul",
-        },
-      ],
-      not_found: false,
-    };
-  }
-  return {
-    answer:
-      "I couldn't find that in your connected sources (memories, calendar and tasks were searched). Connecting Gmail would let me search your email too.",
-    confidence: "low",
-    citations: [],
-    not_found: true,
-  };
-}
-
 /** Mounted only while open — state resets naturally on each open. */
+const citationRoutes = {
+  memory: "/app/memories",
+  email: "/app/email",
+  event: "/app/calendar",
+  task: "/app/tasks",
+} as const;
+
 export function SearchPalette({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const [q, setQ] = useState("");
   const [enabled, setEnabled] = useState<string[]>(["Memories", "Calendar", "Tasks"]);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<SearchResult | null>(null);
   const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   const run = (text?: string) => {
     const query = (text ?? q).trim();
     if (!query || searching) return;
     setSearching(true);
     setResult(null);
-    setTimeout(() => {
-      setResult(mockSearch(query));
-      setSearching(false);
-    }, 700);
+    runSearch(query, enabled)
+      .then(setResult)
+      .catch(() => {
+        setResult({
+          answer:
+            "I couldn't complete that search just now. Please try again in a moment.",
+          confidence: "low",
+          citations: [],
+          not_found: true,
+        });
+      })
+      .finally(() => setSearching(false));
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[12vh]" role="dialog" aria-label="Search or ask Amiva">
-      <div className="absolute inset-0 bg-navy/40" onClick={onClose} />
-      <div className="relative w-full max-w-[640px] overflow-hidden rounded-[16px] bg-white shadow-pop">
+    <Modal label="Search or ask Amiva" position="top" onClose={onClose} panelClassName="w-full max-w-160">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-pop">
         {/* Input row */}
         <div className="flex items-center gap-3 border-b border-line px-4">
           <Search className="size-4.5 shrink-0 text-ink-muted" aria-hidden />
@@ -148,7 +72,7 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => (e.key === "Enter" || e.key === "Return") && run()}
-            placeholder="Ask anything — “where is my flight ticket?”"
+            placeholder="Ask anything, like “where is my flight ticket?”"
             aria-label="Search or ask Amiva"
             className="h-14 flex-1 bg-transparent text-[15px] text-navy outline-none placeholder:text-ink-muted"
           />
@@ -201,7 +125,7 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
           ) : result ? (
             <div className="space-y-4">
               <div className={cn(
-                "rounded-[12px] border p-4",
+                "rounded-xl border p-4",
                 result.not_found ? "border-line bg-soft" : "border-cyan-500/30 bg-cyan-500/8"
               )}>
                 <div className="flex items-start gap-2.5">
@@ -230,6 +154,10 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
                       return (
                         <button
                           key={i}
+                          onClick={() => {
+                            router.push(citationRoutes[c.source_type]);
+                            onClose();
+                          }}
                           className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] border border-line px-3 py-2.5 text-left hover:border-indigo-300"
                         >
                           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50">
@@ -265,6 +193,6 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

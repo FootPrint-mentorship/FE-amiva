@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 import { emailThreads, fmtDay, fmtTime, type EmailThreadSummary } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { settingsStore, tasksStore, eventsStore } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
 
 const ranges = ["Today", "Last 24h", "This week"] as const;
 
@@ -29,8 +32,27 @@ const actionChip = {
 type Draft = { to: string; subject: string; body: string };
 
 export default function EmailPage() {
-  const [connected, setConnected] = useState(false);
+  const settings = useStore(settingsStore);
+  const connected = settings.integrations.gmail;
+  const setConnected = (on: boolean) =>
+    settingsStore.set((cur) => ({
+      ...cur,
+      integrations: { ...cur.integrations, gmail: on },
+    }));
   const [range, setRange] = useState<(typeof ranges)[number]>("This week");
+  const [actionsTaken, setActionsTaken] = useState<string[]>([]);
+  const [now] = useState(() => Date.now()); // page-load clock, stable across renders
+
+  const cutoff =
+    range === "Today"
+      ? new Date(new Date(now).setHours(0, 0, 0, 0)).getTime()
+      : range === "Last 24h"
+      ? now - 24 * 3600000
+      : now - 7 * 24 * 3600000;
+  const visibleThreads = emailThreads.filter(
+    (t) => new Date(t.last_message_at).getTime() >= cutoff
+  );
+  const highCount = visibleThreads.filter((t) => t.importance === "high").length;
   const [openThread, setOpenThread] = useState<EmailThreadSummary | null>(null);
   const [instruction, setInstruction] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -41,23 +63,23 @@ export default function EmailPage() {
   /* ---- Not-connected state ---- */
   if (!connected) {
     return (
-      <div className="mx-auto max-w-[560px] space-y-5 pt-8">
+      <div className="mx-auto max-w-140 space-y-5 pt-8">
         <Card className="p-8 text-center">
-          <span className="mx-auto flex size-14 items-center justify-center rounded-[16px] bg-indigo-50">
+          <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-indigo-50">
             <Mail className="size-7 text-indigo-900" aria-hidden />
           </span>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
             Connect Gmail
           </h1>
-          <p className="mx-auto mt-2 max-w-[400px] text-sm leading-relaxed text-ink-muted">
+          <p className="mx-auto mt-2 max-w-100 text-sm leading-relaxed text-ink-muted">
             Get a daily summary of what matters, extract tasks and meetings
             from threads, and reply faster with drafts written in your tone.
           </p>
-          <div className="mx-auto mt-5 max-w-[400px] space-y-2 text-left">
+          <div className="mx-auto mt-5 max-w-100 space-y-2 text-left">
             {[
               "Amiva reads only the folders you allow",
               "Nothing is ever sent without your approval",
-              "Disconnect any time — access is revoked immediately",
+              "Disconnect any time and access is revoked immediately",
             ].map((t) => (
               <p key={t} className="flex items-start gap-2 text-sm text-navy">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
@@ -65,11 +87,11 @@ export default function EmailPage() {
               </p>
             ))}
           </div>
-          <Button className="mt-6 w-full" size="lg" onClick={() => setConnected(true)}>
+          <Button className="mt-6 w-full" size="lg" onClick={() => { setConnected(true); toast("Gmail connected. Amiva reads only what you allow."); }}>
             Connect Gmail
           </Button>
           <p className="mt-3 text-xs text-ink-muted">
-            Uses Google OAuth — you choose the permissions on Google&apos;s screen.
+            Uses Google OAuth. You choose the permissions on Google&apos;s screen.
           </p>
         </Card>
       </div>
@@ -80,6 +102,7 @@ export default function EmailPage() {
   if (openThread) {
     const closeThread = () => {
       setOpenThread(null);
+      setActionsTaken([]);
       setDraft(null);
       setInstruction("");
       setConfirmingSend(false);
@@ -102,7 +125,7 @@ export default function EmailPage() {
     };
 
     return (
-      <div className="mx-auto max-w-[720px] space-y-5">
+      <div className="mx-auto max-w-180 space-y-5">
         <button
           onClick={closeThread}
           className="inline-flex cursor-pointer items-center gap-1 text-sm text-ink-muted hover:text-navy"
@@ -138,19 +161,70 @@ export default function EmailPage() {
         <Card className="p-4">
           <p className="mb-3 text-sm font-semibold text-navy">Suggested actions</p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={actionsTaken.includes("task")}
+              onClick={() => {
+                const friday = new Date();
+                friday.setDate(friday.getDate() + ((5 - friday.getDay() + 7) % 7 || 7));
+                tasksStore.set((cur) => [
+                  {
+                    id: `tsk_${Date.now()}`,
+                    title: `Follow up: ${openThread.subject}`,
+                    due_date: friday.toISOString().slice(0, 10),
+                    priority: "high" as const,
+                    status: "open" as const,
+                    project: null,
+                    category: "Work",
+                    subtasks: [],
+                  },
+                  ...cur,
+                ]);
+                setActionsTaken((cur) => [...cur, "task"]);
+                toast("Task created in your Tasks.");
+              }}
+            >
               <CheckSquare className="size-4" aria-hidden />
-              Create task: follow up by Friday
+              {actionsTaken.includes("task") ? "Task created ✓" : "Create task: follow up by Friday"}
             </Button>
             {openThread.suggested_action === "schedule" && (
-              <Button variant="secondary" size="sm">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={actionsTaken.includes("event")}
+                onClick={() => {
+                  const start = new Date();
+                  start.setDate(start.getDate() + 7);
+                  start.setHours(10, 0, 0, 0);
+                  const end = new Date(start.getTime() + 30 * 60000);
+                  eventsStore.set((cur) => [
+                    ...cur,
+                    {
+                      id: `evt_${Date.now()}`,
+                      title: "Call with Amara (Flux Ventures)",
+                      start_at: start.toISOString(),
+                      end_at: end.toISOString(),
+                      all_day: false,
+                      location: null,
+                      conference_url: "https://meet.google.com/new",
+                      attendees: [
+                        { email: "amara@fluxventures.com", name: "Amara", response_status: "needsAction" },
+                      ],
+                      status: "confirmed" as const,
+                    },
+                  ]);
+                  setActionsTaken((cur) => [...cur, "event"]);
+                  toast("Call added to your calendar for next week.");
+                }}
+              >
                 <CalendarPlus className="size-4" aria-hidden />
-                Schedule call with Amara
+                {actionsTaken.includes("event") ? "Call scheduled ✓" : "Schedule call with Amara"}
               </Button>
             )}
           </div>
           <p className="mt-2 text-xs text-ink-muted">
-            Nothing is created until you click — Amiva proposes, you decide.
+            Nothing is created until you click. Amiva proposes, you decide.
           </p>
         </Card>
 
@@ -159,14 +233,14 @@ export default function EmailPage() {
           <Card className="border-success/40 bg-success/5 p-5 text-center">
             <p className="font-medium text-success">Reply sent ✓</p>
             <p className="mt-1 text-xs text-ink-muted">
-              Logged in your <span className="font-medium">Activity</span> — sent to {draft?.to} with your approval.
+              Logged in your <span className="font-medium">Activity</span>, sent to {draft?.to} with your approval.
             </p>
           </Card>
         ) : draft ? (
           <Card className="p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-semibold text-navy">
-                Draft reply <Chip tone="warning" className="ml-1.5">Draft — not sent</Chip>
+                Draft reply <Chip tone="warning" className="ml-1.5">Not sent yet</Chip>
               </p>
               <button
                 aria-label="Discard draft"
@@ -192,12 +266,12 @@ export default function EmailPage() {
               />
             </div>
             {confirmingSend ? (
-              <div className="mt-4 rounded-[12px] border border-warning/50 bg-warning/10 p-4">
+              <div className="mt-4 rounded-xl border border-warning/50 bg-warning/10 p-4">
                 <p className="text-sm font-medium text-navy">
                   Send this reply to <strong>{draft.to}</strong>?
                 </p>
                 <p className="mt-1 text-xs text-ink-muted">
-                  This is the only send button — Amiva never sends without it.
+                  This is the only send button. Amiva never sends without it.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <Button size="sm" onClick={() => { setSent(true); setConfirmingSend(false); }}>
@@ -228,7 +302,7 @@ export default function EmailPage() {
                 value={instruction}
                 onChange={(e) => setInstruction(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && makeDraft()}
-                placeholder="Tell Amiva what to say — “accept, but push the deadline to Monday”"
+                placeholder="Tell Amiva what to say, e.g. “accept, but push the deadline to Monday”"
                 aria-label="Draft instruction"
                 className="h-11 flex-1 rounded-[10px] border border-line bg-white px-3.5 text-sm text-navy placeholder:text-ink-muted focus:border-indigo-300"
               />
@@ -250,10 +324,10 @@ export default function EmailPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Email</h1>
           <p className="text-sm text-ink-muted">
-            ada@gmail.com · summaries only — your inbox stays in Gmail
+            ada@gmail.com · summaries only, your inbox stays in Gmail
           </p>
         </div>
-        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
+        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
           {ranges.map((r) => (
             <button
               key={r}
@@ -275,15 +349,21 @@ export default function EmailPage() {
         <div className="flex gap-3">
           <Sparkles className="mt-0.5 size-5 shrink-0 text-cyan-600" aria-hidden />
           <p className="text-sm leading-relaxed text-navy">
-            {`${emailThreads.length} threads`} worth your attention this week — 2 high
-            priority. Kemi&apos;s contract renewal has a Friday deadline, and Tunde
-            introduced you to an investor who wants a call.
+            {`${visibleThreads.length} ${visibleThreads.length === 1 ? "thread" : "threads"}`}{" "}
+            worth your attention {range === "This week" ? "this week" : range === "Today" ? "today" : "in the last 24 hours"}
+            {highCount > 0 && `, ${highCount} high priority`}. Amiva only summarises;
+            your inbox stays exactly as it is in Gmail.
           </p>
         </div>
       </Card>
 
+      {visibleThreads.length === 0 && (
+        <Card className="p-10 text-center text-sm text-ink-muted">
+          Nothing needs your attention in this window. Try a wider range.
+        </Card>
+      )}
       <div className="space-y-2">
-        {emailThreads.map((t) => (
+        {visibleThreads.map((t) => (
           <Card
             key={t.id}
             className="flex cursor-pointer items-start gap-4 px-4 py-3.5 transition-colors hover:border-indigo-300"

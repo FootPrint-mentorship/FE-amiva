@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,8 +14,15 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
+import { Modal } from "@/components/ui/modal";
+import { toast } from "@/components/ui/toast";
+import { cancelEvent as cancelEventApi, saveEvent } from "@/lib/data/collections";
 import { cn } from "@/lib/cn";
-import { weekEvents, fmtTime, fmtDay, user, type CalendarEvent } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { eventsStore, settingsStore } from "@/lib/stores";
+import { fmtTime, fmtDay, type CalendarEvent } from "@/lib/mock";
+import { timezoneAbbr } from "@/lib/timezones";
+import { newId } from "@/lib/id";
 
 const views = ["Day", "Week", "Agenda"] as const;
 type View = (typeof views)[number];
@@ -25,7 +32,10 @@ const HOUR_END = 21;
 const PX_PER_HOUR = 52;
 
 function dayKey(d: Date) {
-  return d.toISOString().slice(0, 10);
+  // Local calendar date, NOT toISOString(): UTC keys shift the whole grid
+  // one day for any timezone ahead of UTC (PRD: zero silent tz errors).
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function startOfWeek(d: Date) {
@@ -77,18 +87,22 @@ export default function CalendarPage() {
   const [anchor, setAnchor] = useState(() => new Date());
   const [openEvent, setOpenEvent] = useState<CalendarEvent | null>(null);
   const [cancelling, setCancelling] = useState(false);
-  const [items, setItems] = useState(weekEvents);
+  const [rescheduling, setRescheduling] = useState(false);
+  const items = useStore(eventsStore);
+  const settings = useStore(settingsStore);
+  const tzAbbr = timezoneAbbr(settings.timezone);
+  const gridRef = useRef<HTMLDivElement>(null);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState({
+  const [draft, setDraft] = useState(() => ({
     title: "",
-    date: new Date().toISOString().slice(0, 10),
+    date: dayKey(new Date()),
     start: "10:00",
     end: "10:30",
     location: "",
     meet: true,
     attendees: "",
-  });
+  }));
   const [draftError, setDraftError] = useState("");
 
   const startEdit = (e: CalendarEvent) => {
@@ -125,7 +139,7 @@ export default function CalendarPage() {
       return setDraftError(`Heads up: this overlaps “${clash.title}”. Click again to book anyway.`);
     }
     const built: CalendarEvent = {
-      id: editingId ?? `evt_${Date.now()}`,
+      id: editingId ?? newId("evt"),
       title: draft.title.trim(),
       start_at: startAt.toISOString(),
       end_at: endAt.toISOString(),
@@ -139,9 +153,7 @@ export default function CalendarPage() {
         .map((email) => ({ email, name: email.split("@")[0], response_status: "needsAction" })),
       status: "confirmed",
     };
-    setItems((cur) =>
-      editingId ? cur.map((e) => (e.id === editingId ? built : e)) : [...cur, built]
-    );
+    saveEvent(built, !editingId).catch(fail);
     setCreating(false);
     setEditingId(null);
     setDraftError("");
@@ -181,15 +193,67 @@ export default function CalendarPage() {
     setAnchor(d);
   };
 
+  useEffect(() => {
+    if (view !== "Week" || !gridRef.current) return;
+    const el = gridRef.current;
+    const todayIdx = daysShown.findIndex((d) => dayKey(d) === dayKey(new Date()));
+    if (todayIdx < 0 || el.scrollWidth <= el.clientWidth) return;
+    const colWidth = (el.scrollWidth - 56) / 7;
+    el.scrollTo({ left: Math.max(0, 56 + todayIdx * colWidth - el.clientWidth / 2) });
+  }, [view, daysShown]);
+
   const now = new Date();
   const nowTop =
     (now.getHours() + now.getMinutes() / 60 - HOUR_START) * PX_PER_HOUR;
 
+  const fail = (err: unknown) =>
+    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
+
   const cancelEvent = (id: string) => {
-    setItems((cur) =>
-      cur.map((e) => (e.id === id ? { ...e, status: "cancelled" as const } : e))
-    );
+    cancelEventApi(id)
+      .then(() => toast("Event cancelled. Attendees were notified.", { tone: "info" }))
+      .catch(fail);
     setCancelling(false);
+    setOpenEvent(null);
+  };
+
+  // Conflict-free slots with the same duration over the next few days,
+  // inside working hours. Mirrors GET /calendar/availability.
+  const suggestSlots = (ev: CalendarEvent): Date[] => {
+    const duration = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
+    const busy = items.filter((e) => e.status !== "cancelled" && e.id !== ev.id);
+    const slots: Date[] = [];
+    for (let day = 1; day <= 5 && slots.length < 3; day++) {
+      for (let half = 18; half < 34 && slots.length < 3; half++) { // 09:00 to 17:00
+        const start = new Date();
+        start.setDate(start.getDate() + day);
+        start.setHours(Math.floor(half / 2), (half % 2) * 30, 0, 0);
+        const end = new Date(start.getTime() + duration);
+        if (end.getHours() >= 17 && end.getMinutes() > 0) continue;
+        const clash = busy.some(
+          (e) => new Date(e.start_at) < end && new Date(e.end_at) > start
+        );
+        if (!clash) {
+          slots.push(start);
+          half += Math.ceil(duration / 1800000); // skip past this slot
+        }
+      }
+    }
+    return slots;
+  };
+
+  const applySlot = (ev: CalendarEvent, start: Date) => {
+    const duration = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
+    const end = new Date(start.getTime() + duration);
+    saveEvent(
+      { ...ev, start_at: start.toISOString(), end_at: end.toISOString() },
+      false
+    )
+      .then(() =>
+        toast(`Rescheduled to ${fmtDay(start.toISOString())} at ${fmtTime(start.toISOString())}. Attendees notified.`)
+      )
+      .catch(fail);
+    setRescheduling(false);
     setOpenEvent(null);
   };
 
@@ -200,7 +264,7 @@ export default function CalendarPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Calendar</h1>
           <p className="text-sm text-ink-muted">
-            Google Calendar · all times in {user.timezone} ({user.tz_abbr})
+            Google Calendar · all times in {settings.timezone} ({tzAbbr})
           </p>
         </div>
         <Button onClick={() => setCreating(true)}>
@@ -211,9 +275,12 @@ export default function CalendarPage() {
 
       {/* Create modal */}
       {creating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={editingId ? "Edit event" : "New event"}>
-          <div className="absolute inset-0 bg-navy/30" onClick={() => { setCreating(false); setEditingId(null); setDraftError(""); }} />
-          <Card className="relative max-h-[90vh] w-full max-w-[480px] overflow-y-auto p-6">
+        <Modal
+          label={editingId ? "Edit event" : "New event"}
+          onClose={() => { setCreating(false); setEditingId(null); setDraftError(""); }}
+          panelClassName="w-full max-w-120"
+        >
+          <Card className="max-h-[90vh] overflow-y-auto p-6">
             <button
               aria-label="Close"
               onClick={() => { setCreating(false); setEditingId(null); setDraftError(""); }}
@@ -261,7 +328,7 @@ export default function CalendarPage() {
                   />
                 </label>
               </div>
-              <p className="text-xs text-ink-muted">All times in {user.timezone} ({user.tz_abbr}).</p>
+              <p className="text-xs text-ink-muted">All times in {settings.timezone} ({tzAbbr}).</p>
               <label className="block text-sm font-medium text-navy">
                 Attendees <span className="font-normal text-ink-muted">(emails, comma-separated)</span>
                 <input
@@ -289,7 +356,7 @@ export default function CalendarPage() {
                 Add Google Meet link
               </label>
               {draftError && (
-                <p className={cn("text-sm", draftError.startsWith("Heads up") ? "text-[#9a6a1d]" : "text-danger")} role="alert">
+                <p className={cn("text-sm", draftError.startsWith("Heads up") ? "text-warning-ink" : "text-danger")} role="alert">
                   {draftError}
                 </p>
               )}
@@ -301,7 +368,7 @@ export default function CalendarPage() {
               </div>
             </div>
           </Card>
-        </div>
+        </Modal>
       )}
 
       {/* Controls */}
@@ -325,10 +392,10 @@ export default function CalendarPage() {
             <ChevronRight className="size-4" aria-hidden />
           </button>
           <p className="ml-2 text-sm font-semibold text-navy">
-            {daysShown[0].toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
+            {anchor.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
           </p>
         </div>
-        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
+        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
           {views.map((v) => (
             <button
               key={v}
@@ -348,8 +415,8 @@ export default function CalendarPage() {
 
       {/* Grid views */}
       {view !== "Agenda" ? (
-        <Card className="overflow-x-auto">
-          <div className="min-w-[640px]">
+        <Card className="overflow-x-auto" ref={gridRef}>
+          <div className="min-w-160">
             {/* Day headers */}
             <div
               className="grid border-b border-line"
@@ -437,8 +504,8 @@ export default function CalendarPage() {
             <Card className="flex flex-col items-center gap-3 p-12 text-center">
               <CalendarDays className="size-8 text-violet-300" aria-hidden />
               <p className="font-medium text-navy">No upcoming events</p>
-              <p className="max-w-[320px] text-sm text-ink-muted">
-                Ask Amiva to schedule something — “book lunch with Kemi on Thursday”.
+              <p className="max-w-80 text-sm text-ink-muted">
+                Ask Amiva to schedule something, like “book lunch with Kemi on Thursday”.
               </p>
             </Card>
           ) : (
@@ -456,7 +523,7 @@ export default function CalendarPage() {
                         className="flex cursor-pointer items-center gap-4 px-4 py-3 hover:border-indigo-300"
                         onClick={() => setOpenEvent(e)}
                       >
-                        <div className="w-[86px] shrink-0 text-right">
+                        <div className="w-21.5 shrink-0 text-right">
                           <p className="text-sm font-semibold tabular-nums text-navy">
                             {fmtTime(e.start_at)}
                           </p>
@@ -496,19 +563,22 @@ export default function CalendarPage() {
 
       {/* Event modal */}
       {openEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={openEvent.title}>
-          <div className="absolute inset-0 bg-navy/30" onClick={() => { setOpenEvent(null); setCancelling(false); }} />
-          <Card className="relative w-full max-w-[440px] p-6">
+        <Modal
+          label={openEvent.title}
+          onClose={() => { setOpenEvent(null); setCancelling(false); setRescheduling(false); }}
+          panelClassName="w-full max-w-110"
+        >
+          <Card className="p-6">
             <button
               aria-label="Close"
-              onClick={() => { setOpenEvent(null); setCancelling(false); }}
+              onClick={() => { setOpenEvent(null); setCancelling(false); setRescheduling(false); }}
               className="absolute right-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50"
             >
               <X className="size-4" aria-hidden />
             </button>
             <h2 className="pr-8 text-lg font-semibold text-navy">{openEvent.title}</h2>
             <p className="mt-1 text-sm text-ink-muted">
-              {fmtDay(openEvent.start_at)} · {fmtTime(openEvent.start_at)}–{fmtTime(openEvent.end_at)} ({user.tz_abbr})
+              {fmtDay(openEvent.start_at)} · {fmtTime(openEvent.start_at)}–{fmtTime(openEvent.end_at)} ({tzAbbr})
             </p>
             <div className="mt-4 space-y-2.5 text-sm text-navy">
               {openEvent.conference_url && (
@@ -540,7 +610,7 @@ export default function CalendarPage() {
             </div>
 
             {cancelling ? (
-              <div className="mt-5 rounded-[12px] border border-danger/40 bg-danger/5 p-4">
+              <div className="mt-5 rounded-xl border border-danger/40 bg-danger/5 p-4">
                 <p className="text-sm font-medium text-navy">Cancel this event?</p>
                 <p className="mt-1 text-xs text-ink-muted">
                   {openEvent.attendees.length > 0
@@ -557,16 +627,42 @@ export default function CalendarPage() {
                 </div>
               </div>
             ) : (
+              rescheduling ? (
+              <div className="mt-5 rounded-xl border border-cyan-500/40 bg-cyan-500/8 p-4">
+                <p className="text-sm font-medium text-navy">Free slots that fit everyone:</p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {suggestSlots(openEvent).map((slot) => (
+                    <button
+                      key={slot.toISOString()}
+                      onClick={() => applySlot(openEvent, slot)}
+                      className="cursor-pointer rounded-full border border-cyan-600/50 bg-white px-3.5 py-1.5 text-[13px] font-medium text-navy hover:border-cyan-600"
+                    >
+                      {fmtDay(slot.toISOString())} · {fmtTime(slot.toISOString())}
+                    </button>
+                  ))}
+                  <Button size="sm" variant="ghost" onClick={() => { setRescheduling(false); startEdit(openEvent); }}>
+                    Pick my own time
+                  </Button>
+                </div>
+                <button
+                  onClick={() => setRescheduling(false)}
+                  className="mt-2 cursor-pointer text-xs text-ink-muted hover:text-navy"
+                >
+                  Never mind
+                </button>
+              </div>
+              ) : (
               <div className="mt-5 flex gap-2">
                 <Button variant="secondary" size="sm" onClick={() => startEdit(openEvent)}>Edit</Button>
-                <Button variant="secondary" size="sm">Reschedule</Button>
+                <Button variant="secondary" size="sm" onClick={() => setRescheduling(true)}>Reschedule</Button>
                 <Button variant="ghost" size="sm" className="ml-auto text-danger" onClick={() => setCancelling(true)}>
                   Cancel event
                 </Button>
               </div>
+              )
             )}
           </Card>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -16,31 +16,31 @@ describe("Calendar page", () => {
 
   it("agenda view lists upcoming events grouped by day", async () => {
     await openAgenda();
-    expect(screen.getByText("Investor sync — Tunde")).toBeInTheDocument();
-    expect(screen.getByText("Flight to Nairobi — KQ533")).toBeInTheDocument();
+    expect(screen.getByText("Investor sync with Tunde")).toBeInTheDocument();
+    expect(screen.getByText("Flight to Nairobi (KQ533)")).toBeInTheDocument();
     expect(screen.getByText("Tentative")).toBeInTheDocument(); // client dinner status
   });
 
   it("event modal shows details; cancelling warns about attendees before acting", async () => {
     await openAgenda();
-    await userEvent.click(screen.getByText("Investor sync — Tunde"));
-    const dialog = screen.getByRole("dialog", { name: "Investor sync — Tunde" });
+    await userEvent.click(screen.getByText("Investor sync with Tunde"));
+    const dialog = screen.getByRole("dialog", { name: "Investor sync with Tunde" });
     expect(dialog).toBeInTheDocument();
     expect(screen.getByText("Join Google Meet")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Cancel event" }));
     // Not cancelled yet — explicit warning first (high-risk action)
     expect(screen.getByText(/Attendees will be notified/)).toBeInTheDocument();
-    expect(screen.getAllByText("Investor sync — Tunde").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Investor sync with Tunde").length).toBeGreaterThan(0);
 
     await userEvent.click(screen.getByRole("button", { name: "Yes, cancel event" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.queryByText("Investor sync — Tunde")).not.toBeInTheDocument();
+    expect(screen.queryByText("Investor sync with Tunde")).not.toBeInTheDocument();
   });
 
   it("backing out of a cancellation keeps the event", async () => {
     await openAgenda();
-    await userEvent.click(screen.getByText("Investor sync — Tunde"));
+    await userEvent.click(screen.getByText("Investor sync with Tunde"));
     await userEvent.click(screen.getByRole("button", { name: "Cancel event" }));
     await userEvent.click(screen.getByRole("button", { name: "Keep it" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument(); // modal still open, event intact
@@ -63,11 +63,11 @@ describe("Calendar page", () => {
     render(<CalendarPage />);
     await userEvent.click(screen.getByRole("button", { name: /New event/ }));
     await userEvent.type(screen.getByLabelText("Title"), "Clash test");
-    // 13:00–13:30 today overlaps "Investor sync — Tunde"
+    // 13:00–13:30 today overlaps "Investor sync with Tunde"
     fireEvent.change(screen.getByLabelText("Start"), { target: { value: "13:00" } });
     fireEvent.change(screen.getByLabelText("End"), { target: { value: "13:30" } });
     await userEvent.click(screen.getByRole("button", { name: "Create event" }));
-    expect(screen.getByRole("alert")).toHaveTextContent(/overlaps “Investor sync — Tunde”/);
+    expect(screen.getByRole("alert")).toHaveTextContent(/overlaps “Investor sync with Tunde”/);
     // Modal still open — nothing created yet
     expect(screen.getByRole("dialog", { name: /New event/ })).toBeInTheDocument();
 
@@ -79,18 +79,18 @@ describe("Calendar page", () => {
 
   it("editing an event prefills the form and updates in place", async () => {
     await openAgenda();
-    await userEvent.click(screen.getByText("Investor sync — Tunde"));
+    await userEvent.click(screen.getByText("Investor sync with Tunde"));
     await userEvent.click(screen.getByRole("button", { name: "Edit" }));
     expect(screen.getByRole("dialog", { name: /Edit event/ })).toBeInTheDocument();
     const title = screen.getByLabelText("Title");
-    expect(title).toHaveValue("Investor sync — Tunde");
+    expect(title).toHaveValue("Investor sync with Tunde");
     expect(screen.getByLabelText(/Attendees/)).toHaveValue("tunde@vc.com");
 
     await userEvent.clear(title);
-    await userEvent.type(title, "Investor sync — rescheduled");
+    await userEvent.type(title, "Investor sync rescheduled");
     await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
-    expect(screen.getByText("Investor sync — rescheduled")).toBeInTheDocument();
+    expect(screen.getByText("Investor sync rescheduled")).toBeInTheDocument();
     // updated, not duplicated
-    expect(screen.queryByText("Investor sync — Tunde")).not.toBeInTheDocument();
+    expect(screen.queryByText("Investor sync with Tunde")).not.toBeInTheDocument();
   });
 });

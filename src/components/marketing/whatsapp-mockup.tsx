@@ -27,7 +27,7 @@ export function WhatsAppMockup() {
   return (
     <div
       aria-hidden
-      className="mx-auto w-[300px] rounded-[38px] border-[10px] border-navy bg-navy shadow-pop"
+      className="mx-auto w-75 rounded-[38px] border-10 border-navy bg-navy shadow-pop"
     >
       <div className="overflow-hidden rounded-[28px]">
         {/* chat header */}
@@ -45,17 +45,17 @@ export function WhatsAppMockup() {
           </div>
         </div>
         {/* thread */}
-        <div className="flex min-h-[380px] flex-col gap-2 bg-[#ece5dd] p-3">
+        <div className="flex min-h-95 flex-col gap-2 bg-[#ece5dd] p-3">
           <UserBubble>Remind me to pay rent on Friday morning</UserBubble>
           <AmivaBubble>
-            ⏰ Done — I&apos;ll remind you <b>Fri 31 Jul, 9:00 AM (WAT)</b>:
+            ⏰ Done. I&apos;ll remind you <b>Fri 31 Jul, 9:00 AM (WAT)</b>:
             <br />
             “Pay rent”
           </AmivaBubble>
           <UserBubble>what does my thursday look like?</UserBubble>
           <AmivaBubble>
             You have <b>2 meetings</b> on Thursday: Standup 9:30 AM and
-            Investor sync 1:00 PM. Your afternoon is free — want me to block
+            Investor sync 1:00 PM. Your afternoon is free. Want me to block
             focus time?
           </AmivaBubble>
           <UserBubble>remember my landlord&apos;s account is GTB 0123456789</UserBubble>

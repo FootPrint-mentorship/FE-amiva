@@ -5,8 +5,14 @@ import { Plus, Flag, X, Sparkles, CheckSquare } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
-import { fmtDay, tasks as seed, type Task } from "@/lib/mock";
+import { fmtDay, taskCategories, type Task } from "@/lib/mock";
+import { Select } from "@/components/ui/select";
+import { useStore } from "@/lib/store";
+import { tasksStore } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
+import { addSubtasks, createTask, patchTask as patchTaskApi, setTaskStatus, toggleSubtask as toggleSubtaskApi } from "@/lib/data/collections";
 
 const tabs = ["Today", "Upcoming", "Overdue", "Completed"] as const;
 type Tab = (typeof tabs)[number];
@@ -18,8 +24,14 @@ const priorityTone = {
   low: "neutral",
 } as const;
 
+function localToday() {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 function matches(t: Task, tab: Tab) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
   switch (tab) {
     case "Today":
       return t.status === "open" && t.due_date === today;
@@ -34,47 +46,70 @@ function matches(t: Task, tab: Tab) {
 
 export default function TasksPage() {
   const [tab, setTab] = useState<Tab>("Today");
-  const [items, setItems] = useState(seed);
+  const [category, setCategory] = useState<string>("all");
+  const items = useStore(tasksStore);
+  const [suggesting, setSuggesting] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [quickTitle, setQuickTitle] = useState("");
 
-  const visible = useMemo(() => items.filter((t) => matches(t, tab)), [items, tab]);
+  const visible = useMemo(
+    () =>
+      items.filter(
+        (t) => matches(t, tab) && (category === "all" || t.category === category)
+      ),
+    [items, tab, category]
+  );
+  const presentCategories = useMemo(
+    () => [...new Set(items.filter((t) => t.category).map((t) => t.category as string))],
+    [items]
+  );
   const open = items.find((t) => t.id === openId) ?? null;
 
-  const complete = (id: string) =>
-    setItems((cur) =>
-      cur.map((t) => (t.id === id ? { ...t, status: "completed" as const } : t))
-    );
+  const fail = (err: unknown) =>
+    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
 
-  const toggleSubtask = (taskId: string, subId: string) =>
-    setItems((cur) =>
-      cur.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              subtasks: t.subtasks.map((s) =>
-                s.id === subId ? { ...s, completed: !s.completed } : s
-              ),
-            }
-          : t
+  const complete = (id: string) =>
+    setTaskStatus(id, "completed")
+      .then(() =>
+        toast("Task completed.", {
+          action: { label: "Undo", onClick: () => void setTaskStatus(id, "open") },
+        })
       )
-    );
+      .catch(fail);
+
+  const patch = (id: string, changes: Partial<Task>) =>
+    patchTaskApi(id, changes).catch(fail);
+
+  const suggestSubtasks = (t: Task) => {
+    setSuggesting(true);
+    const ideas = [
+      `Outline what “${t.title.toLowerCase()}” needs`,
+      "Draft the first version",
+      "Review and send",
+    ].filter((title) => !t.subtasks.some((s) => s.title === title));
+    addSubtasks(t, ideas)
+      .then(() => toast(`Added ${ideas.length} suggested subtasks. Edit or delete freely.`))
+      .catch(fail)
+      .finally(() => setSuggesting(false));
+  };
+
+  const toggleSubtask = (taskId: string, subId: string) => {
+    const task = items.find((t) => t.id === taskId);
+    if (task) void toggleSubtaskApi(task, subId).catch(fail);
+  };
 
   const quickAdd = () => {
     const title = quickTitle.trim();
     if (!title) return;
-    setItems((cur) => [
-      {
-        id: `tsk_${Date.now()}`,
-        title,
-        due_date: new Date().toISOString().slice(0, 10),
-        priority: "medium" as const,
-        status: "open" as const,
-        project: null,
-        subtasks: [],
-      },
-      ...cur,
-    ]);
+    createTask({
+      title,
+      due_date: localToday(),
+      priority: "medium",
+      status: "open",
+      project: null,
+      category: null,
+      subtasks: [],
+    }).catch(fail);
     setQuickTitle("");
   };
 
@@ -84,7 +119,7 @@ export default function TasksPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Tasks</h1>
           <p className="text-sm text-ink-muted">
-            Captured from your chats, emails and meetings — organised here.
+            Captured from your chats, emails and meetings, organised here.
           </p>
         </div>
       </div>
@@ -106,7 +141,7 @@ export default function TasksPage() {
       </div>
 
       {/* Tabs */}
-      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-[12px] bg-indigo-50 p-1">
+      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
         {tabs.map((t) => {
           const count = items.filter((x) => matches(x, t)).length;
           return (
@@ -133,12 +168,33 @@ export default function TasksPage() {
         })}
       </div>
 
+      {/* Category filter (former Lists live here as categories) */}
+      {presentCategories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {["all", ...presentCategories].map((c) => (
+            <button
+              key={c}
+              onClick={() => setCategory(c)}
+              aria-pressed={category === c}
+              className={cn(
+                "cursor-pointer rounded-full px-3.5 py-1.5 text-[13px] font-medium capitalize transition-colors",
+                category === c
+                  ? "bg-indigo-900 text-white"
+                  : "border border-line bg-white text-ink-muted hover:border-indigo-300"
+              )}
+            >
+              {c === "all" ? "All categories" : c}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Rows */}
       {visible.length === 0 ? (
         <Card className="flex flex-col items-center gap-3 p-12 text-center">
           <CheckSquare className="size-8 text-violet-300" aria-hidden />
           <p className="font-medium text-navy">No tasks here</p>
-          <p className="max-w-[320px] text-sm text-ink-muted">
+          <p className="max-w-80 text-sm text-ink-muted">
             Nothing in “{tab}”. Add one above, or tell Amiva on WhatsApp.
           </p>
         </Card>
@@ -180,15 +236,10 @@ export default function TasksPage() {
                     {done}/{t.subtasks.length}
                   </span>
                 )}
+                {t.category && <Chip tone="cyan">{t.category}</Chip>}
                 {t.project && <Chip tone="indigo">{t.project}</Chip>}
                 {t.due_date && (
-                  <Chip
-                    tone={
-                      t.due_date < new Date().toISOString().slice(0, 10)
-                        ? "danger"
-                        : "neutral"
-                    }
-                  >
+                  <Chip tone={t.due_date < localToday() ? "danger" : "neutral"}>
                     {fmtDay(`${t.due_date}T12:00:00Z`)}
                   </Chip>
                 )}
@@ -212,12 +263,8 @@ export default function TasksPage() {
 
       {/* Detail drawer */}
       {open && (
-        <div className="fixed inset-0 z-50" role="dialog" aria-label={open.title}>
-          <div
-            className="absolute inset-0 bg-navy/30"
-            onClick={() => setOpenId(null)}
-          />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-[480px] flex-col bg-white shadow-pop">
+        <Modal label={open.title} position="right" onClose={() => setOpenId(null)}>
+          <div className="flex h-screen w-screen max-w-120 flex-col bg-white shadow-pop">
             <div className="flex items-start justify-between gap-4 border-b border-line p-5">
               <div>
                 <h2 className="text-lg font-semibold text-navy">{open.title}</h2>
@@ -238,6 +285,59 @@ export default function TasksPage() {
               </button>
             </div>
             <div className="flex-1 space-y-5 overflow-y-auto p-5">
+              <section className="grid grid-cols-2 gap-3">
+                <label className="text-sm font-medium text-navy">
+                  Due date
+                  <input
+                    type="date"
+                    value={open.due_date ?? ""}
+                    onChange={(e) => patch(open.id, { due_date: e.target.value || null })}
+                    className="mt-1.5 h-10 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal text-navy"
+                  />
+                </label>
+                <div className="text-sm font-medium text-navy">
+                  Category
+                  <Select
+                    label="Category"
+                    value={open.category ?? "none"}
+                    onChange={(v) => patch(open.id, { category: v === "none" ? null : v })}
+                    options={[
+                      { value: "none", label: "None" },
+                      ...taskCategories.map((c) => ({ value: c, label: c })),
+                    ]}
+                    className="mt-1.5"
+                  />
+                </div>
+                <label className="col-span-2 text-sm font-medium text-navy">
+                  Project
+                  <input
+                    value={open.project ?? ""}
+                    placeholder="None"
+                    onChange={(e) => patch(open.id, { project: e.target.value || null })}
+                    className="mt-1.5 h-10 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal text-navy placeholder:text-ink-muted"
+                  />
+                </label>
+                <div className="col-span-2">
+                  <p className="mb-1.5 text-sm font-medium text-navy">Priority</p>
+                  <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
+                    {(["low", "medium", "high", "urgent"] as const).map((pr) => (
+                      <button
+                        key={pr}
+                        aria-pressed={open.priority === pr}
+                        onClick={() => patch(open.id, { priority: pr })}
+                        className={cn(
+                          "cursor-pointer rounded-[9px] px-3 py-1 text-xs font-medium capitalize transition-colors",
+                          open.priority === pr
+                            ? "bg-white text-indigo-900 shadow-card"
+                            : "text-ink-muted hover:text-navy"
+                        )}
+                      >
+                        {pr}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
               <section>
                 <h3 className="mb-2 text-sm font-semibold text-ink-muted">Subtasks</h3>
                 {open.subtasks.length === 0 ? (
@@ -270,7 +370,13 @@ export default function TasksPage() {
                     ))}
                   </ul>
                 )}
-                <Button variant="secondary" size="sm" className="mt-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="mt-3"
+                  loading={suggesting}
+                  onClick={() => suggestSubtasks(open)}
+                >
                   <Sparkles className="size-4" aria-hidden />
                   Suggest subtasks
                 </Button>
@@ -292,7 +398,7 @@ export default function TasksPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

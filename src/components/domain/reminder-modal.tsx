@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { user, type Reminder } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { settingsStore } from "@/lib/stores";
 
 const recurrences = ["None", "Daily", "Weekly", "Monthly"] as const;
 type Recurrence = (typeof recurrences)[number];
@@ -51,13 +54,18 @@ export function ReminderModal({
   const init = initial ? parseRecurrence(initial.rrule) : null;
   const initParts = initial ? toLocalParts(initial.due_at) : null;
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [date, setDate] = useState(initParts?.date ?? today.toISOString().slice(0, 10));
+  const [date, setDate] = useState(initParts?.date ?? toLocalParts(today.toISOString()).date);
   const [time, setTime] = useState(initParts?.time ?? "09:00");
   const [recurrence, setRecurrence] = useState<Recurrence>(init?.kind ?? "None");
   const [byDays, setByDays] = useState<string[]>(init?.byDays ?? ["MO"]);
   const [chans, setChans] = useState<string[]>(initial?.channels ?? ["whatsapp"]);
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [error, setError] = useState("");
+  const settings = useStore(settingsStore);
+  const channelVerified: Record<string, boolean> = {
+    whatsapp: settings.phoneVerified,
+    email: settings.emailVerified,
+  };
 
   // If the user didn't touch recurrence while editing, keep the original rrule verbatim
   // (our builder can't reproduce every form, e.g. "last Friday of the month").
@@ -88,7 +96,7 @@ export function ReminderModal({
     if (chans.length === 0) return setError("Pick at least one delivery channel.");
     const dueAt = new Date(`${date}T${time}:00`);
     if (recurrence === "None" && dueAt.getTime() < Date.now())
-      return setError("That time is in the past — pick a future time.");
+      return setError("That time is in the past. Pick a future time.");
     onCreate({
       id: initial?.id ?? `rem_${Date.now()}`,
       title: title.trim(),
@@ -107,9 +115,8 @@ export function ReminderModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={initial ? "Edit reminder" : "New reminder"}>
-      <div className="absolute inset-0 bg-navy/30" onClick={onClose} />
-      <Card className="relative max-h-[90vh] w-full max-w-[480px] overflow-y-auto p-6">
+    <Modal label={initial ? "Edit reminder" : "New reminder"} onClose={onClose} panelClassName="w-full max-w-120">
+      <Card className="max-h-[90vh] overflow-y-auto p-6">
         <button
           aria-label="Close"
           onClick={onClose}
@@ -150,7 +157,7 @@ export function ReminderModal({
           {/* Recurrence */}
           <div>
             <p className="mb-2 text-sm font-medium text-navy">Repeats</p>
-            <div className="flex w-fit gap-1 rounded-[12px] bg-indigo-50 p-1">
+            <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
               {recurrences.map((r) => (
                 <button
                   key={r}
@@ -198,21 +205,27 @@ export function ReminderModal({
             <div className="flex gap-2">
               {channels.map((c) => {
                 const on = chans.includes(c.id);
+                const verified = channelVerified[c.id];
                 return (
                   <button
                     key={c.id}
                     aria-pressed={on}
+                    disabled={!verified}
+                    title={verified ? undefined : `Verify your ${c.id === "whatsapp" ? "phone" : "email"} to enable ${c.label}`}
                     onClick={() =>
                       setChans((cur) => (on ? cur.filter((x) => x !== c.id) : [...cur, c.id]))
                     }
                     className={cn(
-                      "cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
-                      on
-                        ? "border-indigo-900 bg-indigo-900 text-white"
-                        : "border-line bg-white text-ink-muted hover:border-indigo-300"
+                      "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                      !verified
+                        ? "cursor-not-allowed border-line bg-soft text-ink-muted/60"
+                        : on
+                        ? "cursor-pointer border-indigo-900 bg-indigo-900 text-white"
+                        : "cursor-pointer border-line bg-white text-ink-muted hover:border-indigo-300"
                     )}
                   >
                     {c.label}
+                    {!verified && " (verify first)"}
                   </button>
                 );
               })}
@@ -236,6 +249,6 @@ export function ReminderModal({
           </div>
         </div>
       </Card>
-    </div>
+    </Modal>
   );
 }

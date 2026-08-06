@@ -1,11 +1,14 @@
 import { cn } from "@/lib/cn";
-import { HTMLAttributes } from "react";
+import { HTMLAttributes, Ref } from "react";
 
-export function Card({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
+export function Card({
+  className,
+  ...rest
+}: HTMLAttributes<HTMLDivElement> & { ref?: Ref<HTMLDivElement> }) {
   return (
     <div
       className={cn(
-        "rounded-[16px] bg-white shadow-card border border-line",
+        "rounded-2xl bg-white shadow-card border border-line",
         className
       )}
       {...rest}

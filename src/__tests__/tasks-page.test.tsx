@@ -9,16 +9,27 @@ describe("Tasks page", () => {
     expect(screen.getByText("Send proposal to Kemi")).toBeInTheDocument();
     expect(screen.getByText("Review Q3 budget draft")).toBeInTheDocument();
     expect(screen.getByText("1/2")).toBeInTheDocument(); // subtask progress
-    expect(screen.getByText("Client — Kemi")).toBeInTheDocument();
+    expect(screen.getByText("Client: Kemi")).toBeInTheDocument();
     // Due in 2 days → Upcoming, not Today
     expect(screen.queryByText("Book flight to Nairobi")).not.toBeInTheDocument();
   });
 
-  it("tabs filter tasks; Upcoming holds the flight task", async () => {
+  it("tabs filter tasks; Upcoming holds the flight task and the former lists", async () => {
     render(<TasksPage />);
     await userEvent.click(screen.getByRole("tab", { name: /Upcoming/ }));
     expect(screen.getByText("Book flight to Nairobi")).toBeInTheDocument();
+    expect(screen.getByText("Weekly shopping")).toBeInTheDocument(); // migrated list
     expect(screen.queryByText("Send proposal to Kemi")).not.toBeInTheDocument();
+  });
+
+  it("category chips filter tasks (lists replacement)", async () => {
+    render(<TasksPage />);
+    await userEvent.click(screen.getByRole("tab", { name: /Upcoming/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Shopping" }));
+    expect(screen.getByText("Weekly shopping")).toBeInTheDocument();
+    expect(screen.queryByText("Book flight to Nairobi")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "All categories" }));
+    expect(screen.getByText("Book flight to Nairobi")).toBeInTheDocument();
   });
 
   it("quick-add creates a task due today", async () => {

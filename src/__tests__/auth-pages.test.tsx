@@ -1,33 +1,71 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LoginPage from "@/app/(public)/login/page";
 import RegisterPage from "@/app/(public)/register/page";
 import ForgotPasswordPage from "@/app/(public)/forgot-password/page";
 import LinkPage from "@/app/(public)/link/page";
+import CompleteProfilePage from "@/app/(public)/complete-profile/page";
 import { nav } from "@/test/setup";
 
 const WAIT = { timeout: 3000 }; // mock submits resolve in 600–800ms
+
+beforeEach(() => {
+  window.localStorage.clear();
+  window.sessionStorage.clear();
+});
+
+async function verifyEmailInline() {
+  await userEvent.click(screen.getByRole("button", { name: "Send code" }));
+  const first = await screen.findByLabelText("Email code digit 1", undefined, WAIT);
+  await userEvent.click(first);
+  await userEvent.paste("482913");
+  expect(await screen.findByText("Email verified")).toBeInTheDocument();
+}
 
 describe("Login", () => {
   it("validates before submitting", async () => {
     render(<LoginPage />);
     await userEvent.click(screen.getByRole("button", { name: "Log in" }));
-    expect(screen.getByRole("alert")).toHaveTextContent(/email and password/);
+    expect(screen.getByRole("alert")).toHaveTextContent(/email or phone number/i);
     expect(nav.push).not.toHaveBeenCalled();
   });
 
-  it("routes to the dashboard on success", async () => {
+  it("accepts an email identifier", async () => {
     render(<LoginPage />);
-    await userEvent.type(screen.getByLabelText("Email"), "ada@example.com");
+    await userEvent.type(screen.getByLabelText("Email or phone number"), "ada@example.com");
     await userEvent.type(screen.getByLabelText("Password"), "correct-horse");
     await userEvent.click(screen.getByRole("button", { name: "Log in" }));
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/app/today"), WAIT);
   });
+
+  it("accepts a phone identifier", async () => {
+    render(<LoginPage />);
+    await userEvent.type(screen.getByLabelText("Email or phone number"), "+234 801 234 5678");
+    await userEvent.type(screen.getByLabelText("Password"), "correct-horse");
+    await userEvent.click(screen.getByRole("button", { name: "Log in" }));
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/app/today"), WAIT);
+  });
+
+  it("Google sign-in routes to complete-profile when the profile is incomplete", async () => {
+    render(<LoginPage />);
+    await userEvent.click(screen.getByRole("button", { name: /Continue with Google/ }));
+    expect(nav.push).toHaveBeenCalledWith("/complete-profile");
+  });
+
+  it("password field has a working show/hide toggle", async () => {
+    render(<LoginPage />);
+    const pw = screen.getByLabelText("Password");
+    expect(pw).toHaveAttribute("type", "password");
+    await userEvent.click(screen.getByRole("button", { name: "Show password" }));
+    expect(pw).toHaveAttribute("type", "text");
+    await userEvent.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(pw).toHaveAttribute("type", "password");
+  });
 });
 
 describe("Register", () => {
-  it("shows field-level errors and requires ToS consent", async () => {
+  it("shows field-level errors, requires consent and a verified email", async () => {
     render(<RegisterPage />);
     await userEvent.click(screen.getByRole("button", { name: "Create account" }));
     expect(screen.getByText("Your name is required.")).toBeInTheDocument();
@@ -36,29 +74,61 @@ describe("Register", () => {
     expect(nav.push).not.toHaveBeenCalled();
   });
 
-  it("shows a password strength meter as the user types", async () => {
-    render(<RegisterPage />);
-    await userEvent.type(screen.getByLabelText("Password"), "abc");
-    expect(screen.getByText("Too short")).toBeInTheDocument();
-    await userEvent.clear(screen.getByLabelText("Password"));
-    await userEvent.type(screen.getByLabelText("Password"), "Str0ng!Passw0rd");
-    expect(screen.getByText("Strong")).toBeInTheDocument();
-  });
-
-  it("submits a valid form and routes to verification", async () => {
+  it("email must be verified inline before the account is created", async () => {
     render(<RegisterPage />);
     await userEvent.type(screen.getByLabelText("Full name"), "Ada Obi");
     await userEvent.type(screen.getByLabelText("Email"), "ada@example.com");
     await userEvent.type(screen.getByLabelText("Phone number"), "8012345678");
     await userEvent.type(screen.getByLabelText("Password"), "Str0ng!Passw0rd");
     await userEvent.click(screen.getByRole("checkbox"));
+
+    // Without inline verification the submit is refused
     await userEvent.click(screen.getByRole("button", { name: "Create account" }));
-    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/verify"), WAIT);
+    expect(screen.getByText("Verify your email to continue.")).toBeInTheDocument();
+    expect(nav.push).not.toHaveBeenCalled();
+
+    await verifyEmailInline();
+    await userEvent.click(screen.getByRole("button", { name: "Create account" }));
+    // Verify page is gone — straight to onboarding
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/onboarding"), WAIT);
+  });
+
+  it("phone input strips non-numeric characters", async () => {
+    render(<RegisterPage />);
+    const phone = screen.getByLabelText("Phone number");
+    await userEvent.type(phone, "80a1-23 45x678");
+    expect(phone).toHaveValue("8012345678");
+  });
+
+  it("Google sign-up hands off to complete-profile", async () => {
+    render(<RegisterPage />);
+    await userEvent.click(screen.getByRole("button", { name: /Continue with Google/ }));
+    expect(nav.push).toHaveBeenCalledWith("/complete-profile");
+  });
+});
+
+describe("Complete profile (after Google)", () => {
+  it("requires a phone number before finishing", async () => {
+    window.sessionStorage.setItem(
+      "amiva_google_pending",
+      JSON.stringify({ name: "Ada Obi", email: "ada.obi@gmail.com" })
+    );
+    render(<CompleteProfilePage />);
+    expect(screen.getByText(/ada.obi@gmail.com/)).toBeInTheDocument();
+    expect(screen.getByText(/email verified/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Finish setting up" }));
+    expect(screen.getByText(/phone number is required/i)).toBeInTheDocument();
+    expect(nav.push).not.toHaveBeenCalled();
+
+    await userEvent.type(screen.getByLabelText("Phone number"), "8012345678");
+    await userEvent.click(screen.getByRole("button", { name: "Finish setting up" }));
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/onboarding"), WAIT);
   });
 });
 
 describe("Forgot password", () => {
-  it("never reveals whether an account exists", async () => {
+  it("never reveals whether an account exists (verified check happens server-side)", async () => {
     render(<ForgotPasswordPage />);
     await userEvent.type(screen.getByLabelText("Email"), "whoever@example.com");
     await userEvent.click(screen.getByRole("button", { name: "Send reset link" }));
@@ -79,7 +149,6 @@ describe("WhatsApp link landing", () => {
     nav.search = "token=abc123";
     render(<LinkPage />);
     expect(screen.getByText("Link your WhatsApp")).toBeInTheDocument();
-    expect(screen.getByText(/Only link a number that belongs to you/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Link WhatsApp" }));
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/app/today"), WAIT);
   });

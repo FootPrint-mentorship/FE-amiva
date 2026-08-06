@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { auditEvents, fmtDay, fmtTime } from "@/lib/mock";
 
@@ -30,12 +31,13 @@ const moduleIcons = {
 
 const riskTone = { low: "neutral", medium: "warning", high: "danger" } as const;
 
-const moduleOptions = ["all", "reminders", "calendar", "email", "memory", "tasks"] as const;
-const riskOptions = ["all", "low", "medium", "high"] as const;
+const moduleOptions = ["all", "reminders", "calendar", "email", "memory", "tasks"];
+const riskOptions = ["all", "low", "medium", "high"];
 
-export default function ActivityPage() {
-  const [moduleFilter, setModuleFilter] = useState<(typeof moduleOptions)[number]>("all");
-  const [riskFilter, setRiskFilter] = useState<(typeof riskOptions)[number]>("all");
+/** The audit trail (PRD trust feature), rendered inside Settings → Activity. */
+export function ActivityLog() {
+  const [moduleFilter, setModuleFilter] = useState("all");
+  const [riskFilter, setRiskFilter] = useState("all");
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const visible = useMemo(
@@ -49,43 +51,40 @@ export default function ActivityPage() {
   );
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-[28px] font-semibold tracking-tight text-navy">Activity</h1>
-        <p className="text-sm text-ink-muted">
-          Everything Amiva has done, and who approved it.
-        </p>
-      </div>
+    <div className="max-w-190 space-y-4">
+      <p className="text-sm text-ink-muted">
+        Everything Amiva has done, and who approved it.
+      </p>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-sm text-ink-muted">
+        <div className="flex items-center gap-2 text-sm text-ink-muted">
           Module
-          <select
+          <Select
+            label="Module filter"
             value={moduleFilter}
-            onChange={(e) => setModuleFilter(e.target.value as typeof moduleFilter)}
-            className="h-9 rounded-[10px] border border-line bg-white px-2.5 text-sm capitalize text-navy"
-          >
-            {moduleOptions.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-sm text-ink-muted">
+            onChange={setModuleFilter}
+            options={moduleOptions.map((m) => ({
+              value: m,
+              label: m === "all" ? "All modules" : m[0].toUpperCase() + m.slice(1),
+            }))}
+            className="w-40"
+          />
+        </div>
+        <div className="flex items-center gap-2 text-sm text-ink-muted">
           Risk
-          <select
+          <Select
+            label="Risk filter"
             value={riskFilter}
-            onChange={(e) => setRiskFilter(e.target.value as typeof riskFilter)}
-            className="h-9 rounded-[10px] border border-line bg-white px-2.5 text-sm capitalize text-navy"
-          >
-            {riskOptions.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-        </label>
+            onChange={setRiskFilter}
+            options={riskOptions.map((r) => ({
+              value: r,
+              label: r === "all" ? "All levels" : r[0].toUpperCase() + r.slice(1),
+            }))}
+            className="w-36"
+          />
+        </div>
       </div>
 
-      {/* Timeline */}
       {visible.length === 0 ? (
         <Card className="p-12 text-center text-sm text-ink-muted">
           No activity matches these filters.
@@ -137,7 +136,7 @@ export default function ActivityPage() {
                     {e.approval && <p className="mt-1">✓ {e.approval}</p>}
                     {e.result === "failure" && (
                       <p className="mt-1 text-danger">
-                        The provider did not confirm this action — no change was made. Amiva reported the failure rather than claiming success.
+                        The provider did not confirm this action, so no change was made. Amiva reported the failure rather than claiming success.
                       </p>
                     )}
                   </div>

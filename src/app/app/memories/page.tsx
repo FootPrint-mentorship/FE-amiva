@@ -15,8 +15,14 @@ import {
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
-import { memories as seed, fmtDay, type Memory } from "@/lib/mock";
+import { fmtDay, type Memory } from "@/lib/mock";
+import { useStore } from "@/lib/store";
+import { memoriesStore } from "@/lib/stores";
+import { toast } from "@/components/ui/toast";
+import { createMemory, deleteMemoryForever, patchMemory } from "@/lib/data/collections";
 
 const categories = ["all", "personal", "work", "people", "travel", "finance", "ideas", "other"] as const;
 
@@ -31,7 +37,7 @@ const categoryTone = {
 } as const;
 
 export default function MemoriesPage() {
-  const [items, setItems] = useState(seed);
+  const items = useStore(memoriesStore);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof categories)[number]>("all");
   const [favOnly, setFavOnly] = useState(false);
@@ -64,13 +70,31 @@ export default function MemoriesPage() {
     return c;
   }, [items]);
 
-  const toggleFav = (id: string) =>
-    setItems((cur) => cur.map((m) => (m.id === id ? { ...m, favorite: !m.favorite } : m)));
+  const fail = (err: unknown) =>
+    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
+
+  const toggleFav = (id: string) => {
+    const m = items.find((x) => x.id === id);
+    if (m) void patchMemory(id, { favorite: !m.favorite }).catch(fail);
+  };
 
   const deleteForever = (id: string) => {
-    setItems((cur) => cur.filter((m) => m.id !== id));
+    deleteMemoryForever(id)
+      .then(() => toast("Memory permanently deleted.", { tone: "info" }))
+      .catch(fail);
     setOpen(null);
     setConfirmDelete(false);
+  };
+
+  const exportAll = () => {
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "amiva-memories.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("Memories exported as JSON.");
   };
 
   return (
@@ -79,11 +103,11 @@ export default function MemoriesPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Memories</h1>
           <p className="text-sm text-ink-muted">
-            Everything you&apos;ve asked Amiva to remember — yours to search, edit and delete.
+            Everything you&apos;ve asked Amiva to remember. Search it, edit it, delete it.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={exportAll}>
             <Download className="size-4" aria-hidden />
             Export all
           </Button>
@@ -129,7 +153,7 @@ export default function MemoriesPage() {
           className={cn(
             "ml-auto flex cursor-pointer items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
             favOnly
-              ? "bg-warning/20 text-[#9a6a1d]"
+              ? "bg-warning/20 text-warning-ink"
               : "border border-line bg-white text-ink-muted hover:border-indigo-300"
           )}
         >
@@ -145,7 +169,7 @@ export default function MemoriesPage() {
           <p className="font-medium text-navy">
             {q ? "I couldn't find that" : "No memories yet"}
           </p>
-          <p className="max-w-[340px] text-sm text-ink-muted">
+          <p className="max-w-85 text-sm text-ink-muted">
             {q
               ? `Nothing matches “${q}” in the sources you've allowed. Try different words.`
               : "Tell Amiva “remember that…” on WhatsApp, or add one here."}
@@ -193,9 +217,8 @@ export default function MemoriesPage() {
 
       {/* New memory modal */}
       {creating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="New memory">
-          <div className="absolute inset-0 bg-navy/30" onClick={() => setCreating(false)} />
-          <Card className="relative w-full max-w-[480px] p-6">
+        <Modal label="New memory" onClose={() => setCreating(false)} panelClassName="w-full max-w-120">
+          <Card className="p-6">
             <button
               aria-label="Close"
               onClick={() => setCreating(false)}
@@ -209,41 +232,33 @@ export default function MemoriesPage() {
               onChange={(e) => setNewContent(e.target.value)}
               rows={4}
               autoFocus
-              placeholder="What should Amiva remember? — “Generator mechanic: Emeka, 0803 555 1234”"
+              placeholder="What should Amiva remember? Try “Generator mechanic: Emeka, 0803 555 1234”"
               aria-label="Memory content"
               className="mt-4 w-full rounded-[10px] border border-line bg-white p-3 text-sm leading-relaxed text-navy placeholder:text-ink-muted focus:border-indigo-300"
             />
             <div className="mt-3">
               <p className="mb-1.5 text-sm font-medium text-navy">Category</p>
-              <select
+              <Select
+                label="Category"
                 value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value as typeof newCategory)}
-                className="h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] capitalize text-navy"
-              >
-                <option value="auto">Let Amiva decide</option>
-                {categories.filter((c) => c !== "all").map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                onChange={(v) => setNewCategory(v as typeof newCategory)}
+                options={[
+                  { value: "auto", label: "Let Amiva decide" },
+                  ...categories
+                    .filter((c) => c !== "all")
+                    .map((c) => ({ value: c, label: c[0].toUpperCase() + c.slice(1) })),
+                ]}
+              />
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
               <Button
                 disabled={!newContent.trim()}
                 onClick={() => {
-                  setItems((cur) => [
-                    {
-                      id: `mem_${Date.now()}`,
-                      content: newContent.trim(),
-                      category: newCategory === "auto" ? "other" : newCategory,
-                      tags: [],
-                      source_channel: "web",
-                      favorite: false,
-                      archived: false,
-                      created_at: new Date().toISOString(),
-                    },
-                    ...cur,
-                  ]);
+                  createMemory(
+                    newContent.trim(),
+                    newCategory === "auto" ? null : newCategory
+                  ).catch(fail);
                   setNewContent("");
                   setNewCategory("auto");
                   setCreating(false);
@@ -253,14 +268,17 @@ export default function MemoriesPage() {
               </Button>
             </div>
           </Card>
-        </div>
+        </Modal>
       )}
 
       {/* Detail modal */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Memory detail">
-          <div className="absolute inset-0 bg-navy/30" onClick={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }} />
-          <Card className="relative w-full max-w-[480px] p-6">
+        <Modal
+          label="Memory detail"
+          onClose={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }}
+          panelClassName="w-full max-w-120"
+        >
+          <Card className="p-6">
             <button
               aria-label="Close"
               onClick={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }}
@@ -287,7 +305,7 @@ export default function MemoriesPage() {
             </p>
 
             {confirmDelete ? (
-              <div className="mt-5 rounded-[12px] border border-danger/40 bg-danger/5 p-4">
+              <div className="mt-5 rounded-xl border border-danger/40 bg-danger/5 p-4">
                 <p className="text-sm font-medium text-navy">Delete this memory permanently?</p>
                 <p className="mt-1 text-xs text-ink-muted">
                   This cannot be undone. The memory and its search index entry are removed immediately.
@@ -312,7 +330,7 @@ export default function MemoriesPage() {
                   disabled={!editContent.trim()}
                   onClick={() => {
                     const updated = { ...open, content: editContent.trim() };
-                    setItems((cur) => cur.map((m) => (m.id === open.id ? updated : m)));
+                    patchMemory(open.id, { content: updated.content }).catch(fail);
                     setOpen(updated);
                     setEditing(false);
                   }}
@@ -339,7 +357,7 @@ export default function MemoriesPage() {
               </div>
             )}
           </Card>
-        </div>
+        </Modal>
       )}
     </div>
   );

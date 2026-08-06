@@ -13,10 +13,10 @@ export function LegalProse({
   sections: LegalSection[];
 }) {
   return (
-    <div className="mx-auto w-full max-w-[760px] px-5 py-14">
+    <div className="mx-auto w-full max-w-190 px-5 py-14">
       {draft && (
         <p className="mb-6 rounded-[10px] border border-warning/50 bg-warning/10 px-4 py-2.5 text-sm text-navy">
-          <strong>Draft v0.1</strong> — placeholder content pending legal
+          <strong>Draft v0.1</strong>: placeholder content pending legal
           review. Do not submit for provider verification until counsel signs
           off.
         </p>
@@ -26,7 +26,7 @@ export function LegalProse({
         Effective date: {effectiveDate}
       </p>
 
-      <nav aria-label="Table of contents" className="mt-8 rounded-[16px] border border-line bg-soft p-5">
+      <nav aria-label="Table of contents" className="mt-8 rounded-2xl border border-line bg-soft p-5">
         <p className="mb-2 text-sm font-semibold text-navy">Contents</p>
         <ol className="list-decimal space-y-1 pl-5 text-sm">
           {sections.map((s) => (

@@ -26,7 +26,7 @@ describe("Reminders page", () => {
 
   it("completing a reminder moves it to Completed", async () => {
     render(<RemindersPage />);
-    const card = screen.getByText("Call Mum").closest("div.rounded-\\[16px\\]")!;
+    const card = screen.getByText("Call Mum").closest("div.rounded-2xl")!;
     await userEvent.click(within(card as HTMLElement).getByRole("button", { name: /Done/ }));
     expect(screen.queryByText("Call Mum")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("tab", { name: "Completed" }));

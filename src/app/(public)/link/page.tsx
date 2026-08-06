@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import { setAuthed } from "@/lib/session";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ function LinkContent() {
         <h1 className="text-xl font-semibold text-navy">Link expired</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
           This linking link has expired or was already used. Ask Amiva for a
-          new one in WhatsApp — just say <strong>&quot;link my account&quot;</strong>.
+          new one in WhatsApp by saying <strong>&quot;link my account&quot;</strong>.
         </p>
       </Card>
     );
@@ -28,7 +29,7 @@ function LinkContent() {
   const confirm = () => {
     setLinking(true);
     // Mock: POST /link/whatsapp/verify {token} → dashboard
-    setTimeout(() => router.push("/app/today"), 800);
+    setTimeout(() => { setAuthed(true); router.push("/app/today") }, 800);
   };
 
   return (

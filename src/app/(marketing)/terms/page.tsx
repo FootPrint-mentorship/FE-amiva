@@ -24,7 +24,7 @@ const sections: LegalSection[] = [
   },
   {
     id: "ai-assistant",
-    heading: "AI assistant — important limitations",
+    heading: "AI assistant: important limitations",
     body: [
       "Amiva uses artificial intelligence to interpret your requests. AI can make mistakes: always review the confirmation Amiva shows before approving consequential actions such as sending email or cancelling meetings.",
       "Amiva does not provide medical, legal, or financial advice, and does not execute financial transactions.",
@@ -78,7 +78,7 @@ const sections: LegalSection[] = [
     id: "governing-law",
     heading: "Governing law",
     body: [
-      "These terms are governed by the laws of the Federal Republic of Nigeria, without prejudice to mandatory consumer protections in your country of residence. [Placeholder — confirm jurisdiction with counsel.]",
+      "These terms are governed by the laws of the Federal Republic of Nigeria, without prejudice to mandatory consumer protections in your country of residence. [Placeholder: confirm jurisdiction with counsel.]",
     ],
   },
   {

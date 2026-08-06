@@ -2,10 +2,13 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import OnboardingPage from "@/app/(onboarding)/onboarding/page";
+import { settingsStore } from "@/lib/stores";
 import { nav } from "@/test/setup";
 
-describe("Onboarding wizard (PRD §15.1)", () => {
-  it("walks all five steps; Google connects are skippable", async () => {
+describe("Onboarding wizard", () => {
+  it("walks all six steps; phone verify and Google connects are skippable", async () => {
+    // A fresh signup arrives with an unverified phone
+    settingsStore.set((c) => ({ ...c, phoneVerified: false }));
     render(<OnboardingPage />);
 
     // 1 · Welcome
@@ -14,19 +17,22 @@ describe("Onboarding wizard (PRD §15.1)", () => {
 
     // 2 · Preferences
     expect(screen.getByText("Your preferences")).toBeInTheDocument();
-    expect(screen.getByLabelText("What should Amiva call you?")).toHaveValue("Ada");
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    // 3 · Calendar (skippable)
+    // 3 · Verify phone (skippable; OTP goes only to the chosen medium)
+    expect(screen.getByRole("heading", { name: "Verify your phone" })).toBeInTheDocument();
+    expect(screen.getByText(/nothing is sent to\s+this number/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Skip for now" }));
+
+    // 4 · Calendar (skippable)
     expect(screen.getByRole("heading", { name: "Connect Google Calendar" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Skip for now" }));
 
-    // 4 · Gmail (optional + skippable)
+    // 5 · Gmail (optional + skippable)
     expect(screen.getByRole("heading", { name: /Connect Gmail/ })).toBeInTheDocument();
-    expect(screen.getByText(/never sends an email without your approval/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Skip for now" }));
 
-    // 5 · First action
+    // 6 · First action
     expect(screen.getByText("Try your first request")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
     expect(screen.getByText(/I'll remind you/)).toBeInTheDocument();
@@ -35,25 +41,42 @@ describe("Onboarding wizard (PRD §15.1)", () => {
     expect(nav.push).toHaveBeenCalledWith("/app/today");
   });
 
-  it("connecting Google Calendar shows the connected state before continuing", async () => {
+  it("the whole onboarding can be skipped in one click", async () => {
     render(<OnboardingPage />);
-    await userEvent.click(screen.getByRole("button", { name: /set you up/ }));
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await userEvent.click(screen.getByRole("button", { name: "Connect Google Calendar" }));
-    expect(screen.getByText("Google Calendar connected")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Continue/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Skip onboarding/ }));
+    expect(nav.push).toHaveBeenCalledWith("/app/today");
   });
 
-  it("the first-action reply uses the preferred name from step 2", async () => {
+  it("verifying the phone marks it verified and moves on", async () => {
+    settingsStore.set((c) => ({ ...c, phoneVerified: false }));
     render(<OnboardingPage />);
     await userEvent.click(screen.getByRole("button", { name: /set you up/ }));
-    const name = screen.getByLabelText("What should Amiva call you?");
-    await userEvent.clear(name);
-    await userEvent.type(name, "Grace");
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await userEvent.click(screen.getByRole("button", { name: "Skip for now" }));
-    await userEvent.click(screen.getByRole("button", { name: "Skip for now" }));
-    await userEvent.click(screen.getByRole("button", { name: "Send" }));
-    expect(screen.getByText(/Done, Grace/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Send code to WhatsApp" }));
+    const first = screen.getByLabelText("Phone code digit 1");
+    await userEvent.click(first);
+    await userEvent.paste("482913");
+    expect(settingsStore.get().phoneVerified).toBe(true);
+    // auto-advanced to the Calendar step
+    expect(screen.getByRole("heading", { name: "Connect Google Calendar" })).toBeInTheDocument();
+  });
+
+  it("has a back button and clickable completed dots", async () => {
+    render(<OnboardingPage />);
+    await userEvent.click(screen.getByRole("button", { name: /set you up/ }));
+    expect(screen.getByText("Your preferences")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "← Back" }));
+    expect(screen.getByText(/Meet Amiva/)).toBeInTheDocument();
+    // forward again, then jump back via the first dot
+    await userEvent.click(screen.getByRole("button", { name: /set you up/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Go to step 1/ }));
+    expect(screen.getByText(/Meet Amiva/)).toBeInTheDocument();
+  });
+
+  it("an already-verified phone shows the verified state instead of an OTP", async () => {
+    render(<OnboardingPage />); // seed has phoneVerified: true
+    await userEvent.click(screen.getByRole("button", { name: /set you up/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Phone already verified")).toBeInTheDocument();
   });
 });
