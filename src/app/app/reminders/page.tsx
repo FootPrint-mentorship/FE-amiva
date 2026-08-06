@@ -19,6 +19,14 @@ import { fmtDay, fmtTime, user, type Reminder } from "@/lib/mock";
 import { useStore } from "@/lib/store";
 import { remindersStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
+import {
+  completeReminder,
+  deleteReminder,
+  saveReminder,
+  skipReminder,
+  snoozeReminder,
+  toggleReminderPause,
+} from "@/lib/data/collections";
 
 const tabs = ["Upcoming", "Recurring", "Snoozed", "Completed"] as const;
 type Tab = (typeof tabs)[number];
@@ -39,61 +47,42 @@ function matches(r: Reminder, tab: Tab) {
 export default function RemindersPage() {
   const [tab, setTab] = useState<Tab>("Upcoming");
   const items = useStore(remindersStore);
-  const setItems = remindersStore.set;
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Reminder | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
 
-  const upsert = (r: Reminder) =>
-    setItems((cur) =>
-      cur.some((x) => x.id === r.id)
-        ? cur.map((x) => (x.id === r.id ? r : x))
-        : [r, ...cur]
-    );
+  const fail = (err: unknown) =>
+    toast(err instanceof Error ? err.message : "That didn't go through. Try again.", {
+      tone: "error",
+    });
 
-  const togglePause = (id: string) =>
-    setItems((cur) =>
-      cur.map((r) =>
-        r.id === id
-          ? { ...r, status: (r.status === "paused" ? "scheduled" : "paused") as Reminder["status"] }
-          : r
-      )
-    );
+  const upsert = (r: Reminder, isNew: boolean) =>
+    saveReminder(r, isNew).catch(fail);
 
-  const remove = (id: string) => {
-    setItems((cur) => cur.filter((r) => r.id !== id));
-    toast("Reminder deleted.", { tone: "info" });
-  };
+  const togglePause = (r: Reminder) =>
+    toggleReminderPause(r.id, r.status !== "paused").catch(fail);
 
-  const snooze = (id: string, until: Date, label: string) => {
-    setItems((cur) =>
-      cur.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              status: "snoozed" as const,
-              snoozed_until: until.toISOString(),
-              next_fire_at: until.toISOString(),
-            }
-          : r
-      )
-    );
-    toast(`Snoozed ${label}.`);
-  };
+  const remove = (id: string) =>
+    deleteReminder(id)
+      .then(() => toast("Reminder deleted.", { tone: "info" }))
+      .catch(fail);
+
+  const snooze = (id: string, until: Date, label: string) =>
+    snoozeReminder(id, until)
+      .then(() => toast(`Snoozed ${label}.`))
+      .catch(fail);
 
   const skipNext = (r: Reminder) => {
     const next = new Date(r.due_at);
     if (r.rrule?.startsWith("FREQ=DAILY")) next.setDate(next.getDate() + 1);
     else if (r.rrule?.startsWith("FREQ=WEEKLY")) next.setDate(next.getDate() + 7);
     else next.setMonth(next.getMonth() + 1);
-    setItems((cur) =>
-      cur.map((x) =>
-        x.id === r.id
-          ? { ...x, due_at: next.toISOString(), next_fire_at: next.toISOString() }
-          : x
-      )
-    );
-    toast(`Skipped. Next: ${fmtDay(next.toISOString())} at ${fmtTime(next.toISOString())}.`);
+    skipReminder(r.id, next)
+      .then((saved) => {
+        const at = saved?.next_fire_at ?? next.toISOString();
+        toast(`Skipped. Next: ${fmtDay(at)} at ${fmtTime(at)}.`);
+      })
+      .catch(fail);
   };
 
   const visible = useMemo(() => items.filter((r) => matches(r, tab)), [items, tab]);
@@ -107,10 +96,7 @@ export default function RemindersPage() {
     return [...map.entries()];
   }, [visible]);
 
-  const complete = (id: string) =>
-    setItems((cur) =>
-      cur.map((r) => (r.id === id ? { ...r, status: "completed" as const } : r))
-    );
+  const complete = (id: string) => completeReminder(id).catch(fail);
 
   return (
     <div className="space-y-5">
@@ -130,13 +116,13 @@ export default function RemindersPage() {
       </div>
 
       {creating && (
-        <ReminderModal onClose={() => setCreating(false)} onCreate={upsert} />
+        <ReminderModal onClose={() => setCreating(false)} onCreate={(r) => upsert(r, true)} />
       )}
       {editing && (
         <ReminderModal
           initial={editing}
           onClose={() => setEditing(null)}
-          onCreate={upsert}
+          onCreate={(r) => upsert(r, false)}
         />
       )}
 
@@ -294,7 +280,7 @@ export default function RemindersPage() {
                             <button
                               role="menuitem"
                               className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-navy hover:bg-indigo-50"
-                              onClick={() => { setMenuFor(null); togglePause(r.id); }}
+                              onClick={() => { setMenuFor(null); togglePause(r); }}
                             >
                               {r.status === "paused" ? "Resume" : "Pause"}
                             </button>

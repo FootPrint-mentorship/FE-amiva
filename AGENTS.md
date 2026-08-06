@@ -13,7 +13,8 @@ Frontend for **Amiva**, an AI personal assistant ("chief of staff") delivered th
 | Document | What it is |
 |---|---|
 | `AMIVA-FRONTEND-SPEC.md` (this folder) | **The source of truth for everything built here.** Design tokens, per-screen specs (Purpose/Route/Data/Layout/States/Acceptance), component inventory, build order. Follow it; if you deviate, update it. |
-| `../BE-amiva/AMIVA-BACKEND-SPEC.md` | The API contract this frontend consumes (the backend project now lives in `../BE-amiva/`): every endpoint, request/response shape, error codes. Mock data mirrors these shapes exactly. |
+| `../BE-amiva/AMIVA-BACKEND-SPEC.md` | The API contract this frontend consumes: every endpoint, request/response shape, error codes. Mock data mirrors these shapes exactly. |
+| `../BE-amiva/openapi.yaml` | **The machine-readable contract (77 paths, §11-amended — generate the typed client from THIS).** The backend is complete (spec steps 1–13, the §11 amendments, **plus voice-note/media pipeline + calendar-in-chat added 6 Aug** — contract unchanged, 169 tests); explore/test it live at `http://localhost:8000/docs` (`docker compose up` in BE-amiva; §11 auth recipe in its README). |
 | `../Amiva Product Requirements Document (PRD) v1.0.pdf` | Product requirements (the why). |
 | `../Amiva Brand Guideline.pdf` | Brand identity. Tokens already extracted into `src/app/globals.css`. |
 
@@ -24,11 +25,28 @@ Next.js 15 (App Router, Turbopack) · React 19 · TypeScript strict · Tailwind 
 ## Run it
 
 ```bash
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3000 — real-API mode by default (see below)
 npx tsc --noEmit   # type-check (keep green)
 npm run lint
-npm test           # Vitest suite (keep green) · npm run test:watch while developing
+npm test           # Vitest suite (keep green; tests always run in mock mode)
+npm run gen:api    # regenerate src/lib/api/schema.d.ts from ../BE-amiva/openapi.yaml
 ```
+
+**Two modes** (`.env.local` / `.env.example`):
+- **Real API (default):** needs the backend running — `docker compose up -d app worker` in `../BE-amiva/` (self-contained dev keys; API on :8000). Registration OTPs are logged by the server: `docker compose logs app | grep "code is"`.
+- **Self-contained demo:** set `NEXT_PUBLIC_USE_MOCKS=1` — everything runs on the in-memory mock stores, no backend. This flag is a permanent product requirement, keep it working.
+
+## Backend integration status (6 Aug 2026, evening — read before continuing)
+
+Architecture: `src/lib/api/client.ts` (fetch wrapper; access token in memory, refresh token in localStorage, single-flight refresh because tokens rotate — parallel refreshes revoke the session family) + repositories in `src/lib/data/` (`auth.ts`, `collections.ts`, `assistant.ts`, `search.ts`, `settings.ts`, `notifications.ts`): mock mode mutates stores, real mode calls the API then updates stores from the server response. Screens still render from the shared stores; `hydrateAll()` + `loadMe()` + `hydrateConfirmations()` + `hydrateNotifications()` run from the app layout once authed.
+
+**Wired to the real API and verified in-browser:** registration with real inline email OTP (end-to-end), login (email-or-phone), sign-out, token refresh, hydration of reminders/tasks/memories/events, reminders full CRUD + snooze/skip/pause, tasks incl. subtask endpoints (`PATCH /tasks/{id}/subtasks/{sub_id}` — task PATCH does NOT accept subtasks), memories CRUD, calendar create/edit/cancel/reschedule, **chat/assistant** (server thread history, send, resource cards, in-thread confirmation cards; approve/reject from Chat, Today banner and the tray all hit `/assistant/confirmations/{id}/approve|reject` and re-hydrate collections), **search palette** (POST /search; API `source_type` is plural — mapped to singular kinds in `data/search.ts`), **Settings persistence** (PATCH /users/me, PATCH /users/me/features with revert-on-failure, GET/PUT notification prefs with display↔API key mapping, phone-verify OTP via `/auth/phone/*`), **notifications feed** (GET /notifications + POST /notifications/read).
+
+**Resolved handoff items (6 Aug):** the /app/today crash ("Cannot read properties of undefined (reading 'filter')") was **not** the refresh race — `GET /calendar/events` returns a **bare array** per openapi.yaml, not the `{data,…}` list envelope, so `hydrateAll` was setting `eventsStore` to `undefined`. Fixed in `collections.ts`. The single-flight refresh itself was then verified explicitly: hard reload with only a refresh token → five 401s → exactly one `POST /auth/refresh` → all five retried 200. Test account (real backend): `grace.ede@example.com` / `Str0ng!Passw0rd` (the backend dev resets the DB sometimes — re-register if it 401s; email OTP is in `docker compose logs app | grep "code is"`).
+
+Also fixed while wiring: Today/Calendar rendered the mock `user` (greeting said "Ada" for every real account) — they now read `settingsStore` (which absorbs email/phone too); tz abbreviations come from `timezoneAbbr()` in `lib/timezones.ts` (Intl plus a pinned map for African zones — Intl's `en` locale calls Lagos "GMT+1", the spec wants "WAT").
+
+**Not yet wired (still mock in real mode):** Google sign-in (needs GOOGLE_CLIENT_ID; mock flow → /complete-profile), onboarding-wizard phone-verify step (Settings→Profile verify IS wired; onboarding still fakes it), integrations OAuth connect flow, SSE/cross-channel sync, Playwright smoke test. Note: the assistant needs **no LLM key** — the backend's rule-based fallback parser serves `POST /assistant/messages` in dev, incl. reminders/tasks/memories and calendar agenda/availability/create/reschedule/cancel with the high-risk confirm flow.
 
 ## Testing
 
@@ -61,7 +79,7 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 ## Rules that keep this codebase consistent
 
 1. **Brand tokens only.** Never hardcode colors — use the Tailwind tokens from `globals.css` (`indigo-900`, `navy`, `cyan-500`, `violet-500`, `soft`, `ink-muted`, `line`, `success/warning/danger`). Radii: cards `rounded-[16px]` (Card component), controls `rounded-[10px]`.
-2. **Mock data mirrors the API.** There is no backend yet. All screen data comes from `src/lib/mock.ts`, whose types copy the resource shapes in `AMIVA-BACKEND-SPEC.md` §5 field-for-field. When adding a screen, add its fixture there in the API's shape — never invent screen-local shapes. When the backend lands, `mock.ts` is replaced by a generated OpenAPI client and screens should barely change.
+2. **Mock data mirrors the API.** All screen data still comes from `src/lib/mock.ts`, whose types copy the resource shapes in `AMIVA-BACKEND-SPEC.md` §5 field-for-field. **The backend now exists and is integration-ready** — the real contract is `../BE-amiva/openapi.yaml`; integration = replacing `mock.ts` with a client generated from it (`openapi-typescript`/`orval`) + TanStack Query. Screens should barely change. Integration gotchas the backend README documents: 15-min access tokens (use `/auth/refresh`), `{data, next_cursor, total_estimate}` list envelope, `{error: {code, message, details}}` error shape, optional `Idempotency-Key` on POSTs, 120 req/min rate limit. **§11 amendments are now implemented server-side (6 Aug 2026)** — Google sign-in (`POST /auth/google` + `/auth/complete-profile`), inline email verification (register returns tokens), `identifier` login, `/meta/timezones`, tasks with `category` + subtask checklists (no `/lists/*`), `PATCH /users/me/features`, no `ai_tone`. Regenerate the client from the updated `openapi.yaml` (77 paths) — integration can start against the final contract.
 3. **Follow the spec's screen contract.** Each screen in `AMIVA-FRONTEND-SPEC.md` §6 lists its layout, states (loading/empty/error) and acceptance criteria. Empty states are required, not optional.
 4. **Timezone display:** absolute times always show the tz abbreviation ("10:00 AM WAT"). Helpers `fmtTime`/`fmtDay` in `mock.ts`.
 5. **Accessibility:** WCAG 2.1 AA. Interactive elements need labels; keyboard focus must be visible (global cyan focus ring already set); use `aria-selected` on tabs, `aria-live` for async feedback.
@@ -92,7 +110,8 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 | Auth (`/login`, `/register`, `/complete-profile`, `/forgot-password`, `/link`) | ✅ done (mock) — Google sign-in, email-or-phone login, inline email OTP at signup (`/verify` removed), password toggles |
 | Onboarding wizard (`/onboarding`, 6 steps incl. skippable phone verify) | ✅ done (mock) — skip-all, back button, animated brand panel |
 | Test suite (Vitest + RTL, 16 files / 120 tests) | ✅ green — see Testing section |
-| Real API client, TanStack Query, SSE | ❌ blocked on backend |
+| API client + repositories (`lib/api`, `lib/data`) with NEXT_PUBLIC_USE_MOCKS escape hatch | ✅ wired & verified — auth, reminders/tasks/memories/calendar, chat/assistant + confirmations, search, settings persistence, phone OTP (Settings), notifications feed; see "Backend integration status" |
+| Google OAuth, onboarding phone-verify step, integrations OAuth, SSE, Playwright smoke | ❌ not wired yet (details above) |
 
 ## Architecture notes (post fix-all pass, 28 Jul 2026)
 

@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
 import { tasksStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
+import { addSubtasks, createTask, patchTask as patchTaskApi, setTaskStatus, toggleSubtask as toggleSubtaskApi } from "@/lib/data/collections";
 
 const tabs = ["Today", "Upcoming", "Overdue", "Completed"] as const;
 type Tab = (typeof tabs)[number];
@@ -47,7 +48,6 @@ export default function TasksPage() {
   const [tab, setTab] = useState<Tab>("Today");
   const [category, setCategory] = useState<string>("all");
   const items = useStore(tasksStore);
-  const setItems = tasksStore.set;
   const [suggesting, setSuggesting] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [quickTitle, setQuickTitle] = useState("");
@@ -65,77 +65,51 @@ export default function TasksPage() {
   );
   const open = items.find((t) => t.id === openId) ?? null;
 
-  const complete = (id: string) => {
-    setItems((cur) =>
-      cur.map((t) => (t.id === id ? { ...t, status: "completed" as const } : t))
-    );
-    toast("Task completed.", {
-      action: {
-        label: "Undo",
-        onClick: () =>
-          setItems((cur) =>
-            cur.map((t) => (t.id === id ? { ...t, status: "open" as const } : t))
-          ),
-      },
-    });
-  };
+  const fail = (err: unknown) =>
+    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
+
+  const complete = (id: string) =>
+    setTaskStatus(id, "completed")
+      .then(() =>
+        toast("Task completed.", {
+          action: { label: "Undo", onClick: () => void setTaskStatus(id, "open") },
+        })
+      )
+      .catch(fail);
 
   const patch = (id: string, changes: Partial<Task>) =>
-    setItems((cur) => cur.map((t) => (t.id === id ? { ...t, ...changes } : t)));
+    patchTaskApi(id, changes).catch(fail);
 
   const suggestSubtasks = (t: Task) => {
     setSuggesting(true);
-    setTimeout(() => {
-      const ideas = [
-        `Outline what “${t.title.toLowerCase()}” needs`,
-        "Draft the first version",
-        "Review and send",
-      ].filter((title) => !t.subtasks.some((s) => s.title === title));
-      patch(t.id, {
-        subtasks: [
-          ...t.subtasks,
-          ...ideas.map((title, i) => ({
-            id: `sub_${Date.now()}_${i}`,
-            title,
-            completed: false,
-          })),
-        ],
-      });
-      setSuggesting(false);
-      toast(`Added ${ideas.length} suggested subtasks. Edit or delete freely.`);
-    }, 700);
+    const ideas = [
+      `Outline what “${t.title.toLowerCase()}” needs`,
+      "Draft the first version",
+      "Review and send",
+    ].filter((title) => !t.subtasks.some((s) => s.title === title));
+    addSubtasks(t, ideas)
+      .then(() => toast(`Added ${ideas.length} suggested subtasks. Edit or delete freely.`))
+      .catch(fail)
+      .finally(() => setSuggesting(false));
   };
 
-  const toggleSubtask = (taskId: string, subId: string) =>
-    setItems((cur) =>
-      cur.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              subtasks: t.subtasks.map((s) =>
-                s.id === subId ? { ...s, completed: !s.completed } : s
-              ),
-            }
-          : t
-      )
-    );
+  const toggleSubtask = (taskId: string, subId: string) => {
+    const task = items.find((t) => t.id === taskId);
+    if (task) void toggleSubtaskApi(task, subId).catch(fail);
+  };
 
   const quickAdd = () => {
     const title = quickTitle.trim();
     if (!title) return;
-    setItems((cur) => [
-      {
-        id: `tsk_${Date.now()}`,
-        title,
-        due_date: localToday(),
-        priority: "medium" as const,
-        status: "open" as const,
-        project: null,
-        category: null,
-        subtasks: [],
-      },
-      ...cur,
-    ]);
+    createTask({
+      title,
+      due_date: localToday(),
+      priority: "medium",
+      status: "open",
+      project: null,
+      category: null,
+      subtasks: [],
+    }).catch(fail);
     setQuickTitle("");
   };
 

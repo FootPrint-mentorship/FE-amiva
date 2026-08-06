@@ -82,6 +82,8 @@ export type FeatureKey = "chat" | "reminders" | "calendar" | "tasks" | "memories
 export type Settings = {
   fullName: string;
   preferredName: string;
+  email: string;
+  phone: string;
   timezone: string;
   emailVerified: boolean;
   phoneVerified: boolean;
@@ -95,6 +97,8 @@ export type Settings = {
 export const settingsStore = createStore<Settings>({
   fullName: "Ada Obi",
   preferredName: "Ada",
+  email: "ada@example.com",
+  phone: "+234 801 234 5678",
   timezone: "Africa/Lagos",
   emailVerified: true,
   phoneVerified: true,

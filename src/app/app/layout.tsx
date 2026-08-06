@@ -22,16 +22,19 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/cn";
-import { fmtDay, fmtTime, user } from "@/lib/mock";
+import { fmtDay, fmtTime } from "@/lib/mock";
 import { useStore } from "@/lib/store";
 import {
   confirmationsStore,
   notificationsStore,
-  resolveConfirmation,
   settingsStore,
   type FeatureKey,
 } from "@/lib/stores";
-import { isAuthed, setAuthed } from "@/lib/session";
+import { sessionActive, signOut as endSession, loadMe } from "@/lib/data/auth";
+import { hydrateAll } from "@/lib/data/collections";
+import { hydrateConfirmations, resolveConfirmationRemote } from "@/lib/data/assistant";
+import { hydrateNotifications, markNotificationsRead } from "@/lib/data/notifications";
+import { USE_MOCKS } from "@/lib/api/client";
 import { SearchPalette } from "@/components/search-palette";
 import { Modal } from "@/components/ui/modal";
 import { Card } from "@/components/ui/card";
@@ -100,15 +103,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pending = confirmations.filter((c) => c.status === "pending");
   const unread = notifications.filter((n) => !n.read);
 
-  // Mock auth guard: the dashboard needs a session, exactly as it will
-  // once the real backend issues tokens.
+  // Session guard: mock flag in mock mode, real tokens otherwise.
   useEffect(() => {
     const t = setTimeout(() => {
-      if (!isAuthed()) router.replace("/login");
+      if (!sessionActive()) router.replace("/login");
       else setReady(true);
     }, 0);
     return () => clearTimeout(t);
   }, [router]);
+
+  // Real-API mode: pull the user + collections into the shared stores.
+  useEffect(() => {
+    if (!ready || USE_MOCKS) return;
+    Promise.all([
+      loadMe(),
+      hydrateAll(),
+      hydrateConfirmations(),
+      hydrateNotifications(),
+    ]).catch(() => {
+      toast("Couldn't reach the Amiva backend. Showing what's cached.", { tone: "error" });
+    });
+  }, [ready]);
 
   // Theme: explicit choice wins, otherwise follow the OS.
   const systemDark = useSyncExternalStore(
@@ -142,8 +157,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = () => {
-    setAuthed(false);
-    router.replace("/login");
+    void endSession().finally(() => router.replace("/login"));
   };
 
   return (
@@ -271,8 +285,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       <Button
                         size="sm"
                         onClick={() => {
-                          resolveConfirmation(c.id, "approved");
-                          toast("Approved. Amiva is on it.");
+                          resolveConfirmationRemote(c.id, "approved")
+                            .then((reply) => toast(reply))
+                            .catch(() => toast("That didn't go through — nothing was changed.", { tone: "error" }));
                         }}
                       >
                         Approve
@@ -281,8 +296,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         size="sm"
                         variant="ghost"
                         onClick={() => {
-                          resolveConfirmation(c.id, "rejected");
-                          toast("Rejected. Nothing was changed.", { tone: "info" });
+                          resolveConfirmationRemote(c.id, "rejected")
+                            .then((reply) => toast(reply, { tone: "info" }))
+                            .catch(() => toast("That didn't go through — nothing was changed.", { tone: "error" }));
                         }}
                       >
                         Reject
@@ -305,9 +321,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-1">
                 {unread.length > 0 && (
                   <button
-                    onClick={() =>
-                      notificationsStore.set((cur) => cur.map((n) => ({ ...n, read: true })))
-                    }
+                    onClick={() => void markNotificationsRead({ all: true })}
                     className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-indigo-900 hover:bg-indigo-50"
                   >
                     Mark all read
@@ -328,9 +342,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   key={n.id}
                   href={n.href}
                   onClick={() => {
-                    notificationsStore.set((cur) =>
-                      cur.map((x) => (x.id === n.id ? { ...x, read: true } : x))
-                    );
+                    void markNotificationsRead({ ids: [n.id] });
                     setNotifOpen(false);
                   }}
                   className={cn("block px-5 py-3.5 hover:bg-soft", !n.read && "bg-cyan-500/5")}

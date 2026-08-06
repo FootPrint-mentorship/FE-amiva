@@ -13,10 +13,10 @@ import { Select } from "@/components/ui/select";
 import { OtpInput } from "@/components/ui/otp-input";
 import { GoogleButton, OrDivider } from "@/components/ui/google-button";
 import { toast } from "@/components/ui/toast";
-import { setAuthed } from "@/lib/session";
+import { sendEmailCode as sendCode, verifyEmailCode, register as registerAccount } from "@/lib/data/auth";
+import { ApiError } from "@/lib/api/client";
 import { startGoogleSignIn } from "@/lib/google";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
-import { settingsStore } from "@/lib/stores";
 import { cn } from "@/lib/cn";
 
 function strength(pw: string) {
@@ -52,29 +52,44 @@ export default function RegisterPage() {
   const pwScore = strength(form.password);
   const pwLabel = ["Too short", "Weak", "Okay", "Good", "Strong"][pwScore];
 
-  const sendEmailCode = () => {
+  const sendEmailCode = async () => {
     if (!EMAIL_RE.test(form.email)) {
       setErrors((e) => ({ ...e, email: "Enter a valid email address first." }));
       return;
     }
     setErrors(({ email: _email, ...rest }) => rest);
     setSending(true);
-    setTimeout(() => {
-      setSending(false);
+    try {
+      await sendCode(form.email);
       setEmailStage("sent");
       toast(`Code sent to ${form.email}.`);
-    }, 600);
-  };
-
-  const confirmEmailCode = (code: string) => {
-    setEmailOtp(code);
-    if (code.length === 6) {
-      setEmailStage("verified");
-      toast("Email verified.");
+    } catch (err) {
+      setErrors((e) => ({
+        ...e,
+        email: err instanceof ApiError ? err.message : "Couldn't send the code. Try again.",
+      }));
+    } finally {
+      setSending(false);
     }
   };
 
-  const submit = () => {
+  const confirmEmailCode = async (code: string) => {
+    setEmailOtp(code);
+    if (code.length !== 6) return;
+    try {
+      await verifyEmailCode(form.email, code);
+      setEmailStage("verified");
+      toast("Email verified.");
+    } catch (err) {
+      setEmailOtp("");
+      setErrors((e) => ({
+        ...e,
+        email: err instanceof ApiError ? err.message : "That code didn't match. Try again.",
+      }));
+    }
+  };
+
+  const submit = async () => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = "Your name is required.";
     if (!EMAIL_RE.test(form.email)) errs.email = "Enter a valid email address.";
@@ -85,19 +100,22 @@ export default function RegisterPage() {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setSubmitting(true);
-    // Mock: POST /auth/register (email already verified inline)
-    setTimeout(() => {
-      settingsStore.set((c) => ({
-        ...c,
-        fullName: form.name.trim(),
-        preferredName: form.name.trim().split(" ")[0],
+    try {
+      await registerAccount({
+        name: form.name.trim(),
+        email: form.email,
+        phone: `${form.cc}${form.phone}`,
+        password: form.password,
         timezone: form.timezone,
-        emailVerified: true,
-        phoneVerified: false, // phone verifies during onboarding (skippable)
-      }));
-      setAuthed(true);
+      });
       router.push("/onboarding");
-    }, 700);
+    } catch (err) {
+      setSubmitting(false);
+      setErrors((e) => ({
+        ...e,
+        email: err instanceof ApiError ? err.message : "Registration failed. Try again.",
+      }));
+    }
   };
 
   const google = () => {

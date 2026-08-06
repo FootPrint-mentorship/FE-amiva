@@ -22,6 +22,7 @@ import { fmtDay, type Memory } from "@/lib/mock";
 import { useStore } from "@/lib/store";
 import { memoriesStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
+import { createMemory, deleteMemoryForever, patchMemory } from "@/lib/data/collections";
 
 const categories = ["all", "personal", "work", "people", "travel", "finance", "ideas", "other"] as const;
 
@@ -37,7 +38,6 @@ const categoryTone = {
 
 export default function MemoriesPage() {
   const items = useStore(memoriesStore);
-  const setItems = memoriesStore.set;
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof categories)[number]>("all");
   const [favOnly, setFavOnly] = useState(false);
@@ -70,14 +70,20 @@ export default function MemoriesPage() {
     return c;
   }, [items]);
 
-  const toggleFav = (id: string) =>
-    setItems((cur) => cur.map((m) => (m.id === id ? { ...m, favorite: !m.favorite } : m)));
+  const fail = (err: unknown) =>
+    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
+
+  const toggleFav = (id: string) => {
+    const m = items.find((x) => x.id === id);
+    if (m) void patchMemory(id, { favorite: !m.favorite }).catch(fail);
+  };
 
   const deleteForever = (id: string) => {
-    setItems((cur) => cur.filter((m) => m.id !== id));
+    deleteMemoryForever(id)
+      .then(() => toast("Memory permanently deleted.", { tone: "info" }))
+      .catch(fail);
     setOpen(null);
     setConfirmDelete(false);
-    toast("Memory permanently deleted.", { tone: "info" });
   };
 
   const exportAll = () => {
@@ -249,19 +255,10 @@ export default function MemoriesPage() {
               <Button
                 disabled={!newContent.trim()}
                 onClick={() => {
-                  setItems((cur) => [
-                    {
-                      id: `mem_${Date.now()}`,
-                      content: newContent.trim(),
-                      category: newCategory === "auto" ? "other" : newCategory,
-                      tags: [],
-                      source_channel: "web",
-                      favorite: false,
-                      archived: false,
-                      created_at: new Date().toISOString(),
-                    },
-                    ...cur,
-                  ]);
+                  createMemory(
+                    newContent.trim(),
+                    newCategory === "auto" ? null : newCategory
+                  ).catch(fail);
                   setNewContent("");
                   setNewCategory("auto");
                   setCreating(false);
@@ -333,7 +330,7 @@ export default function MemoriesPage() {
                   disabled={!editContent.trim()}
                   onClick={() => {
                     const updated = { ...open, content: editContent.trim() };
-                    setItems((cur) => cur.map((m) => (m.id === open.id ? updated : m)));
+                    patchMemory(open.id, { content: updated.content }).catch(fail);
                     setOpen(updated);
                     setEditing(false);
                   }}

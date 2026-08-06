@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "amiva-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/Grace/Documents/Code/Amiva/amiva-web",
+      "port": 3000
+    }
+  ]
+}

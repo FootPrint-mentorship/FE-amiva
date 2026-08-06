@@ -16,20 +16,19 @@ import {
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
-import {
-  agendaSummary,
-  events,
-  fmtTime,
-  user,
-} from "@/lib/mock";
+import { agendaSummary, fmtTime } from "@/lib/mock";
+import { timezoneAbbr } from "@/lib/timezones";
 import { useStore } from "@/lib/store";
 import {
   confirmationsStore,
+  eventsStore,
   remindersStore,
-  resolveConfirmation,
+  settingsStore,
   tasksStore,
 } from "@/lib/stores";
+import { resolveConfirmationRemote } from "@/lib/data/assistant";
 import { toast } from "@/components/ui/toast";
+import { completeReminder, setTaskStatus } from "@/lib/data/collections";
 import { cn } from "@/lib/cn";
 
 const priorityTone = {
@@ -40,8 +39,10 @@ const priorityTone = {
 } as const;
 
 export default function TodayPage() {
+  const settings = useStore(settingsStore);
   const allReminders = useStore(remindersStore);
   const allTasks = useStore(tasksStore);
+  const allEvents = useStore(eventsStore);
   const confirmations = useStore(confirmationsStore).filter((c) => c.status === "pending");
   const reminders = allReminders.filter((r) => r.status === "scheduled");
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -64,7 +65,7 @@ export default function TodayPage() {
       {/* Header */}
       <div>
         <h1 className="text-[28px] font-semibold tracking-tight text-navy">
-          {greeting}, {user.preferred_name}
+          {greeting}, {settings.preferredName}
         </h1>
         <p className="text-sm text-ink-muted">
           {new Date().toLocaleDateString("en-GB", {
@@ -72,7 +73,7 @@ export default function TodayPage() {
             day: "numeric",
             month: "long",
           })}{" "}
-          · {user.timezone}
+          · {settings.timezone}
         </p>
       </div>
 
@@ -89,8 +90,9 @@ export default function TodayPage() {
               <Button
                 size="sm"
                 onClick={() => {
-                  resolveConfirmation(confirmations[0].id, "approved");
-                  toast("Approved. Amiva is on it.");
+                  resolveConfirmationRemote(confirmations[0].id, "approved")
+                    .then((reply) => toast(reply))
+                    .catch(() => toast("That didn't go through — nothing was changed.", { tone: "error" }));
                 }}
               >
                 Approve
@@ -99,8 +101,9 @@ export default function TodayPage() {
                 size="sm"
                 variant="ghost"
                 onClick={() => {
-                  resolveConfirmation(confirmations[0].id, "rejected");
-                  toast("Rejected. Nothing was changed.", { tone: "info" });
+                  resolveConfirmationRemote(confirmations[0].id, "rejected")
+                    .then((reply) => toast(reply, { tone: "info" }))
+                    .catch(() => toast("That didn't go through — nothing was changed.", { tone: "error" }));
                 }}
               >
                 Reject
@@ -132,7 +135,18 @@ export default function TodayPage() {
             </Link>
           </div>
           <ol className="space-y-3">
-            {events.map((e) => (
+            {allEvents
+              .filter((e) => {
+                const d = new Date(e.start_at);
+                const n = new Date();
+                return (
+                  e.status !== "cancelled" &&
+                  d.getFullYear() === n.getFullYear() &&
+                  d.getMonth() === n.getMonth() &&
+                  d.getDate() === n.getDate()
+                );
+              })
+              .map((e) => (
               <li
                 key={e.id}
                 className={cn("flex gap-3", new Date(e.end_at).getTime() < now && "opacity-50")}
@@ -169,7 +183,7 @@ export default function TodayPage() {
                   </p>
                 </div>
               </li>
-            ))}
+              ))}
           </ol>
         </Card>
 
@@ -198,7 +212,7 @@ export default function TodayPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy">{r.title}</p>
                     <p className="text-xs tabular-nums text-ink-muted">
-                      {fmtTime(r.due_at)} {user.tz_abbr}
+                      {fmtTime(r.due_at)} {timezoneAbbr(settings.timezone)}
                       {r.recurrence_human ? ` · ${r.recurrence_human}` : ""}
                     </p>
                   </div>
@@ -206,8 +220,8 @@ export default function TodayPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() =>
-                      remindersStore.set((cur) =>
-                        cur.map((x) => (x.id === r.id ? { ...x, status: "completed" as const } : x))
+                      completeReminder(r.id).catch(() =>
+                        toast("Couldn't complete that reminder.", { tone: "error" })
                       )
                     }
                   >
@@ -237,18 +251,16 @@ export default function TodayPage() {
                 <button
                   aria-label={`Complete ${t.title}`}
                   onClick={() => {
-                    tasksStore.set((cur) =>
-                      cur.map((x) => (x.id === t.id ? { ...x, status: "completed" as const } : x))
-                    );
-                    toast("Task completed.", {
-                      action: {
-                        label: "Undo",
-                        onClick: () =>
-                          tasksStore.set((cur) =>
-                            cur.map((x) => (x.id === t.id ? { ...x, status: "open" as const } : x))
-                          ),
-                      },
-                    });
+                    setTaskStatus(t.id, "completed")
+                      .then(() =>
+                        toast("Task completed.", {
+                          action: {
+                            label: "Undo",
+                            onClick: () => void setTaskStatus(t.id, "open"),
+                          },
+                        })
+                      )
+                      .catch(() => toast("Couldn't complete that task.", { tone: "error" }));
                   }}
                   className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-indigo-300 hover:border-indigo-900 hover:bg-indigo-50"
                 />

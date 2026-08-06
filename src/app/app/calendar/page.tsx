@@ -16,10 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Modal } from "@/components/ui/modal";
 import { toast } from "@/components/ui/toast";
+import { cancelEvent as cancelEventApi, saveEvent } from "@/lib/data/collections";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/lib/store";
-import { eventsStore } from "@/lib/stores";
-import { fmtTime, fmtDay, user, type CalendarEvent } from "@/lib/mock";
+import { eventsStore, settingsStore } from "@/lib/stores";
+import { fmtTime, fmtDay, type CalendarEvent } from "@/lib/mock";
+import { timezoneAbbr } from "@/lib/timezones";
+import { newId } from "@/lib/id";
 
 const views = ["Day", "Week", "Agenda"] as const;
 type View = (typeof views)[number];
@@ -86,7 +89,8 @@ export default function CalendarPage() {
   const [cancelling, setCancelling] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
   const items = useStore(eventsStore);
-  const setItems = eventsStore.set;
+  const settings = useStore(settingsStore);
+  const tzAbbr = timezoneAbbr(settings.timezone);
   const gridRef = useRef<HTMLDivElement>(null);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -135,7 +139,7 @@ export default function CalendarPage() {
       return setDraftError(`Heads up: this overlaps “${clash.title}”. Click again to book anyway.`);
     }
     const built: CalendarEvent = {
-      id: editingId ?? `evt_${Date.now()}`,
+      id: editingId ?? newId("evt"),
       title: draft.title.trim(),
       start_at: startAt.toISOString(),
       end_at: endAt.toISOString(),
@@ -149,9 +153,7 @@ export default function CalendarPage() {
         .map((email) => ({ email, name: email.split("@")[0], response_status: "needsAction" })),
       status: "confirmed",
     };
-    setItems((cur) =>
-      editingId ? cur.map((e) => (e.id === editingId ? built : e)) : [...cur, built]
-    );
+    saveEvent(built, !editingId).catch(fail);
     setCreating(false);
     setEditingId(null);
     setDraftError("");
@@ -204,13 +206,15 @@ export default function CalendarPage() {
   const nowTop =
     (now.getHours() + now.getMinutes() / 60 - HOUR_START) * PX_PER_HOUR;
 
+  const fail = (err: unknown) =>
+    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
+
   const cancelEvent = (id: string) => {
-    setItems((cur) =>
-      cur.map((e) => (e.id === id ? { ...e, status: "cancelled" as const } : e))
-    );
+    cancelEventApi(id)
+      .then(() => toast("Event cancelled. Attendees were notified.", { tone: "info" }))
+      .catch(fail);
     setCancelling(false);
     setOpenEvent(null);
-    toast("Event cancelled. Attendees were notified.", { tone: "info" });
   };
 
   // Conflict-free slots with the same duration over the next few days,
@@ -241,16 +245,16 @@ export default function CalendarPage() {
   const applySlot = (ev: CalendarEvent, start: Date) => {
     const duration = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
     const end = new Date(start.getTime() + duration);
-    setItems((cur) =>
-      cur.map((e) =>
-        e.id === ev.id
-          ? { ...e, start_at: start.toISOString(), end_at: end.toISOString() }
-          : e
+    saveEvent(
+      { ...ev, start_at: start.toISOString(), end_at: end.toISOString() },
+      false
+    )
+      .then(() =>
+        toast(`Rescheduled to ${fmtDay(start.toISOString())} at ${fmtTime(start.toISOString())}. Attendees notified.`)
       )
-    );
+      .catch(fail);
     setRescheduling(false);
     setOpenEvent(null);
-    toast(`Rescheduled to ${fmtDay(start.toISOString())} at ${fmtTime(start.toISOString())}. Attendees notified.`);
   };
 
   return (
@@ -260,7 +264,7 @@ export default function CalendarPage() {
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-navy">Calendar</h1>
           <p className="text-sm text-ink-muted">
-            Google Calendar · all times in {user.timezone} ({user.tz_abbr})
+            Google Calendar · all times in {settings.timezone} ({tzAbbr})
           </p>
         </div>
         <Button onClick={() => setCreating(true)}>
@@ -324,7 +328,7 @@ export default function CalendarPage() {
                   />
                 </label>
               </div>
-              <p className="text-xs text-ink-muted">All times in {user.timezone} ({user.tz_abbr}).</p>
+              <p className="text-xs text-ink-muted">All times in {settings.timezone} ({tzAbbr}).</p>
               <label className="block text-sm font-medium text-navy">
                 Attendees <span className="font-normal text-ink-muted">(emails, comma-separated)</span>
                 <input
@@ -574,7 +578,7 @@ export default function CalendarPage() {
             </button>
             <h2 className="pr-8 text-lg font-semibold text-navy">{openEvent.title}</h2>
             <p className="mt-1 text-sm text-ink-muted">
-              {fmtDay(openEvent.start_at)} · {fmtTime(openEvent.start_at)}–{fmtTime(openEvent.end_at)} ({user.tz_abbr})
+              {fmtDay(openEvent.start_at)} · {fmtTime(openEvent.start_at)}–{fmtTime(openEvent.end_at)} ({tzAbbr})
             </p>
             <div className="mt-4 space-y-2.5 text-sm text-navy">
               {openEvent.conference_url && (

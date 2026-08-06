@@ -52,6 +52,32 @@ export function timezoneOptions(): SelectOption[] {
   return cache;
 }
 
+// Intl's "en" locale renders most African zones as "GMT+1"-style offsets
+// (their named abbreviations only appear under regional locales like en-NG),
+// so the primary-market zones are pinned here; everything else asks Intl.
+const KNOWN_ABBR: Record<string, string> = {
+  "Africa/Lagos": "WAT",
+  "Africa/Accra": "GMT",
+  "Africa/Nairobi": "EAT",
+  "Africa/Johannesburg": "SAST",
+  "Africa/Cairo": "EET",
+};
+
+/** Short abbreviation for a zone, e.g. "WAT" for Africa/Lagos. */
+export function timezoneAbbr(tz: string): string {
+  const known = KNOWN_ABBR[tz];
+  if (known) return known;
+  try {
+    return (
+      new Intl.DateTimeFormat("en", { timeZone: tz, timeZoneName: "short" })
+        .formatToParts(new Date())
+        .find((p) => p.type === "timeZoneName")?.value ?? tz
+    );
+  } catch {
+    return tz;
+  }
+}
+
 export function detectTimezone(): string {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "Africa/Lagos";

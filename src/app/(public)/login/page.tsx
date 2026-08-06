@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { PasswordField } from "@/components/ui/password-field";
 import { GoogleButton, OrDivider } from "@/components/ui/google-button";
-import { setAuthed, isProfileComplete } from "@/lib/session";
+import { isProfileComplete, setAuthed } from "@/lib/session";
+import { login as loginAccount } from "@/lib/data/auth";
+import { ApiError } from "@/lib/api/client";
 import { startGoogleSignIn } from "@/lib/google";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
@@ -21,7 +23,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const submit = () => {
+  const submit = async () => {
     const id = identifier.trim().replace(/[\s()-]/g, "");
     const valid = EMAIL_RE.test(id) || PHONE_RE.test(id);
     if (!valid || !password) {
@@ -30,11 +32,19 @@ export default function LoginPage() {
     }
     setError("");
     setSubmitting(true);
-    // Mock: POST /auth/login — identifier may be email or phone (E.164)
-    setTimeout(() => {
-      setAuthed(true);
+    try {
+      await loginAccount(id, password);
       router.push("/app/today");
-    }, 600);
+    } catch (err) {
+      setSubmitting(false);
+      setError(
+        err instanceof ApiError && err.status === 401
+          ? "That email/phone and password don't match."
+          : err instanceof ApiError
+          ? err.message
+          : "Couldn't reach the server. Try again."
+      );
+    }
   };
 
   const google = () => {

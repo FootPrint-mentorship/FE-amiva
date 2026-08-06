@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   UserRound,
   Bell,
@@ -36,6 +36,14 @@ import { cn } from "@/lib/cn";
 import { useStore } from "@/lib/store";
 import { settingsStore, type FeatureKey } from "@/lib/stores";
 import { timezoneOptions } from "@/lib/timezones";
+import {
+  hydrateNotificationPrefs,
+  saveFeature,
+  saveNotificationPrefs,
+  saveProfile,
+  sendPhoneCode,
+  verifyPhoneCode,
+} from "@/lib/data/settings";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: UserRound },
@@ -91,7 +99,27 @@ export default function SettingsPage() {
   const [phoneOtp, setPhoneOtp] = useState("");
   const { matrix, quietHours } = settings;
 
-  const save = () => toast("Saved. Your preferences are up to date.");
+  // Real mode: the notifications matrix lives on the server.
+  useEffect(() => {
+    hydrateNotificationPrefs().catch(() => {
+      /* the store's defaults still render; saving will surface errors */
+    });
+  }, []);
+
+  const saveFailed = () =>
+    toast("Saving didn't go through — nothing was changed. Please try again.", {
+      tone: "error",
+    });
+
+  const save = () =>
+    saveProfile()
+      .then(() => toast("Saved. Your preferences are up to date."))
+      .catch(saveFailed);
+
+  const savePrefs = () =>
+    saveNotificationPrefs()
+      .then(() => toast("Saved. Your preferences are up to date."))
+      .catch(saveFailed);
 
   const toggleCell = (row: string, ch: string) => {
     if (ch === "Push") return; // mobile app is Release 2
@@ -114,13 +142,27 @@ export default function SettingsPage() {
       integrations: { ...c.integrations, [key]: on },
     }));
 
+  const startPhoneVerify = () => {
+    setVerifyingPhone(true);
+    sendPhoneCode().catch(() => {
+      setVerifyingPhone(false);
+      toast("Couldn't send the code just now. Please try again.", { tone: "error" });
+    });
+  };
+
   const onPhoneOtp = (code: string) => {
     setPhoneOtp(code);
     if (code.length === 6) {
-      settingsStore.set((c) => ({ ...c, phoneVerified: true }));
-      setVerifyingPhone(false);
-      setPhoneOtp("");
-      toast("Phone verified. WhatsApp delivery is live.");
+      verifyPhoneCode(code)
+        .then(() => {
+          setVerifyingPhone(false);
+          setPhoneOtp("");
+          toast("Phone verified. WhatsApp delivery is live.");
+        })
+        .catch(() => {
+          setPhoneOtp("");
+          toast("That code didn't match. Please try again.", { tone: "error" });
+        });
     }
   };
 
@@ -164,7 +206,7 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <Field label="Email" defaultValue="ada@example.com" disabled />
+            <Field label="Email" value={settings.email} disabled onChange={() => {}} />
             <p className="mt-1 flex items-center gap-1.5 text-xs">
               {settings.emailVerified ? (
                 <span className="flex items-center gap-1 font-medium text-success">
@@ -176,7 +218,7 @@ export default function SettingsPage() {
             </p>
           </div>
           <div>
-            <Field label="Phone" defaultValue="+234 801 234 5678" disabled />
+            <Field label="Phone" value={settings.phone} disabled onChange={() => {}} />
             <p className="mt-1 flex items-center gap-2 text-xs">
               {settings.phoneVerified ? (
                 <span className="flex items-center gap-1 font-medium text-success">
@@ -186,7 +228,7 @@ export default function SettingsPage() {
                 <>
                   <span className="text-warning-ink">Not verified — WhatsApp delivery is paused.</span>
                   <button
-                    onClick={() => setVerifyingPhone(true)}
+                    onClick={startPhoneVerify}
                     className="cursor-pointer font-medium text-indigo-900 hover:underline"
                   >
                     Verify now
@@ -256,12 +298,23 @@ export default function SettingsPage() {
                       ...c,
                       features: { ...c.features, [f.key]: !c.features[f.key] },
                     }));
-                    toast(
-                      turningOff
-                        ? `${f.label} switched off. Turn it back on any time.`
-                        : `${f.label} switched on.`,
-                      { tone: "info" }
-                    );
+                    saveFeature(f.key, !turningOff)
+                      .then(() =>
+                        toast(
+                          turningOff
+                            ? `${f.label} switched off. Turn it back on any time.`
+                            : `${f.label} switched on.`,
+                          { tone: "info" }
+                        )
+                      )
+                      .catch(() => {
+                        // server said no — put the flag back
+                        settingsStore.set((c) => ({
+                          ...c,
+                          features: { ...c.features, [f.key]: turningOff },
+                        }));
+                        saveFailed();
+                      });
                   }}
                 />
               </div>
@@ -340,7 +393,7 @@ export default function SettingsPage() {
               />
             </label>
           </div>
-          <Button className="mt-6" onClick={save}>Save preferences</Button>
+          <Button className="mt-6" onClick={savePrefs}>Save preferences</Button>
         </Card>
       )}
 

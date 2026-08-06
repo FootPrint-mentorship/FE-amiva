@@ -4,6 +4,9 @@ import { cleanup } from "@testing-library/react";
 import React from "react";
 import { resetAllStores } from "@/lib/store";
 
+// Tests always run self-contained on the mock stores.
+process.env.NEXT_PUBLIC_USE_MOCKS = "1";
+
 afterEach(cleanup);
 beforeEach(() => resetAllStores()); // shared stores must not leak between tests
 
