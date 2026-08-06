@@ -29,6 +29,7 @@ npm run dev        # http://localhost:3000 — real-API mode by default (see bel
 npx tsc --noEmit   # type-check (keep green)
 npm run lint
 npm test           # Vitest suite (keep green; tests always run in mock mode)
+npm run test:e2e   # Playwright smoke (prod build, mock mode, port 3100)
 npm run gen:api    # regenerate src/lib/api/schema.d.ts from ../BE-amiva/openapi.yaml
 ```
 
@@ -46,7 +47,11 @@ Architecture: `src/lib/api/client.ts` (fetch wrapper; access token in memory, re
 
 Also fixed while wiring: Today/Calendar rendered the mock `user` (greeting said "Ada" for every real account) — they now read `settingsStore` (which absorbs email/phone too); tz abbreviations come from `timezoneAbbr()` in `lib/timezones.ts` (Intl plus a pinned map for African zones — Intl's `en` locale calls Lagos "GMT+1", the spec wants "WAT").
 
-**Not yet wired (still mock in real mode):** Google sign-in (needs GOOGLE_CLIENT_ID; mock flow → /complete-profile), onboarding-wizard phone-verify step (Settings→Profile verify IS wired; onboarding still fakes it), integrations OAuth connect flow, SSE/cross-channel sync, Playwright smoke test. Note: the assistant needs **no LLM key** — the backend's rule-based fallback parser serves `POST /assistant/messages` in dev, incl. reminders/tasks/memories and calendar agenda/availability/create/reschedule/cancel with the high-risk confirm flow.
+**Also wired (later on 6 Aug):** onboarding phone-verify step (same `/auth/phone/*` repo as Settings), **integrations** (`data/integrations.ts`: GET /integrations — another bare-array endpoint — hydrates real connect state incl. `whatsapp_linked` from /users/me; Connect posts `/integrations/google/authorize` and redirects to the returned `authorization_url`; Disconnect DELETEs the integration. Without GOOGLE_CLIENT_ID the backend answers PROVIDER_ERROR and the UI toasts honestly — never fakes connected). Also fixed: the reminder modal defaulted `channels` to `["whatsapp"]` even for phone-unverified users — now defaults to verified channels only (spec §10.2).
+
+**Playwright smoke layer exists:** `npm run test:e2e` — `e2e/smoke.spec.ts` runs the critical journey (register with inline OTP → skip onboarding → Today → create reminder → sign out, plus the honest not-found search) against a production build in mock mode on :3100 (a second `next dev` in the same dir is refused, hence the prod build). `E2E_REAL=1 npx playwright test real-backend` additionally logs into the real backend on :3000 and creates a reminder through the chat assistant (verified end-to-end).
+
+**Not yet wired:** Google sign-in (needs GOOGLE_CLIENT_ID; mock flow → /complete-profile). **SSE/cross-channel sync is blocked server-side** — the backend exposes no event-stream endpoint yet; when it lands, invalidate stores on events (spec §7). Note: the assistant needs **no LLM key** — the backend's rule-based fallback parser serves `POST /assistant/messages` in dev, incl. reminders/tasks/memories and calendar agenda/availability/create/reschedule/cancel with the high-risk confirm flow.
 
 ## Testing
 
@@ -59,7 +64,7 @@ Conventions:
 - Mock async latencies (search 700ms, drafts/chat 900ms) use real timers — use `findBy*` with `{ timeout: 2500+ }`, don't add fake-timer plumbing.
 - Components using React 19 `use(params)` must render inside an awaited `act()` with a `Suspense` wrapper (see `lists-pages.test.tsx`).
 
-- The one gap worth naming honestly: these are jsdom component tests, not real-browser E2E; when the backend exists, a thin Playwright smoke layer over the critical journey (register → onboard → create reminder → receive on WhatsApp) would be the right addition.
+- The Playwright smoke layer now covers the real-browser gap: `npm run test:e2e` (mock mode, prod build on :3100) plus the opt-in `E2E_REAL=1 npx playwright test real-backend` journey against the live stack. WhatsApp delivery itself still can't be asserted from a browser.
 
 ## Layout of the code
 
@@ -110,8 +115,9 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 | Auth (`/login`, `/register`, `/complete-profile`, `/forgot-password`, `/link`) | ✅ done (mock) — Google sign-in, email-or-phone login, inline email OTP at signup (`/verify` removed), password toggles |
 | Onboarding wizard (`/onboarding`, 6 steps incl. skippable phone verify) | ✅ done (mock) — skip-all, back button, animated brand panel |
 | Test suite (Vitest + RTL, 16 files / 120 tests) | ✅ green — see Testing section |
-| API client + repositories (`lib/api`, `lib/data`) with NEXT_PUBLIC_USE_MOCKS escape hatch | ✅ wired & verified — auth, reminders/tasks/memories/calendar, chat/assistant + confirmations, search, settings persistence, phone OTP (Settings), notifications feed; see "Backend integration status" |
-| Google OAuth, onboarding phone-verify step, integrations OAuth, SSE, Playwright smoke | ❌ not wired yet (details above) |
+| API client + repositories (`lib/api`, `lib/data`) with NEXT_PUBLIC_USE_MOCKS escape hatch | ✅ wired & verified — auth, reminders/tasks/memories/calendar, chat/assistant + confirmations, search, settings persistence, phone OTP (Settings + onboarding), notifications feed, integrations; see "Backend integration status" |
+| Playwright smoke layer (`npm run test:e2e`, optional `E2E_REAL=1` spec) | ✅ passing — see "Backend integration status" |
+| Google sign-in (needs GOOGLE_CLIENT_ID) · SSE (no backend endpoint yet) | ❌ blocked externally (details above) |
 
 ## Architecture notes (post fix-all pass, 28 Jul 2026)
 

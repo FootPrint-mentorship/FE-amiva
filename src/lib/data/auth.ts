@@ -19,6 +19,7 @@ type ApiUser = {
   timezone: string;
   email_verified?: boolean;
   phone_verified?: boolean;
+  whatsapp_linked?: boolean;
   profile_complete: boolean;
   features?: Record<string, boolean>;
 };
@@ -36,6 +37,10 @@ function absorbUser(u: ApiUser) {
     timezone: u.timezone,
     emailVerified: u.email_verified ?? true,
     phoneVerified: u.phone_verified ?? false,
+    integrations: {
+      ...c.integrations,
+      whatsapp: u.whatsapp_linked ?? c.integrations.whatsapp,
+    },
     features: (u.features as Settings["features"]) ?? c.features,
   }));
 }

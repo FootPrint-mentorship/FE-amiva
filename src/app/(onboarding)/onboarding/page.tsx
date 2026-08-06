@@ -26,6 +26,10 @@ import { WA_LINK } from "@/lib/site";
 import { setAuthed } from "@/lib/session";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
+import {
+  sendPhoneCode as sendPhoneCodeApi,
+  verifyPhoneCode,
+} from "@/lib/data/settings";
 
 const steps = ["Welcome", "Preferences", "Verify phone", "Calendar", "Gmail", "First action"];
 
@@ -68,15 +72,26 @@ export default function OnboardingPage() {
 
   const sendPhoneCode = () => {
     setPhoneStage("sent");
-    toast("Code sent to your WhatsApp number.");
+    sendPhoneCodeApi()
+      .then(() => toast("Code sent to your WhatsApp number."))
+      .catch(() => {
+        setPhoneStage("idle");
+        toast("Couldn't send the code just now. Please try again.", { tone: "error" });
+      });
   };
 
   const onPhoneOtp = (code: string) => {
     setPhoneOtp(code);
     if (code.length === 6) {
-      settingsStore.set((c) => ({ ...c, phoneVerified: true }));
-      toast("Phone verified. WhatsApp delivery is live.");
-      next();
+      verifyPhoneCode(code)
+        .then(() => {
+          toast("Phone verified. WhatsApp delivery is live.");
+          next();
+        })
+        .catch(() => {
+          setPhoneOtp("");
+          toast("That code didn't match. Please try again.", { tone: "error" });
+        });
     }
   };
 
