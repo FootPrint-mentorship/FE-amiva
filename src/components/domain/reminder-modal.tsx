@@ -53,15 +53,20 @@ export function ReminderModal({
   const today = new Date();
   const init = initial ? parseRecurrence(initial.rrule) : null;
   const initParts = initial ? toLocalParts(initial.due_at) : null;
+  const settings = useStore(settingsStore);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [date, setDate] = useState(initParts?.date ?? toLocalParts(today.toISOString()).date);
   const [time, setTime] = useState(initParts?.time ?? "09:00");
   const [recurrence, setRecurrence] = useState<Recurrence>(init?.kind ?? "None");
   const [byDays, setByDays] = useState<string[]>(init?.byDays ?? ["MO"]);
-  const [chans, setChans] = useState<string[]>(initial?.channels ?? ["whatsapp"]);
+  // Default only to channels the user has verified — nothing is ever
+  // dispatched to an unverified medium (spec §10.2).
+  const [chans, setChans] = useState<string[]>(
+    initial?.channels ??
+      (settings.phoneVerified ? ["whatsapp"] : settings.emailVerified ? ["email"] : [])
+  );
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [error, setError] = useState("");
-  const settings = useStore(settingsStore);
   const channelVerified: Record<string, boolean> = {
     whatsapp: settings.phoneVerified,
     email: settings.emailVerified,

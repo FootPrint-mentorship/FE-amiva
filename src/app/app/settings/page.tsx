@@ -44,6 +44,14 @@ import {
   sendPhoneCode,
   verifyPhoneCode,
 } from "@/lib/data/settings";
+import {
+  connectGoogle,
+  hydrateIntegrations,
+  integrationsStore,
+  revokeIntegration,
+} from "@/lib/data/integrations";
+import { ApiError, USE_MOCKS } from "@/lib/api/client";
+import { useRouter } from "next/navigation";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: UserRound },
@@ -92,17 +100,22 @@ function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; la
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<TabId>("profile");
   const settings = useStore(settingsStore);
+  const integrationRows = useStore(integrationsStore);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [verifyingPhone, setVerifyingPhone] = useState(false);
   const [phoneOtp, setPhoneOtp] = useState("");
   const { matrix, quietHours } = settings;
 
-  // Real mode: the notifications matrix lives on the server.
+  // Real mode: the notifications matrix and integrations live on the server.
   useEffect(() => {
     hydrateNotificationPrefs().catch(() => {
       /* the store's defaults still render; saving will surface errors */
+    });
+    hydrateIntegrations().catch(() => {
+      /* same: the cards fall back to the stored flags */
     });
   }, []);
 
@@ -429,6 +442,32 @@ export default function SettingsPage() {
             ]
           ).map((i) => {
             const on = settings.integrations[i.key];
+            const row =
+              i.key === "whatsapp"
+                ? null
+                : integrationRows.find(
+                    (r) => r.status === "active" && r.scopes.includes(i.key)
+                  );
+            const detail = row ? `${row.account_email} · connected` : i.detail;
+            const connect = () => {
+              if (i.key === "whatsapp") {
+                if (USE_MOCKS) {
+                  setIntegration("whatsapp", true);
+                  toast("WhatsApp connected.");
+                } else {
+                  router.push("/link"); // linking happens in WhatsApp itself
+                }
+                return;
+              }
+              connectGoogle(i.key).catch((err) =>
+                toast(
+                  err instanceof ApiError && err.code === "PROVIDER_ERROR"
+                    ? "Google connections aren't configured on this server yet — nothing was changed."
+                    : "That didn't go through — nothing was changed.",
+                  { tone: "error" }
+                )
+              );
+            };
             return (
               <Card key={i.name} className="flex items-center gap-4 p-5">
                 <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-50">
@@ -439,20 +478,14 @@ export default function SettingsPage() {
                     {i.name}
                     {on && <Chip tone="success">Connected</Chip>}
                   </p>
-                  <p className="text-sm text-ink-muted">{on ? i.detail : i.offDetail}</p>
+                  <p className="text-sm text-ink-muted">{on ? detail : i.offDetail}</p>
                 </div>
                 {on ? (
                   <Button variant="ghost" size="sm" onClick={() => setDisconnecting(i.key)}>
                     {i.disconnectLabel}
                   </Button>
                 ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setIntegration(i.key, true);
-                      toast(`${i.name} connected.`);
-                    }}
-                  >
+                  <Button size="sm" onClick={connect}>
                     Connect
                   </Button>
                 )}
@@ -483,9 +516,18 @@ export default function SettingsPage() {
                   <Button
                     variant="danger"
                     onClick={() => {
-                      setIntegration(disconnecting as "whatsapp" | "calendar" | "gmail", false);
+                      const key = disconnecting as "whatsapp" | "calendar" | "gmail";
                       setDisconnecting(null);
-                      toast("Disconnected. Access was revoked.", { tone: "info" });
+                      if (key === "whatsapp") {
+                        setIntegration("whatsapp", false);
+                        toast("Disconnected. Access was revoked.", { tone: "info" });
+                        return;
+                      }
+                      revokeIntegration(key)
+                        .then(() => toast("Disconnected. Access was revoked.", { tone: "info" }))
+                        .catch(() =>
+                          toast("That didn't go through — access was not changed.", { tone: "error" })
+                        );
                     }}
                   >
                     Disconnect
