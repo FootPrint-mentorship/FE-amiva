@@ -1,13 +1,29 @@
+"use client";
+
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { WA_LINK } from "@/lib/site";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Menu, X } from "lucide-react";
 import { Year } from "@/components/year";
+import { CtaPair } from "@/components/marketing/cta-pair";
+import { useState } from "react";
 
 const nav = [
   { href: "/#features", label: "Features" },
   { href: "/#pricing", label: "Pricing" },
+  { href: "/#faq", label: "Questions" },
+  { href: "/#faq", label: "Contact" },
+];
+
+const footerProduct = [
+  { href: "/#features", label: "Features" },
+  { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
+];
+
+const footerLegal = [
+  { href: "/privacy-policy", label: "Privacy Policy" },
+  { href: "/terms", label: "Terms of Service" },
 ];
 
 export default function MarketingLayout({
@@ -15,77 +31,195 @@ export default function MarketingLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="sticky top-0 z-40 border-b border-line bg-white/85 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-285 items-center justify-between px-5">
+    <div className="flex min-h-screen flex-col bg-[#fbfaff]">
+      {/* ── Header ─────────────────────────── */}
+      <header
+        className="sticky top-0 z-40 border-b border-line/80 bg-[rgba(251,250,255,0.9)] backdrop-blur-[18px]"
+        style={{ height: 80 }}
+      >
+        <div className="mx-auto flex h-full w-full max-w-[1240px] items-center justify-between px-7">
+          {/* Logo */}
           <Link href="/" aria-label="Amiva home">
-            <Logo size={30} />
+            <Logo size={20} />
           </Link>
-          <nav className="hidden items-center gap-7 text-sm text-ink-muted md:flex">
+
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-8 text-[14px] text-[#4f5060] md:flex">
             {nav.map((n) => (
-              <Link key={n.href} href={n.href} className="hover:text-navy">
+              <Link key={n.label} href={n.href} className="hover:text-indigo-900">
                 {n.label}
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-2">
+
+          {/* Desktop actions */}
+          <div className="hidden items-center gap-[22px] text-[14px] md:flex">
             <Link
               href="/login"
-              className="hidden h-9 items-center rounded-[10px] px-4 text-sm font-medium text-indigo-900 hover:bg-indigo-50 sm:inline-flex"
+              className="text-ink hover:text-indigo-900"
             >
               Log in
             </Link>
             <Link
               href="/register"
-              className="inline-flex h-9 items-center rounded-[10px] bg-indigo-900 px-4 text-sm font-medium text-white hover:bg-indigo-700"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-indigo-900 px-5 text-[14px] font-semibold text-white transition-all hover:bg-[#302477] hover:-translate-y-px"
             >
-              Get started
+              <span>Get started</span>
+              <span aria-hidden>→</span>
             </Link>
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="flex size-9 items-center justify-center rounded-lg text-navy md:hidden"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
         </div>
+
+        {/* Mobile nav drawer */}
+        {mobileOpen && (
+          <div className="absolute left-0 right-0 top-full border-b border-line bg-white px-5 py-6 shadow-[0_20px_30px_rgba(32,24,91,0.08)] md:hidden">
+            <nav className="flex flex-col gap-4">
+              {nav.map((n) => (
+                <Link
+                  key={n.label}
+                  href={n.href}
+                  className="text-[15px] font-medium text-navy"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {n.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="mt-5 flex gap-3">
+              <Link
+                href="/login"
+                className="flex-1 inline-flex h-11 items-center justify-center rounded-full border border-line text-[14px] font-medium text-navy"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="flex-1 inline-flex h-11 items-center justify-center gap-1 rounded-full bg-indigo-900 text-[14px] font-semibold text-white"
+              >
+                <span>Get started</span>
+                <span aria-hidden>→</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
+      {/* ── Main content ───────────────────── */}
       <main className="flex-1">{children}</main>
 
-      <footer className="bg-navy text-white">
-        <div className="mx-auto grid w-full max-w-285 gap-10 px-5 py-14 md:grid-cols-4">
-          <div className="space-y-3">
-            <Logo variant="light" size={28} />
-            <p className="max-w-55 text-sm text-white/60">
-              Your personal chief of staff, on WhatsApp.
-            </p>
-          </div>
-          <div>
-            <p className="mb-3 text-sm font-semibold text-white/80">Product</p>
-            <ul className="space-y-2 text-sm text-white/60">
-              <li><Link href="/#features" className="hover:text-white">Features</Link></li>
-              <li><Link href="/#pricing" className="hover:text-white">Pricing</Link></li>
-              <li><Link href="/#faq" className="hover:text-white">FAQ</Link></li>
-            </ul>
-          </div>
-          <div>
-            <p className="mb-3 text-sm font-semibold text-white/80">Legal</p>
-            <ul className="space-y-2 text-sm text-white/60">
-              <li><Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
-            </ul>
-          </div>
-          <div className="space-y-3">
-            <p className="text-sm font-semibold text-white/80">Talk to Amiva</p>
-            <a
-              href={WA_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-cyan-500 px-4 text-sm font-semibold text-navy hover:bg-cyan-400"
-            >
-              <MessageCircle className="size-4" aria-hidden />
-              Open WhatsApp
-            </a>
-          </div>
+      {/* ── Footer ─────────────────────────── */}
+      <footer className="bg-[#ecebf1] px-[max(22px,calc(50vw-620px))] pb-[42px] pt-[36px] text-navy">
+        {/* Gradient CTA card */}
+        <div className="flex min-h-[330px] flex-col items-center justify-center rounded-[34px] bg-[radial-gradient(at_50%_-15%,#9d92d2_0%,#6655ac_32%,#32236f_72%,#20185b_100%)] px-6 py-[55px] text-center text-white shadow-[0_24px_55px_rgba(32,24,91,0.18)]">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">
+            Get started for free
+          </span>
+          <h2 className="mx-auto mt-[14px] max-w-[560px] text-[clamp(36px,4vw,54px)] font-bold leading-[1.04] tracking-[-0.055em]">
+            Start in the chat you already use.
+          </h2>
+          <p className="mt-0 text-[13px] text-[#d9d6e9]">
+            Free to start · No app to install
+          </p>
+          <CtaPair className="mt-6 justify-center" invert />
         </div>
-        <div className="border-t border-white/10 py-5 text-center text-xs text-white/40">
-          © <Year /> Amiva. All rights reserved.
+
+        {/* White card */}
+        <div className="relative mt-[18px] overflow-hidden rounded-[34px] border border-[#e1e0e8] bg-white pb-0 pt-[62px] shadow-[0_20px_45px_rgba(25,22,48,0.08)]">
+          {/* Footer top grid */}
+          <div className="relative z-[2] grid gap-10 px-6 md:grid-cols-[2fr_repeat(3,1fr)] md:px-[54px]">
+            {/* Brand */}
+            <div className="flex flex-col items-start gap-3 text-[13px]">
+              <Logo size={20} />
+              <p className="max-w-[250px] leading-[1.6] text-[#696b7a]">
+                Your personal chief of staff, on WhatsApp.
+              </p>
+            </div>
+
+            {/* Product */}
+            <div className="flex flex-col items-start gap-3 text-[13px]">
+              <b className="text-navy">Product</b>
+              {footerProduct.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="text-[#696b7a] hover:text-navy"
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Legal */}
+            <div className="flex flex-col items-start gap-3 text-[13px]">
+              <b className="text-navy">Legal</b>
+              {footerLegal.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="text-[#696b7a] hover:text-navy"
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="flex flex-col items-start gap-3 text-[13px]">
+              <b className="text-navy">Talk to Amiva</b>
+              <a
+                href={WA_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-indigo-900 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-indigo-700"
+              >
+                <MessageCircle className="size-4" aria-hidden />
+                Open WhatsApp
+              </a>
+            </div>
+          </div>
+
+          {/* Footer bottom */}
+          <div className="relative z-[2] mt-[45px] flex flex-wrap items-center justify-between gap-3 border-t border-[#ecebf1] px-6 py-5 text-[11px] text-[#8a8b96] md:px-[54px]">
+            <span>
+              © <Year /> Amiva. All rights reserved.
+            </span>
+            <span className="flex gap-[18px]">
+              <Link href="/privacy-policy" className="hover:text-navy">
+                Privacy
+              </Link>
+              <Link href="/terms" className="hover:text-navy">
+                Terms
+              </Link>
+            </span>
+          </div>
+
+          {/* Giant wordmark watermark */}
+          <p
+            aria-hidden
+            className="pointer-events-none select-none whitespace-nowrap text-center font-bold leading-[0.75] text-[#f0eff5]"
+            style={{
+              fontSize: "clamp(250px, 32vw, 480px)",
+              letterSpacing: "-0.09em",
+              transform: "scaleX(1.12)",
+              transformOrigin: "bottom",
+              position: "relative",
+              bottom: "-180px",
+            }}
+          >
+            Amiva
+          </p>
         </div>
       </footer>
     </div>

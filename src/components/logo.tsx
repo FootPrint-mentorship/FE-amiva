@@ -1,36 +1,36 @@
 import Image from "next/image";
 import { cn } from "@/lib/cn";
 
-/** Brand lockup: square app-icon mark + Inter wordmark. */
+/** Brand lockup using the official horizontal logo SVG. */
 export function Logo({
   variant = "dark",
   size = 32,
   className,
 }: {
-  /** dark = navy wordmark on light bg · light = white wordmark on dark bg */
+  /** dark = on light bg (default) · light = on dark/indigo bg */
   variant?: "dark" | "light";
   size?: number;
   className?: string;
 }) {
+  // The horizontal logo is 360×360 viewBox but wide — treat height as 'size',
+  // width proportional at ~4.4× (360w mark + wordmark, real ratio is wider).
+  const h = size;
+  const w = Math.round(h * 4.4);
+
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
+    <span className={cn("inline-flex items-center", className)}>
       <Image
-        src="/brand/mark.svg"
-        alt=""
-        width={size}
-        height={size}
+        src="/brand/logo-horizontal.svg"
+        alt="Amiva"
+        width={w}
+        height={h}
         priority
-        className="rounded-[22%]"
+        style={
+          variant === "light"
+            ? { filter: "brightness(0) invert(1)" }
+            : undefined
+        }
       />
-      <span
-        className={cn(
-          "font-semibold tracking-tight",
-          variant === "dark" ? "text-navy" : "text-white"
-        )}
-        style={{ fontSize: size * 0.66 }}
-      >
-        Amiva
-      </span>
     </span>
   );
 }
