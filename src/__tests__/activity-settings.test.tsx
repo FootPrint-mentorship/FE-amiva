@@ -29,12 +29,12 @@ describe("Settings page", () => {
 
   it("feature toggles switch modules off and on", async () => {
     await openTab("Features");
-    const emailToggle = screen.getByRole("switch", { name: "Email feature" });
-    expect(emailToggle).toHaveAttribute("aria-checked", "true");
-    await userEvent.click(emailToggle);
-    expect(settingsStore.get().features.email).toBe(false);
-    await userEvent.click(emailToggle);
-    expect(settingsStore.get().features.email).toBe(true);
+    const memToggle = screen.getByRole("switch", { name: "Memories feature" });
+    expect(memToggle).toHaveAttribute("aria-checked", "true");
+    await userEvent.click(memToggle);
+    expect(settingsStore.get().features.memories).toBe(false);
+    await userEvent.click(memToggle);
+    expect(settingsStore.get().features.memories).toBe(true);
   });
 
   it("notification matrix toggles cells; Push stays disabled", async () => {
@@ -67,7 +67,6 @@ describe("Settings page", () => {
   it("integrations show connected status and confirm before disconnecting", async () => {
     await openTab("Integrations");
     expect(screen.getAllByText("Connected").length).toBe(2); // WhatsApp + Calendar
-    expect(screen.getByRole("button", { name: "Connect" })).toBeInTheDocument(); // Gmail
     await userEvent.click(screen.getAllByRole("button", { name: "Disconnect" })[0]);
     expect(screen.getByText(/Calendar features stop working/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Keep it connected" }));
@@ -78,9 +77,9 @@ describe("Settings page", () => {
 describe("Activity log (inside Settings)", () => {
   it("lists actions with risk chips and expandable approval details", async () => {
     await openTab("Activity");
-    expect(screen.getByText(/Sent reply to kemi@client.com/)).toBeInTheDocument();
-    await userEvent.click(screen.getByText(/Sent reply to kemi@client.com/));
-    expect(screen.getByText(/Approved by you via web/)).toBeInTheDocument();
+    expect(screen.getByText(/Permanently deleted 1 memory/)).toBeInTheDocument();
+    await userEvent.click(screen.getByText(/Permanently deleted 1 memory/));
+    expect(screen.getByText(/Confirmed by you via web/)).toBeInTheDocument();
   });
 
   it("filters by risk through the custom dropdown", async () => {
@@ -88,7 +87,6 @@ describe("Activity log (inside Settings)", () => {
     await userEvent.click(screen.getByRole("combobox", { name: "Risk filter" }));
     const listbox = screen.getByRole("listbox", { name: "Risk filter" });
     await userEvent.click(within(listbox).getByRole("option", { name: "High" }));
-    expect(screen.getByText(/Sent reply to kemi@client.com/)).toBeInTheDocument();
     expect(screen.getByText(/Permanently deleted 1 memory/)).toBeInTheDocument();
     expect(screen.queryByText(/Pay NEPA bill/)).not.toBeInTheDocument();
   });

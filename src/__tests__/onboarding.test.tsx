@@ -6,7 +6,7 @@ import { settingsStore } from "@/lib/stores";
 import { nav } from "@/test/setup";
 
 describe("Onboarding wizard", () => {
-  it("walks all six steps; phone verify and Google connects are skippable", async () => {
+  it("walks all five steps; phone verify and Google Calendar connect are skippable", async () => {
     // A fresh signup arrives with an unverified phone
     settingsStore.set((c) => ({ ...c, phoneVerified: false }));
     render(<OnboardingPage />);
@@ -28,11 +28,7 @@ describe("Onboarding wizard", () => {
     expect(screen.getByRole("heading", { name: "Connect Google Calendar" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Skip for now" }));
 
-    // 5 · Gmail (optional + skippable)
-    expect(screen.getByRole("heading", { name: /Connect Gmail/ })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Skip for now" }));
-
-    // 6 · First action
+    // 5 · First action
     expect(screen.getByText("Try your first request")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
     expect(screen.getByText(/I'll remind you/)).toBeInTheDocument();

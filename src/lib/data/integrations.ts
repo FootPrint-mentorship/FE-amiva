@@ -23,7 +23,7 @@ export type IntegrationInfo = {
 /** Raw server rows; the settings page reads account emails from here. */
 export const integrationsStore = createStore<IntegrationInfo[]>([]);
 
-type GoogleScope = "calendar" | "gmail";
+type GoogleScope = "calendar";
 
 function active(rows: IntegrationInfo[], scope: GoogleScope): boolean {
   return rows.some((r) => r.status === "active" && r.scopes.includes(scope));
@@ -38,7 +38,6 @@ export async function hydrateIntegrations(): Promise<void> {
     integrations: {
       ...c.integrations,
       calendar: active(rows, "calendar"),
-      gmail: active(rows, "gmail"),
     },
   }));
 }

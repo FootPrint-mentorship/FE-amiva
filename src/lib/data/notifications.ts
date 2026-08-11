@@ -23,7 +23,6 @@ function kindHref(kind: string): string {
   if (kind.startsWith("task")) return "/app/tasks";
   if (kind.startsWith("calendar") || kind.startsWith("event")) return "/app/calendar";
   if (kind.startsWith("memory")) return "/app/memories";
-  if (kind.startsWith("email")) return "/app/email";
   return "/app/today";
 }
 

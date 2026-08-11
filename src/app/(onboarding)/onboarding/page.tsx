@@ -9,7 +9,6 @@ import {
   CalendarDays,
   Check,
   ListChecks,
-  Mail,
   MessageCircle,
   Send,
   Smartphone,
@@ -31,7 +30,7 @@ import {
   verifyPhoneCode,
 } from "@/lib/data/settings";
 
-const steps = ["Welcome", "Preferences", "Verify phone", "Calendar", "Gmail", "First action"];
+const steps = ["Welcome", "Preferences", "Verify phone", "Calendar", "First action"];
 
 const capabilities = [
   { icon: AlarmClock, title: "Remind", body: "One-time and recurring reminders, delivered where you'll see them." },
@@ -54,7 +53,6 @@ export default function OnboardingPage() {
     workEnd: "17:00",
   }));
   const [calendarConnected, setCalendarConnected] = useState(false);
-  const [gmailConnected, setGmailConnected] = useState(false);
   const [tryText, setTryText] = useState("Remind me to call Mum tomorrow at 6 pm");
   const [tried, setTried] = useState(false);
 
@@ -354,43 +352,8 @@ export default function OnboardingPage() {
             </Card>
           )}
 
-          {/* 5 · Gmail */}
+          {/* 5 · First action */}
           {step === 4 && (
-            <Card className="p-8">
-              <span className="flex size-12 items-center justify-center rounded-[14px] bg-indigo-50">
-                <Mail className="size-6 text-indigo-900" aria-hidden />
-              </span>
-              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
-                Connect Gmail <span className="text-base font-normal text-ink-muted">(optional)</span>
-              </h1>
-              <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                Get inbox summaries and drafted replies. Amiva reads only what
-                you allow and <strong>never sends an email without your approval</strong>.
-              </p>
-              {gmailConnected ? (
-                <p className="mt-5 flex items-center gap-2 rounded-[10px] bg-success/10 px-4 py-3 text-sm font-medium text-success">
-                  <Check className="size-4" aria-hidden /> Gmail connected
-                </p>
-              ) : (
-                <Button className="mt-5 w-full" size="lg" onClick={() => setGmailConnected(true)}>
-                  Connect Gmail
-                </Button>
-              )}
-              <div className="mt-3 flex justify-between">
-                <button onClick={next} className="cursor-pointer text-sm text-ink-muted hover:text-navy">
-                  Skip for now
-                </button>
-                {gmailConnected && (
-                  <Button size="sm" variant="ghost" onClick={next}>
-                    Continue →
-                  </Button>
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* 6 · First action */}
-          {step === 5 && (
             <Card className="p-8">
               <h1 className="text-2xl font-semibold tracking-tight text-navy">
                 Try your first request

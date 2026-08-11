@@ -152,4 +152,13 @@ describe("WhatsApp link landing", () => {
     await userEvent.click(screen.getByRole("button", { name: "Link WhatsApp" }));
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/app/today"), WAIT);
   });
+
+  it("never shows a number it cannot know — the token carries only a hash", () => {
+    nav.search = "token=abc123";
+    render(<LinkPage />);
+    // The mock-era page hardcoded "+234 801 •••• 678"; the real token can't
+    // reveal a number, so the copy must not pretend to.
+    expect(screen.queryByText(/\+234 801/)).not.toBeInTheDocument();
+    expect(screen.getByText(/number you just messaged Amiva from/)).toBeInTheDocument();
+  });
 });

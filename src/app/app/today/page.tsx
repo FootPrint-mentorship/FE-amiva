@@ -17,6 +17,7 @@ import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { agendaSummary, fmtTime } from "@/lib/mock";
+import { USE_MOCKS } from "@/lib/api/client";
 import { timezoneAbbr } from "@/lib/timezones";
 import { useStore } from "@/lib/store";
 import {
@@ -53,6 +54,35 @@ export default function TodayPage() {
   );
   const [now] = useState(() => Date.now());
 
+  // The summary strip narrates REAL data (mock mode keeps the demo line).
+  // A new account reads "your day is clear", never someone else's fake day.
+  const sameLocalDay = (iso: string) => {
+    const d = new Date(iso);
+    const n = new Date();
+    return (
+      d.getFullYear() === n.getFullYear() &&
+      d.getMonth() === n.getMonth() &&
+      d.getDate() === n.getDate()
+    );
+  };
+  const eventsToday = allEvents.filter(
+    (e) => e.status !== "cancelled" && sameLocalDay(e.start_at)
+  ).length;
+  const remindersToday = reminders.filter(
+    (r) => r.next_fire_at !== null && sameLocalDay(r.next_fire_at)
+  ).length;
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const summaryParts = [
+    eventsToday ? `${plural(eventsToday, "meeting")} on your calendar` : "",
+    remindersToday ? `${plural(remindersToday, "reminder")} due` : "",
+    tasks.length ? `${plural(tasks.length, "task")} due` : "",
+  ].filter(Boolean);
+  const daySummary = USE_MOCKS
+    ? agendaSummary
+    : summaryParts.length
+    ? `Today: ${summaryParts.join(" · ")}.`
+    : "Your day is clear. Anything you tell Amiva on WhatsApp shows up here too. 🎉";
+
   const greeting =
     new Date().getHours() < 12
       ? "Good morning"
@@ -65,7 +95,8 @@ export default function TodayPage() {
       {/* Header */}
       <div>
         <h1 className="text-[28px] font-semibold tracking-tight text-navy">
-          {greeting}, {settings.preferredName}
+          {greeting}
+          {settings.preferredName && `, ${settings.preferredName}`}
         </h1>
         <p className="text-sm text-ink-muted">
           {new Date().toLocaleDateString("en-GB", {
@@ -117,7 +148,7 @@ export default function TodayPage() {
       <Card className="border-cyan-500/30 bg-cyan-500/8 p-4">
         <div className="flex gap-3">
           <Sparkles className="mt-0.5 size-5 shrink-0 text-cyan-600" aria-hidden />
-          <p className="text-sm leading-relaxed text-navy">{agendaSummary}</p>
+          <p className="text-sm leading-relaxed text-navy">{daySummary}</p>
         </div>
       </Card>
 

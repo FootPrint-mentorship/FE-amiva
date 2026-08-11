@@ -10,7 +10,6 @@ import {
   CalendarDays,
   CheckSquare,
   Brain,
-  Mail,
   Settings,
   Search,
   Bell,
@@ -32,6 +31,7 @@ import {
 } from "@/lib/stores";
 import { sessionActive, signOut as endSession, loadMe } from "@/lib/data/auth";
 import { hydrateAll } from "@/lib/data/collections";
+import { completePendingLink } from "@/lib/data/linking";
 import { hydrateConfirmations, resolveConfirmationRemote } from "@/lib/data/assistant";
 import { hydrateNotifications, markNotificationsRead } from "@/lib/data/notifications";
 import { USE_MOCKS } from "@/lib/api/client";
@@ -49,7 +49,6 @@ const nav: { href: string; label: string; icon: typeof Sun; feature?: FeatureKey
   { href: "/app/calendar", label: "Calendar", icon: CalendarDays, feature: "calendar" },
   { href: "/app/tasks", label: "Tasks", icon: CheckSquare, feature: "tasks" },
   { href: "/app/memories", label: "Memories", icon: Brain, feature: "memories" },
-  { href: "/app/email", label: "Email", icon: Mail, feature: "email" },
 ];
 
 function NavLinks({
@@ -115,6 +114,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Real-API mode: pull the user + collections into the shared stores.
   useEffect(() => {
     if (!ready || USE_MOCKS) return;
+    // A WhatsApp deep-link token may be waiting from before sign-in/signup —
+    // complete the link now that we know which account to bind (spec §3.1.3).
+    completePendingLink().then((linked) => {
+      if (linked) toast("WhatsApp linked, chat with Amiva any time.");
+    });
     Promise.all([
       loadMe(),
       hydrateAll(),

@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import {
   AlarmClock,
   CalendarDays,
-  Mail,
   Brain,
   CheckSquare,
   UserRound,
@@ -23,7 +22,6 @@ import { auditEvents, fmtDay, fmtTime } from "@/lib/mock";
 const moduleIcons = {
   reminders: AlarmClock,
   calendar: CalendarDays,
-  email: Mail,
   memory: Brain,
   tasks: CheckSquare,
   account: UserRound,
@@ -31,7 +29,7 @@ const moduleIcons = {
 
 const riskTone = { low: "neutral", medium: "warning", high: "danger" } as const;
 
-const moduleOptions = ["all", "reminders", "calendar", "email", "memory", "tasks"];
+const moduleOptions = ["all", "reminders", "calendar", "memory", "tasks"];
 const riskOptions = ["all", "low", "medium", "high"];
 
 /** The audit trail (PRD trust feature), rendered inside Settings → Activity. */

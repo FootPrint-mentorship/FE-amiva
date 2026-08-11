@@ -9,7 +9,6 @@ import {
   Lock,
   MessageCircle,
   CalendarDays,
-  Mail,
   Check,
   Download,
   Trash2,
@@ -68,13 +67,12 @@ type TabId = (typeof tabs)[number]["id"];
 const notifRows = ["Reminders", "Tasks", "Daily agenda", "Product updates"] as const;
 const notifChannels = ["WhatsApp", "Email", "Push"] as const;
 
-const featureMeta: { key: FeatureKey; label: string; body: string; icon: typeof Mail }[] = [
+const featureMeta: { key: FeatureKey; label: string; body: string; icon: typeof Brain }[] = [
   { key: "chat", label: "Chat", body: "Talk to Amiva from the web, not just WhatsApp.", icon: MessageSquare },
   { key: "reminders", label: "Reminders", body: "One-time and recurring reminders with delivery tracking.", icon: AlarmClock },
   { key: "calendar", label: "Calendar", body: "Google Calendar events, conflicts and free slots.", icon: CalendarDays },
   { key: "tasks", label: "Tasks", body: "Categorised tasks and checklists with subtasks.", icon: CheckSquare },
   { key: "memories", label: "Memories", body: "Your personal, searchable memory.", icon: Brain },
-  { key: "email", label: "Email", body: "Inbox summaries and approval-gated replies.", icon: Mail },
 ];
 
 function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; label: string }) {
@@ -149,7 +147,7 @@ export default function SettingsPage() {
     }));
   };
 
-  const setIntegration = (key: "whatsapp" | "calendar" | "gmail", on: boolean) =>
+  const setIntegration = (key: "whatsapp" | "calendar", on: boolean) =>
     settingsStore.set((c) => ({
       ...c,
       integrations: { ...c.integrations, [key]: on },
@@ -419,7 +417,9 @@ export default function SettingsPage() {
                 key: "whatsapp" as const,
                 icon: MessageCircle,
                 name: "WhatsApp",
-                detail: "+234 801 •••• 678",
+                // The account's own phone — the wa_id itself can be a privacy
+                // JID (…@lid), so the number on file is the honest display.
+                detail: settings.phone || "Connected",
                 offDetail: "Link the number you chat from",
                 disconnectLabel: "Unlink",
               },
@@ -429,14 +429,6 @@ export default function SettingsPage() {
                 name: "Google Calendar",
                 detail: "ada@gmail.com · 2 calendars selected",
                 offDetail: "Events, conflict checks and agenda summaries",
-                disconnectLabel: "Disconnect",
-              },
-              {
-                key: "gmail" as const,
-                icon: Mail,
-                name: "Gmail",
-                detail: "ada@gmail.com · inbox summaries active",
-                offDetail: "Summaries, drafts and follow-ups",
                 disconnectLabel: "Disconnect",
               },
             ]
@@ -500,14 +492,12 @@ export default function SettingsPage() {
             <Modal label="Confirm disconnect" onClose={() => setDisconnecting(null)} panelClassName="w-full max-w-110">
               <Card className="p-6">
                 <h2 className="text-lg font-semibold text-navy">
-                  Disconnect {disconnecting === "whatsapp" ? "WhatsApp" : disconnecting === "calendar" ? "Google Calendar" : "Gmail"}?
+                  Disconnect {disconnecting === "whatsapp" ? "WhatsApp" : "Google Calendar"}?
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                   {disconnecting === "whatsapp"
                     ? "Amiva stops replying on WhatsApp until you link a number again."
-                    : disconnecting === "calendar"
-                    ? "Calendar features stop working and Amiva loses access to your events immediately."
-                    : "Email summaries and drafts stop working and access is revoked immediately."}
+                    : "Calendar features stop working and Amiva loses access to your events immediately."}
                 </p>
                 <div className="mt-5 flex justify-end gap-2">
                   <Button variant="ghost" onClick={() => setDisconnecting(null)}>
@@ -516,7 +506,7 @@ export default function SettingsPage() {
                   <Button
                     variant="danger"
                     onClick={() => {
-                      const key = disconnecting as "whatsapp" | "calendar" | "gmail";
+                      const key = disconnecting as "whatsapp" | "calendar";
                       setDisconnecting(null);
                       if (key === "whatsapp") {
                         setIntegration("whatsapp", false);

@@ -83,11 +83,10 @@ function MiniAppCard({ item, dark }: { item: (typeof practical)[number]; dark?: 
   const Icon = item.icon;
   return (
     <div
-      className={`relative flex min-h-[210px] flex-col justify-between overflow-hidden rounded-[18px] border p-7 shadow-[0_20px_55px_rgba(38,28,92,0.08)] ${
-        dark
+      className={`relative flex min-h-[210px] flex-col justify-between overflow-hidden rounded-[18px] border p-7 shadow-[0_20px_55px_rgba(38,28,92,0.08)] ${dark
           ? "border-indigo-800 bg-indigo-900 text-white"
           : "border-[#e7e3f1] bg-[#f3f0fb] text-navy"
-      }`}
+        }`}
     >
       <div className="flex items-center justify-between">
         <Icon className={`size-5 ${dark ? "text-cyan-400" : "text-violet-500"}`} aria-hidden />

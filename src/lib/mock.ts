@@ -472,64 +472,10 @@ export const chatSeed: ChatMessage[] = [
   },
 ];
 
-export type EmailThreadSummary = {
-  id: string;
-  subject: string;
-  from: { name: string; email: string };
-  summary: string;
-  importance: "high" | "normal" | "low";
-  importance_reason: string;
-  suggested_action: "reply" | "read" | "schedule";
-  last_message_at: string;
-};
-
-export const emailThreads: EmailThreadSummary[] = [
-  {
-    id: "thr_01",
-    subject: "Contract renewal: action needed",
-    from: { name: "Kemi A.", email: "kemi@client.com" },
-    summary: "Kemi needs the signed renewal by Friday; legal flagged clause 4 for review.",
-    importance: "high",
-    importance_reason: "Explicit deadline (Friday) and a direct request to you.",
-    suggested_action: "reply",
-    last_message_at: iso(8, 30),
-  },
-  {
-    id: "thr_02",
-    subject: "Your e-ticket: KQ533 LOS→NBO",
-    from: { name: "Kenya Airways", email: "noreply@kenya-airways.com" },
-    summary: "E-ticket confirmed for the day after tomorrow, 9:15 AM departure. Booking ref 6HJQZP.",
-    importance: "normal",
-    importance_reason: "Travel document for an upcoming trip on your calendar.",
-    suggested_action: "read",
-    last_message_at: iso(10, 4, -1),
-  },
-  {
-    id: "thr_03",
-    subject: "Intro: Amara from Flux Ventures",
-    from: { name: "Tunde O.", email: "tunde@vc.com" },
-    summary: "Tunde is introducing you to Amara, who invests in productivity tools. She suggested a call next week.",
-    importance: "high",
-    importance_reason: "Warm investor introduction with a proposed meeting.",
-    suggested_action: "schedule",
-    last_message_at: iso(16, 45, -1),
-  },
-  {
-    id: "thr_04",
-    subject: "Team offsite: venue options",
-    from: { name: "Abraham O.", email: "abraham@amiva.app" },
-    summary: "Three venue options for the August offsite; Abraham needs your pick by Wednesday.",
-    importance: "normal",
-    importance_reason: "Decision requested, but the deadline is several days out.",
-    suggested_action: "reply",
-    last_message_at: iso(9, 15, -2),
-  },
-];
-
 export type AuditEvent = {
   id: string;
   action: string;
-  module: "reminders" | "calendar" | "email" | "memory" | "tasks" | "account";
+  module: "reminders" | "calendar" | "memory" | "tasks" | "account";
   summary: string;
   risk: "low" | "medium" | "high";
   channel: "whatsapp" | "web";
@@ -539,17 +485,6 @@ export type AuditEvent = {
 };
 
 export const auditEvents: AuditEvent[] = [
-  {
-    id: "aud_01",
-    action: "email.send",
-    module: "email",
-    summary: "Sent reply to kemi@client.com: “Re: Contract renewal”",
-    risk: "high",
-    channel: "web",
-    result: "success",
-    approval: "Approved by you via web, today 14:03",
-    created_at: iso(14, 3),
-  },
   {
     id: "aud_02",
     action: "reminder.create",
