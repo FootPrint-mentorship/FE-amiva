@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { CtaPair } from "@/components/marketing/cta-pair";
 import { FaqAccordion } from "@/components/marketing/faq";
 import { IntegrationsChaos } from "@/components/marketing/integrations";
 import { WA_LINK } from "@/lib/site";
@@ -152,6 +153,7 @@ export default function HomePage() {
           <p className="mx-auto mt-5 max-w-[540px] text-[13px] leading-relaxed text-[#73708a] sm:text-sm">
             Create reminders, manage meetings, organise tasks and work with email through one calm conversation.
           </p>
+          <CtaPair className="mt-6 justify-center" />
         </div>
 
         {/* Hero Visual: iPhone Mockup (iPhone Amiva_Hero.png) & Floating Cards */}
