@@ -95,6 +95,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [trayOpen, setTrayOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const confirmations = useStore(confirmationsStore);
   const notifications = useStore(notificationsStore);
@@ -161,6 +163,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = () => {
+    setSigningOut(true);
     void endSession().finally(() => router.replace("/login"));
   };
 
@@ -192,7 +195,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <button
               aria-label="Sign out"
               title="Sign out"
-              onClick={signOut}
+              onClick={() => setConfirmSignOut(true)}
               className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50 hover:text-navy"
             >
               <LogOut className="size-4" aria-hidden />
@@ -394,7 +397,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 Settings
               </Link>
               <button
-                onClick={signOut}
+                onClick={() => {
+                  setDrawerOpen(false);
+                  setConfirmSignOut(true);
+                }}
                 className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-indigo-50 hover:text-navy"
               >
                 <LogOut className="size-4.5" aria-hidden />
@@ -402,6 +408,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {confirmSignOut && (
+        <Modal
+          label="Confirm sign out"
+          onClose={() => !signingOut && setConfirmSignOut(false)}
+          panelClassName="w-full max-w-110"
+        >
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold text-navy">Sign out of Amiva?</h2>
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+              You&apos;ll need to sign in again to see your reminders, tasks and calendar
+              here. WhatsApp keeps working as usual.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmSignOut(false)} disabled={signingOut}>
+                Stay signed in
+              </Button>
+              <Button variant="danger" onClick={signOut} loading={signingOut}>
+                Sign out
+              </Button>
+            </div>
+          </Card>
         </Modal>
       )}
     </div>

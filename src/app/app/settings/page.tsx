@@ -49,6 +49,14 @@ import {
   integrationsStore,
   revokeIntegration,
 } from "@/lib/data/integrations";
+import {
+  listSessions,
+  revokeSession,
+  requestPasswordReset,
+  signOut as endSession,
+  type SessionRow,
+} from "@/lib/data/auth";
+import { deleteAccount, privacyOverview, runExport, saveBlob, type DataCount } from "@/lib/data/privacy";
 import { ApiError, USE_MOCKS } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
 
@@ -63,6 +71,14 @@ const tabs = [
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
+
+const KIND_LABEL: Record<string, string> = {
+  memories: "Memories",
+  reminders: "Reminders",
+  tasks: "Tasks",
+  messages: "Messages",
+  calendar_events: "Events",
+};
 
 const notifRows = ["Reminders", "Tasks", "Daily agenda", "Product updates"] as const;
 const notifChannels = ["WhatsApp", "Email", "Push"] as const;
@@ -105,7 +121,20 @@ export default function SettingsPage() {
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [verifyingPhone, setVerifyingPhone] = useState(false);
   const [phoneOtp, setPhoneOtp] = useState("");
+  const [sessions, setSessions] = useState<SessionRow[] | null>(null);
+  const [counts, setCounts] = useState<DataCount[] | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { matrix, quietHours } = settings;
+
+  // Security/Privacy tabs read from the server on first open.
+  useEffect(() => {
+    if (tab === "security" && sessions === null)
+      listSessions().then(setSessions).catch(() => setSessions([]));
+    if (tab === "privacy" && counts === null)
+      privacyOverview().then(setCounts).catch(() => setCounts([]));
+  }, [tab, sessions, counts]);
 
   // Real mode: the notifications matrix and integrations live on the server.
   useEffect(() => {
@@ -533,49 +562,71 @@ export default function SettingsPage() {
       {tab === "security" && (
         <div className="max-w-160 space-y-4">
           <Card className="p-6">
-            <p className="font-semibold text-navy">Password &amp; MFA</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => toast("Password changes arrive with live accounts.", { tone: "info" })}
-              >
-                Change password
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => toast("Two-factor setup arrives with live accounts.", { tone: "info" })}
-              >
-                Set up two-factor authentication
-              </Button>
-            </div>
+            <p className="font-semibold text-navy">Password</p>
+            <p className="mt-1 text-sm text-ink-muted">
+              We&apos;ll email you a secure link to set a new password.
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-3"
+              onClick={() =>
+                requestPasswordReset(settings.email)
+                  .then(() => toast("Password reset link sent to your email."))
+                  .catch(saveFailed)
+              }
+            >
+              Change password
+            </Button>
           </Card>
           <Card className="p-6">
             <p className="mb-3 font-semibold text-navy">Active sessions</p>
-            <div className="space-y-3">
-              {[
-                { icon: Laptop, label: "MacBook · Lagos", meta: "This device · active now" },
-                { icon: Smartphone, label: "iPhone · Lagos", meta: "Last active 2 hours ago" },
-              ].map((s) => (
-                <div key={s.label} className="flex items-center gap-3">
-                  <s.icon className="size-4.5 text-ink-muted" aria-hidden />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-navy">{s.label}</p>
-                    <p className="text-xs text-ink-muted">{s.meta}</p>
-                  </div>
-                  {!s.meta.startsWith("This") && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toast("Signed out on that device.", { tone: "info" })}
-                    >
-                      Sign out
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+            {sessions === null ? (
+              <p className="text-sm text-ink-muted">Loading sessions…</p>
+            ) : sessions.length === 0 ? (
+              <p className="text-sm text-ink-muted">Couldn&apos;t load your sessions.</p>
+            ) : (
+              <div className="space-y-3">
+                {sessions.map((s) => {
+                  const mobile = /mobile|iphone|android/i.test(s.user_agent ?? "");
+                  const Icon = mobile ? Smartphone : Laptop;
+                  const label =
+                    s.device_label ??
+                    (s.user_agent ? s.user_agent.split(" ")[0].split("/")[0] : "Unknown device");
+                  const meta = s.current
+                    ? "This device · active now"
+                    : `Last active ${new Date(s.last_used_at ?? s.created_at).toLocaleString()}`;
+                  return (
+                    <div key={s.id} className="flex items-center gap-3">
+                      <Icon className="size-4.5 text-ink-muted" aria-hidden />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-navy">
+                          {label}
+                          {s.ip ? <span className="font-normal text-ink-muted"> · {s.ip}</span> : null}
+                        </p>
+                        <p className="text-xs text-ink-muted">{meta}</p>
+                      </div>
+                      {!s.current && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            revokeSession(s.id)
+                              .then(() => {
+                                setSessions((cur) => (cur ?? []).filter((r) => r.id !== s.id));
+                                toast("Signed out on that device.");
+                              })
+                              .catch(saveFailed)
+                          }
+                        >
+                          Sign out
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         </div>
       )}
@@ -588,25 +639,39 @@ export default function SettingsPage() {
         <div className="max-w-160 space-y-4">
           <Card className="p-6">
             <p className="font-semibold text-navy">Your data</p>
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                ["Memories", 7],
-                ["Reminders", 5],
-                ["Tasks", 6],
-                ["Events", 8],
-              ].map(([k, n]) => (
-                <div key={k} className="rounded-xl bg-soft p-3 text-center">
-                  <p className="text-xl font-bold tabular-nums text-navy">{n}</p>
-                  <p className="text-xs text-ink-muted">{k}</p>
-                </div>
-              ))}
-            </div>
-            <Button variant="secondary" size="sm" className="mt-4">
+            {counts === null ? (
+              <p className="mt-3 text-sm text-ink-muted">Counting your data…</p>
+            ) : (
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {counts.map(({ kind, count }) => (
+                  <div key={kind} className="rounded-xl bg-soft p-3 text-center">
+                    <p className="text-xl font-bold tabular-nums text-navy">{count}</p>
+                    <p className="text-xs text-ink-muted">{KIND_LABEL[kind] ?? kind}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-4"
+              loading={exporting}
+              onClick={() => {
+                setExporting(true);
+                runExport()
+                  .then((blob) => {
+                    saveBlob(blob, "amiva-export.json");
+                    toast("Your export has downloaded.");
+                  })
+                  .catch(saveFailed)
+                  .finally(() => setExporting(false));
+              }}
+            >
               <Download className="size-4" aria-hidden />
               Export all my data
             </Button>
             <p className="mt-2 text-xs text-ink-muted">
-              A complete JSON export, ready within a few minutes. Link valid for 24 hours.
+              A complete JSON export of everything Amiva stores about you.
             </p>
           </Card>
           <Card className="border-danger/30 p-6">
@@ -615,11 +680,52 @@ export default function SettingsPage() {
               Deleting your account revokes all provider access immediately and
               permanently removes your data after a 14-day grace period.
             </p>
-            <Button variant="danger" size="sm" className="mt-4">
+            <Button variant="danger" size="sm" className="mt-4" onClick={() => setConfirmingDelete(true)}>
               <Trash2 className="size-4" aria-hidden />
               Delete my account
             </Button>
           </Card>
+
+          {confirmingDelete && (
+            <Modal
+              label="Confirm account deletion"
+              onClose={() => !deleting && setConfirmingDelete(false)}
+              panelClassName="w-full max-w-110"
+            >
+              <Card className="p-6">
+                <h2 className="text-lg font-semibold text-navy">Delete your account?</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+                  You&apos;ll be signed out everywhere right away. Your data is kept for a
+                  14-day grace period — contact support within that window to undo — and
+                  is permanently deleted after it.
+                </p>
+                <div className="mt-5 flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setConfirmingDelete(false)} disabled={deleting}>
+                    Keep my account
+                  </Button>
+                  <Button
+                    variant="danger"
+                    loading={deleting}
+                    onClick={() => {
+                      setDeleting(true);
+                      deleteAccount()
+                        .then((when) => {
+                          toast(`Deletion scheduled for ${new Date(when).toLocaleDateString()}.`);
+                          return endSession();
+                        })
+                        .then(() => router.replace("/login"))
+                        .catch(() => {
+                          setDeleting(false);
+                          saveFailed();
+                        });
+                    }}
+                  >
+                    Delete my account
+                  </Button>
+                </div>
+              </Card>
+            </Modal>
+          )}
         </div>
       )}
 
