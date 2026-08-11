@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { CtaPair } from "@/components/marketing/cta-pair";
 import { FaqAccordion } from "@/components/marketing/faq";
 import { IntegrationsChaos } from "@/components/marketing/integrations";
 import { WA_LINK } from "@/lib/site";
@@ -142,39 +141,38 @@ export default function HomePage() {
   return (
     <>
       {/* ── HERO SECTION ─────────────────────────── */}
-      <section className="relative overflow-hidden bg-[#fbfaff] pt-14 text-center">
+      <section className="hero-water-scene relative overflow-hidden pt-10 text-center sm:pt-12">
         <div className="relative z-10 mx-auto max-w-[850px] px-5">
-          <h1 className="mx-auto mt-2 max-w-[760px] text-[clamp(42px,5.8vw,72px)] font-bold leading-[1.04] tracking-[-0.06em] text-navy">
+          <h1 className="mx-auto mt-2 max-w-[700px] text-[clamp(36px,5vw,64px)] font-bold leading-[1.04] tracking-[-0.06em] text-navy">
             Your personal chief of staff,{" "}
             <span className="mt-2 inline-block rounded-[16px] bg-[#6653cd] px-4 py-1 text-white shadow-xs">
               on WhatsApp.
             </span>
           </h1>
-          <p className="mx-auto mt-6 max-w-[580px] text-sm leading-relaxed text-[#73708a] sm:text-[15px]">
+          <p className="mx-auto mt-5 max-w-[540px] text-[13px] leading-relaxed text-[#73708a] sm:text-sm">
             Create reminders, manage meetings, organise tasks and work with email through one calm conversation.
           </p>
-          <CtaPair className="mt-7 justify-center" />
         </div>
 
         {/* Hero Visual: iPhone Mockup (iPhone Amiva_Hero.png) & Floating Cards */}
-        <div className="relative mx-auto mt-10 h-[440px] sm:h-[480px] max-w-[1020px] overflow-hidden">
-          {/* Bottom Ambient Radial Gradient Glow */}
-          <div className="pointer-events-none absolute bottom-0 left-1/2 h-[380px] w-[min(1200px,100%)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_bottom,#8b76ed_0%,#b2a5f4_35%,rgba(247,245,254,0.3)_65%,transparent_75%)] opacity-85" />
+        <div className="relative mx-auto mt-6 h-[390px] max-w-[1180px] overflow-hidden sm:h-[440px] md:h-[480px]">
+          {/* Subtle refracted-water U-shaped wash */}
+          <div className="hero-water-wash" aria-hidden />
 
           {/* iPhone Image (iPhone Amiva_Hero.png) - cut/hidden behind next section */}
           <Image
             src="/brand/iPhone Amiva_Hero.png"
             alt="Amiva conversation on an iPhone"
-            width={290}
-            height={596}
+            width={530}
+            height={1126}
             priority
-            className="absolute bottom-[-30px] left-1/2 z-10 h-[460px] sm:h-[500px] w-auto -translate-x-1/2 drop-shadow-[0_30px_45px_rgba(30,21,84,0.25)] object-contain"
+            className="absolute bottom-[-470px] left-1/2 z-10 h-[860px] w-auto -translate-x-1/2 object-contain drop-shadow-[0_40px_70px_rgba(30,21,84,0.24)] sm:bottom-[-535px] sm:h-[975px] md:bottom-[-580px] md:h-[1060px]"
           />
 
           {/* LEFT FLOATING CARD */}
-          <div className="absolute left-[2%] top-[120px] sm:top-[140px] z-20 hidden w-[250px] items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-transform hover:-translate-y-1 sm:flex md:left-[5%] lg:left-[10%]">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc]">
-              <AlarmClock className="size-5 text-[#7059db]" />
+          <div className="group/card absolute left-[2%] top-[72px] z-20 hidden w-[250px] items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:left-[5%] md:top-[88px] lg:left-[9%]">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc] transition-transform duration-300 group-hover/card:-rotate-6 group-hover/card:scale-110">
+              <AlarmClock className="size-5 text-[#7059db]" aria-hidden />
             </div>
             <div className="flex-1 min-w-0 text-left">
               <div className="flex items-center justify-between gap-1">
@@ -188,16 +186,16 @@ export default function HomePage() {
               <h4 className="mt-0.5 text-xs font-bold text-navy truncate">Pay rent</h4>
               <p className="text-[11px] text-[#73708a]">Friday, 9:00 AM</p>
               <div className="mt-2.5 flex items-center gap-1.5 border-t border-[#f0edfa] pt-2 text-[10px] font-semibold text-[#7059db]">
-                <Bell className="size-3.5" />
+                <Bell className="size-3.5 transition-transform duration-300 group-hover/card:rotate-12" aria-hidden />
                 <span>WhatsApp alert ready</span>
               </div>
             </div>
           </div>
 
           {/* RIGHT FLOATING CARD */}
-          <div className="absolute right-[2%] top-[190px] sm:top-[210px] z-20 hidden w-[250px] items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-transform hover:-translate-y-1 sm:flex md:right-[5%] lg:right-[10%]">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc]">
-              <CalendarDays className="size-5 text-[#7059db]" />
+          <div className="group/card absolute right-[2%] top-[140px] z-20 hidden w-[268px] items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:right-[5%] md:top-[164px] lg:right-[9%]">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc] transition-transform duration-300 group-hover/card:rotate-6 group-hover/card:scale-110">
+              <CalendarDays className="size-5 text-[#7059db]" aria-hidden />
             </div>
             <div className="flex-1 min-w-0 text-left">
               <div className="flex items-center justify-between gap-1">
@@ -211,11 +209,11 @@ export default function HomePage() {
               <h4 className="mt-0.5 text-xs font-bold text-navy truncate">Product planning</h4>
               <p className="text-[11px] text-[#73708a]">Tuesday, 2:30 PM</p>
               <div className="mt-2.5 flex items-center gap-2 border-t border-[#f0edfa] pt-2 text-[10px] text-[#73708a]">
-                <div className="flex -space-x-1.5">
-                  <img className="size-4 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80" alt="Avatar" />
-                  <img className="size-4 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&auto=format&fit=crop&q=80" alt="Avatar" />
-                  <img className="size-4 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&auto=format&fit=crop&q=80" alt="Avatar" />
-                  <img className="size-4 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&auto=format&fit=crop&q=80" alt="Avatar" />
+                <div className="flex -space-x-2">
+                  <img className="size-6 rounded-full border-2 border-white object-cover shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80" alt="Kemi" title="Kemi" />
+                  <img className="size-6 rounded-full border-2 border-white object-cover shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&auto=format&fit=crop&q=80" alt="Tunde" title="Tunde" />
+                  <img className="size-6 rounded-full border-2 border-white object-cover shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&auto=format&fit=crop&q=80" alt="Amina" title="Amina" />
+                  <img className="size-6 rounded-full border-2 border-white object-cover shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&auto=format&fit=crop&q=80" alt="David" title="David" />
                 </div>
                 <span className="font-medium">4 attending</span>
               </div>

@@ -128,12 +128,6 @@ export default function RegisterPage() {
       <h1 className="text-2xl font-semibold tracking-tight text-navy">
         Create your account
       </h1>
-      <p className="mt-1 text-sm text-ink-muted">
-        Already have one?{" "}
-        <Link href="/login" className="font-medium text-indigo-900 hover:underline">
-          Log in
-        </Link>
-      </p>
 
       <div className="mt-6">
         <GoogleButton onClick={google} />
@@ -269,6 +263,16 @@ export default function RegisterPage() {
         <Button className="w-full" size="lg" loading={submitting} onClick={submit}>
           Create account
         </Button>
+
+        <p className="border-t border-line pt-5 text-center text-sm font-medium text-ink-muted">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="font-semibold text-violet-700 underline decoration-cyan-500 decoration-2 underline-offset-4 transition-colors hover:text-indigo-900"
+          >
+            Log in
+          </Link>
+        </p>
       </div>
     </Card>
   );

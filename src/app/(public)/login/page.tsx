@@ -62,12 +62,6 @@ export default function LoginPage() {
       <h1 className="text-2xl font-semibold tracking-tight text-navy">
         Welcome back
       </h1>
-      <p className="mt-1 text-sm text-ink-muted">
-        New to Amiva?{" "}
-        <Link href="/register" className="font-medium text-indigo-900 hover:underline">
-          Create an account
-        </Link>
-      </p>
 
       <div className="mt-6">
         <GoogleButton onClick={google} />
@@ -107,6 +101,16 @@ export default function LoginPage() {
         <Button className="w-full" size="lg" loading={submitting} onClick={submit}>
           Log in
         </Button>
+
+        <p className="border-t border-line pt-5 text-center text-sm font-medium text-ink-muted">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="font-semibold text-violet-700 underline decoration-cyan-500 decoration-2 underline-offset-4 transition-colors hover:text-indigo-900"
+          >
+            Sign up
+          </Link>
+        </p>
       </div>
     </Card>
   );
