@@ -95,7 +95,8 @@ export default function TodayPage() {
       {/* Header */}
       <div>
         <h1 className="text-[28px] font-semibold tracking-tight text-navy">
-          {greeting}, {settings.preferredName}
+          {greeting}
+          {settings.preferredName && `, ${settings.preferredName}`}
         </h1>
         <p className="text-sm text-ink-muted">
           {new Date().toLocaleDateString("en-GB", {
