@@ -11,15 +11,15 @@ const faqs = [
   },
   {
     q: "What can I ask Amiva to do?",
-    a: "Set one-time or recurring reminders, create and reschedule calendar events, manage tasks and shopping lists, save things to memory (“remember my landlord's account…”), search everything you've saved, and summarise your email.",
+    a: "Set one-time or recurring reminders, create and reschedule calendar events, manage tasks and shopping lists, save things to memory (“remember my landlord's account…”), and search everything you've saved.",
   },
   {
     q: "Is my data private?",
-    a: "Yes. Your data is encrypted, never used to train AI models, and you can see, export or permanently delete everything from the privacy centre. Important actions, like sending an email, always require your explicit approval first.",
+    a: "Yes. Your data is encrypted, never used to train AI models, and you can see, export or permanently delete everything from the privacy centre. Important actions, like cancelling a meeting with attendees, always require your explicit approval first.",
   },
   {
     q: "How much does it cost?",
-    a: "Amiva has a free plan to get organised, and a Pro plan for unlimited use with email features. Pricing is in your local currency. See the pricing section for details.",
+    a: "Amiva has a free plan to get organised, and a Pro plan for unlimited use. Pricing is in your local currency. See the pricing section for details.",
   },
 ];
 

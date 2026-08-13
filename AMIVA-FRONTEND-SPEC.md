@@ -324,3 +324,20 @@ Supersedes the sections referenced. Implemented in code; treat these as the curr
 
 ---
 *Amiva — Confidential. Version 1.2, July 2026. Companion: ../BE-amiva/AMIVA-BACKEND-SPEC.md.*
+
+## 11. Amendment — 13 Aug 2026: email feature removed (v1.3)
+
+Client decision, accepted 13 Aug 2026 (backend spec §15): the email/Gmail
+feature is removed from the product — it would delay release and needs the
+yearly Google CASA assessment. **Google sign-in and Google Calendar stay.**
+
+Removed from this app: the Email screen (§6) and its nav item; the "email"
+feature flag and its Settings toggle; the Gmail integration row + disconnect
+flow; the Gmail onboarding step (wizard is now 5 steps: Welcome, Preferences,
+Verify phone, Calendar, First action); the Email source in ⌘K search; email
+mock threads and the email audit sample; marketing/FAQ/legal copy references.
+
+Kept (unrelated to the Gmail feature): email as an auth identity (OTP
+verification at signup, password resets) and "Email" as a notification
+delivery channel in Settings → Notifications. API client regenerated from
+the 67-path contract.

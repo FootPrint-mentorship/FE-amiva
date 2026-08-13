@@ -30,9 +30,12 @@ describe("SearchPalette", () => {
     expect(screen.queryByText("Sources")).not.toBeInTheDocument();
   });
 
-  it("disables the Email source until Gmail is connected", () => {
+  it("offers exactly the three searchable sources", () => {
     render(<SearchPalette onClose={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /Email \(connect\)/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Memories" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Calendar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tasks" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Email/ })).not.toBeInTheDocument();
   });
 
   it("the search button is disabled with an empty query", () => {

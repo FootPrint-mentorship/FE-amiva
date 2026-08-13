@@ -27,7 +27,7 @@ const steps = [
   {
     icon: Link2,
     title: "Connect your tools",
-    body: "Link Google Calendar and Gmail securely. You choose exactly what Amiva can see.",
+    body: "Link Google Calendar securely. You choose exactly what Amiva can see.",
   },
   {
     icon: Sparkles,

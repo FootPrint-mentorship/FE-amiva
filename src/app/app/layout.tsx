@@ -10,7 +10,6 @@ import {
   CalendarDays,
   CheckSquare,
   Brain,
-  Mail,
   Settings,
   Search,
   Bell,
@@ -50,7 +49,6 @@ const nav: { href: string; label: string; icon: typeof Sun; feature?: FeatureKey
   { href: "/app/calendar", label: "Calendar", icon: CalendarDays, feature: "calendar" },
   { href: "/app/tasks", label: "Tasks", icon: CheckSquare, feature: "tasks" },
   { href: "/app/memories", label: "Memories", icon: Brain, feature: "memories" },
-  { href: "/app/email", label: "Email", icon: Mail, feature: "email" },
 ];
 
 function NavLinks({

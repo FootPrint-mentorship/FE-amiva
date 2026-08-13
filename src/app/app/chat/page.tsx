@@ -29,7 +29,6 @@ const examplePrompts = [
   "Remind me to call Ada tomorrow at 10",
   "Add milo to my shopping list",
   "When is my flight to Nairobi?",
-  "Summarise my unread email",
   "Find my landlord's account number",
 ];
 

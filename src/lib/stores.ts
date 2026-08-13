@@ -80,7 +80,7 @@ export const notificationsStore = createStore<AppNotification[]>(USE_MOCKS ? not
 
 /* ---- settings (profile, notification prefs, integrations, theme) ---- */
 
-export type FeatureKey = "chat" | "reminders" | "calendar" | "tasks" | "memories" | "email";
+export type FeatureKey = "chat" | "reminders" | "calendar" | "tasks" | "memories";
 
 export type Settings = {
   fullName: string;
@@ -93,7 +93,7 @@ export type Settings = {
   matrix: Record<string, string[]>;
   quietHours: boolean;
   theme: "system" | "light" | "dark";
-  integrations: { whatsapp: boolean; calendar: boolean; gmail: boolean };
+  integrations: { whatsapp: boolean; calendar: boolean };
   features: Record<FeatureKey, boolean>;
 };
 
@@ -113,14 +113,13 @@ const settingsSeed: Settings = {
   },
   quietHours: true,
   theme: "system",
-  integrations: { whatsapp: true, calendar: true, gmail: false },
+  integrations: { whatsapp: true, calendar: true },
   features: {
     chat: true,
     reminders: true,
     calendar: true,
     tasks: true,
     memories: true,
-    email: true,
   },
 };
 
@@ -139,14 +138,13 @@ const settingsBlank: Settings = {
   matrix: { Reminders: [], Tasks: [], "Daily agenda": [], "Product updates": [] },
   quietHours: false,
   theme: "system",
-  integrations: { whatsapp: false, calendar: false, gmail: false },
+  integrations: { whatsapp: false, calendar: false },
   features: {
     chat: true,
     reminders: true,
     calendar: true,
     tasks: true,
     memories: true,
-    email: true,
   },
 };
 

@@ -21,7 +21,7 @@ const sections: LegalSection[] = [
     body: [
       "Account data: your name, email address, phone number, timezone and preferences, collected when you create an account.",
       "Content you give Amiva: messages you send to the assistant, reminders, tasks, lists, and information you explicitly ask Amiva to remember (memories). Voice notes are transcribed to text to fulfil your request.",
-      "Connected provider data: if you connect Google Calendar or Gmail, we access only the data covered by the permissions you grant, and only to deliver the features you use. You can disconnect a provider at any time, which immediately revokes our access.",
+      "Connected provider data: if you connect Google Calendar, we access only the data covered by the permissions you grant, and only to deliver the features you use. You can disconnect a provider at any time, which immediately revokes our access.",
       "Usage and device data: technical logs (with personal content masked) used for security, reliability and support.",
     ],
   },

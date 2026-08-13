@@ -949,128 +949,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/email/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Email Summary */
-        get: operations["email_summary_api_v1_email_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/email/threads/{thread_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Thread Detail */
-        get: operations["thread_detail_api_v1_email_threads__thread_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/email/threads/{thread_id}/extract-actions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Extract Actions */
-        post: operations["extract_actions_api_v1_email_threads__thread_id__extract_actions_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/email/threads/{thread_id}/follow-up": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Set Follow Up */
-        post: operations["set_follow_up_api_v1_email_threads__thread_id__follow_up_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/email/drafts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Drafts */
-        get: operations["list_drafts_api_v1_email_drafts_get"];
-        put?: never;
-        /** Create Draft */
-        post: operations["create_draft_api_v1_email_drafts_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/email/drafts/{draft_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Draft */
-        get: operations["get_draft_api_v1_email_drafts__draft_id__get"];
-        put?: never;
-        post?: never;
-        /** Discard Draft */
-        delete: operations["discard_draft_api_v1_email_drafts__draft_id__delete"];
-        options?: never;
-        head?: never;
-        /** Update Draft */
-        patch: operations["update_draft_api_v1_email_drafts__draft_id__patch"];
-        trace?: never;
-    };
-    "/api/v1/email/drafts/{draft_id}/send": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Send Draft */
-        post: operations["send_draft_api_v1_email_drafts__draft_id__send_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/notifications": {
         parameters: {
             query?: never;
@@ -1301,18 +1179,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** ActionProposal */
-        ActionProposal: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "task" | "reminder" | "event";
-            /** Payload */
-            payload: {
-                [key: string]: unknown;
-            };
-        };
         /** ActionTaken */
         ActionTaken: {
             /** Type */
@@ -1412,7 +1278,7 @@ export interface components {
         /** AuthorizeRequest */
         AuthorizeRequest: {
             /** Scopes */
-            scopes: ("calendar" | "gmail")[];
+            scopes: "calendar"[];
         };
         /** AuthorizeResponse */
         AuthorizeResponse: {
@@ -1545,55 +1411,6 @@ export interface components {
              */
             created_at: string;
         };
-        /** DraftCreate */
-        DraftCreate: {
-            /** Thread Id */
-            thread_id?: string | null;
-            /** To */
-            to?: string[] | null;
-            /** Instruction */
-            instruction: string;
-        };
-        /** DraftOut */
-        DraftOut: {
-            /** Id */
-            id: string;
-            /** Thread Ref Id */
-            thread_ref_id: string | null;
-            /** To */
-            to: string[];
-            /** Cc */
-            cc: string[];
-            /** Subject */
-            subject: string | null;
-            /** Body Text */
-            body_text: string | null;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "draft" | "approved" | "sent" | "discarded";
-            /** Sent Provider Id */
-            sent_provider_id: string | null;
-            /** Approved At */
-            approved_at: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** DraftUpdate */
-        DraftUpdate: {
-            /** To */
-            to?: string[] | null;
-            /** Cc */
-            cc?: string[] | null;
-            /** Subject */
-            subject?: string | null;
-            /** Body Text */
-            body_text?: string | null;
-        };
         /** EmailSendCodeRequest */
         EmailSendCodeRequest: {
             /**
@@ -1601,38 +1418,6 @@ export interface components {
              * Format: email
              */
             email: string;
-        };
-        /** EmailSummaryResponse */
-        EmailSummaryResponse: {
-            /** Overview */
-            overview: string;
-            /** Threads */
-            threads: components["schemas"]["EmailThreadSummaryOut"][];
-        };
-        /** EmailThreadSummaryOut */
-        EmailThreadSummaryOut: {
-            /** Id */
-            id: string;
-            /** Subject */
-            subject: string | null;
-            from?: components["schemas"]["FromAddress"] | null;
-            /** Summary */
-            summary: string | null;
-            /**
-             * Importance
-             * @enum {string}
-             */
-            importance: "high" | "normal" | "low";
-            /** Importance Reason */
-            importance_reason: string | null;
-            /** Suggested Action */
-            suggested_action: string | null;
-            /** Last Message At */
-            last_message_at: string | null;
-            /** Follow Up At */
-            follow_up_at: string | null;
-            /** Provider Link */
-            provider_link: string;
         };
         /** EmailVerifyRequest */
         EmailVerifyRequest: {
@@ -1745,11 +1530,6 @@ export interface components {
             /** Download Url */
             download_url?: string | null;
         };
-        /** ExtractActionsResponse */
-        ExtractActionsResponse: {
-            /** Proposals */
-            proposals: components["schemas"]["ActionProposal"][];
-        };
         /**
          * FeaturesUpdate
          * @description §11.8 — partial update; omitted keys keep their current value.
@@ -1768,14 +1548,6 @@ export interface components {
             /** Email */
             email?: boolean | null;
         };
-        /** FollowUpRequest */
-        FollowUpRequest: {
-            /**
-             * Remind At
-             * Format: date-time
-             */
-            remind_at: string;
-        };
         /** ForgotPasswordRequest */
         ForgotPasswordRequest: {
             /**
@@ -1783,13 +1555,6 @@ export interface components {
              * Format: email
              */
             email: string;
-        };
-        /** FromAddress */
-        FromAddress: {
-            /** Name */
-            name?: string | null;
-            /** Email */
-            email?: string | null;
         };
         /** GoogleAuthRequest */
         GoogleAuthRequest: {
@@ -1987,15 +1752,6 @@ export interface components {
         Page_DeliveryOut_: {
             /** Data */
             data: components["schemas"]["DeliveryOut"][];
-            /** Next Cursor */
-            next_cursor: string | null;
-            /** Total Estimate */
-            total_estimate: number;
-        };
-        /** Page[DraftOut] */
-        Page_DraftOut_: {
-            /** Data */
-            data: components["schemas"]["DraftOut"][];
             /** Next Cursor */
             next_cursor: string | null;
             /** Total Estimate */
@@ -2244,11 +2000,6 @@ export interface components {
             /** Not Found */
             not_found: boolean;
         };
-        /** SendRequest */
-        SendRequest: {
-            /** Confirm */
-            confirm: boolean;
-        };
         /** SessionListResponse */
         SessionListResponse: {
             /** Data */
@@ -2425,26 +2176,6 @@ export interface components {
             project?: string | null;
             /** Labels */
             labels?: string[] | null;
-        };
-        /** ThreadDetailResponse */
-        ThreadDetailResponse: {
-            /** Id */
-            id: string;
-            /** Subject */
-            subject: string | null;
-            /** Messages */
-            messages: components["schemas"]["ThreadMessageOut"][];
-        };
-        /** ThreadMessageOut */
-        ThreadMessageOut: {
-            /** From */
-            from?: string | null;
-            /** To */
-            to: string | null;
-            /** Date */
-            date: string | null;
-            /** Body Text Snippet */
-            body_text_snippet: string;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -4663,317 +4394,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Page_PendingConfirmationOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    email_summary_api_v1_email_summary_get: {
-        parameters: {
-            query?: {
-                range?: "today" | "24h" | "week";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EmailSummaryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    thread_detail_api_v1_email_threads__thread_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                thread_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ThreadDetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    extract_actions_api_v1_email_threads__thread_id__extract_actions_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                thread_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExtractActionsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_follow_up_api_v1_email_threads__thread_id__follow_up_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                thread_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FollowUpRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EmailThreadSummaryOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_drafts_api_v1_email_drafts_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Page_DraftOut_"];
-                };
-            };
-        };
-    };
-    create_draft_api_v1_email_drafts_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DraftCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_draft_api_v1_email_drafts__draft_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                draft_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    discard_draft_api_v1_email_drafts__draft_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                draft_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_draft_api_v1_email_drafts__draft_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                draft_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DraftUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    send_draft_api_v1_email_drafts__draft_id__send_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                draft_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftOut"];
                 };
             };
             /** @description Validation Error */
