@@ -143,11 +143,34 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 - AI suggestions (subtasks, list items) and search answers are canned; drafts are template-generated.
 - `launch.json` for Claude Code preview lives in the session workspace, not this repo; plain `npm run dev` works everywhere.
 
-## Next steps (in order, from the spec's build order §9)
+# Transactional emails — design handoff
 
-All spec screens are now built on mocks, including edit flows and the mobile nav drawer. Remaining:
+Every email Amiva sends today, with the exact trigger, subject, and content
+variables. Sender identity for all of them: **Amiva `<no-reply@tryamiva.com>`**
+(Resend, domain verified). All bodies are currently plain text — when the
+designs are ready, `app/channels/email_channel.py::send_email` grows an HTML
+part (code change, small).
 
-1. Legal content sign-off by counsel (pages exist; remove the Draft banner after review).
-2. Dark-mode pass (tokens exist in spec §2.1; components currently light-only) + full a11y audit (axe + manual).
-3. When backend exists: replace `mock.ts` with generated client + TanStack Query, wire SSE, real auth guard on `/app/*`.
-4. Then: the backend itself (`../AMIVA-BACKEND-SPEC.md`, build order §10).
+The Gmail/email *feature* was removed from the product (13 Aug 2026) — these
+are auth/lifecycle emails only, and they are all that exists.
+
+| # | Email | Trigger | Subject | Body copy today | Variables |
+|---|---|---|---|---|---|
+| 1 | **Email verification code** | Registration step 1 (`POST /auth/email/send-code`), re-sendable | `Your Amiva verification code` | "Your verification code is {code}. It expires in 10 minutes." | 6-digit `code` |
+| 2 | **Password reset link** | "Forgot password" or Settings → Security → Change password (`POST /auth/password/forgot`) | `Reset your Amiva password` | "Use this link to reset your password (valid for 30 minutes): {link}" | `link` = `https://tryamiva.com/forgot-password?token=…` |
+| 3 | **Account deletion scheduled** | Settings → Privacy → Delete my account (`DELETE /account`) | `Your Amiva account is scheduled for deletion` | "Your account was deactivated and will be permanently deleted on {date}. If this wasn't you, contact support immediately." | `date` (deletion date, 14-day grace) |
+| 4 | **Notification email** (latent) | The §8.2 notification sender can deliver any in-app notification by email when a user's matrix enables the Email channel for a category (Reminders / Tasks / Daily agenda / Product updates). No feature produces these yet — reminders currently deliver via WhatsApp only. | dynamic: the notification `title` | the notification `body` | `title`, `body` |
+
+Design notes for the designer:
+
+- #1 is the highest-volume email and the first thing every new user sees.
+- #2 and #3 are security-sensitive: the design should keep the action link
+  obvious and include the "if this wasn't you" reassurance.
+- #4 needs a generic "notification" template (title + body + CTA back to
+  https://tryamiva.com) that any future category can reuse.
+- One shared frame (logo, indigo `#20185B` / cyan `#57C7DC` brand palette,
+  Inter, footer with support contact) + per-email content blocks is enough —
+  four templates, one layout.
+- Related but NOT email: the WhatsApp phone-verification message ("Your Amiva
+  verification code is {code}. It expires in 10 minutes.") — same voice, no
+  design needed.
