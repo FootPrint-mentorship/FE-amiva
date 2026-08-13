@@ -1246,6 +1246,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/webhooks/openwa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Receive Openwa Webhook */
+        post: operations["receive_openwa_webhook_webhooks_openwa_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks/google": {
         parameters: {
             query?: never;
@@ -5267,6 +5284,28 @@ export interface operations {
         };
     };
     receive_webhook_webhooks_whatsapp_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    receive_openwa_webhook_webhooks_openwa_post: {
         parameters: {
             query?: never;
             header?: never;
