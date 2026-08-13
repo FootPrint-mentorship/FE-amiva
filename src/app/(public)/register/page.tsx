@@ -151,7 +151,9 @@ export default function RegisterPage() {
 
         {/* Email + inline verification */}
         <div>
-          <div className="flex items-end gap-2">
+          {/* items-start + a fixed label-height offset: with items-end, an
+              error line under the input pushed the button out of alignment. */}
+          <div className="flex items-start gap-2">
             <Field
               label="Email"
               type="email"
@@ -169,7 +171,7 @@ export default function RegisterPage() {
             {emailStage !== "verified" && (
               <Button
                 variant="secondary"
-                className="mb-[1px] shrink-0"
+                className="mt-[28px] h-11 shrink-0"
                 loading={sending}
                 onClick={sendEmailCode}
               >

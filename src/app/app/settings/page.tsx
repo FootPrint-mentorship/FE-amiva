@@ -419,7 +419,9 @@ export default function SettingsPage() {
                 key: "whatsapp" as const,
                 icon: MessageCircle,
                 name: "WhatsApp",
-                detail: "+234 801 •••• 678",
+                // The account's own phone — the wa_id itself can be a privacy
+                // JID (…@lid), so the number on file is the honest display.
+                detail: settings.phone || "Connected",
                 offDetail: "Link the number you chat from",
                 disconnectLabel: "Unlink",
               },
