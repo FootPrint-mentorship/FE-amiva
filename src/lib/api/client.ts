@@ -132,5 +132,17 @@ export async function api<T>(
   return (await res.json()) as T;
 }
 
+/** Authenticated binary GET (file downloads) — same 401-refresh-retry as api(). */
+export async function apiBlob(path: string): Promise<Blob> {
+  const attempt = () =>
+    fetch(`${BASE}${path}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    });
+  let res = await attempt();
+  if (res.status === 401 && (await refreshSession())) res = await attempt();
+  if (!res.ok) throw new ApiError("INTERNAL", `Download failed (${res.status})`, res.status);
+  return res.blob();
+}
+
 /** List envelope from spec §2. */
 export type Page<T> = { data: T[]; next_cursor: string | null; total_estimate: number };

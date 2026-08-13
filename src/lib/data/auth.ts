@@ -121,3 +121,39 @@ export async function loadMe(): Promise<void> {
   if (USE_MOCKS) return;
   absorbUser(await api<ApiUser>("/users/me"));
 }
+
+// --- Active sessions (spec §3: list + remote revoke) -------------------------
+
+export type SessionRow = {
+  id: string;
+  device_label: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  current: boolean;
+  last_used_at: string | null;
+  created_at: string;
+};
+
+const MOCK_SESSIONS: SessionRow[] = [
+  {
+    id: "ses-this", device_label: "MacBook · Lagos", ip: null, user_agent: null,
+    current: true, last_used_at: new Date().toISOString(), created_at: new Date().toISOString(),
+  },
+];
+
+export async function listSessions(): Promise<SessionRow[]> {
+  if (USE_MOCKS) return delay(300).then(() => MOCK_SESSIONS);
+  const res = await api<{ data: SessionRow[] }>("/auth/sessions");
+  return res.data;
+}
+
+export async function revokeSession(id: string): Promise<void> {
+  if (USE_MOCKS) return delay(300).then(() => undefined);
+  await api(`/auth/sessions/${id}`, { method: "DELETE" });
+}
+
+/** §11.4 forgot-password flow doubles as authed "change password". */
+export async function requestPasswordReset(email: string): Promise<void> {
+  if (USE_MOCKS) return delay(400).then(() => undefined);
+  await api("/auth/password/forgot", { method: "POST", body: { email }, auth: false });
+}
