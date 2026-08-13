@@ -97,7 +97,7 @@ export type Settings = {
   features: Record<FeatureKey, boolean>;
 };
 
-export const settingsStore = createStore<Settings>({
+const settingsSeed: Settings = {
   fullName: "Ada Obi",
   preferredName: "Ada",
   email: "ada@example.com",
@@ -122,4 +122,32 @@ export const settingsStore = createStore<Settings>({
     memories: true,
     email: true,
   },
-});
+};
+
+// Real mode starts blank — absorbUser/loadMe fill the profile, and
+// hydrateNotificationPrefs fills the matrix. The matrix keeps its row keys
+// (the settings table indexes them unconditionally); timezone gets the
+// browser zone so nothing formats against an empty tz before /users/me lands.
+const settingsBlank: Settings = {
+  fullName: "",
+  preferredName: "",
+  email: "",
+  phone: "",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  emailVerified: false,
+  phoneVerified: false,
+  matrix: { Reminders: [], Tasks: [], "Daily agenda": [], "Product updates": [] },
+  quietHours: false,
+  theme: "system",
+  integrations: { whatsapp: false, calendar: false, gmail: false },
+  features: {
+    chat: true,
+    reminders: true,
+    calendar: true,
+    tasks: true,
+    memories: true,
+    email: true,
+  },
+};
+
+export const settingsStore = createStore<Settings>(USE_MOCKS ? settingsSeed : settingsBlank);
