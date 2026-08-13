@@ -1,4 +1,5 @@
 import { createStore } from "@/lib/store";
+import { USE_MOCKS } from "@/lib/api/client";
 import {
   reminders,
   tasks,
@@ -12,12 +13,14 @@ import {
   type PendingConfirmation,
 } from "@/lib/mock";
 
-/* ---- collections (seeded from mock, shaped like the API) ---- */
+/* ---- collections (shaped like the API). Mock mode seeds the demo data;
+   real mode starts EMPTY and fills from hydration — a fresh account must
+   never flash (or keep, on hydration failure) someone else's fake day. ---- */
 
-export const remindersStore = createStore<Reminder[]>(reminders);
-export const tasksStore = createStore<Task[]>(tasks);
-export const memoriesStore = createStore<Memory[]>(memories);
-export const eventsStore = createStore<CalendarEvent[]>(weekEvents);
+export const remindersStore = createStore<Reminder[]>(USE_MOCKS ? reminders : []);
+export const tasksStore = createStore<Task[]>(USE_MOCKS ? tasks : []);
+export const memoriesStore = createStore<Memory[]>(USE_MOCKS ? memories : []);
+export const eventsStore = createStore<CalendarEvent[]>(USE_MOCKS ? weekEvents : []);
 
 /* ---- confirmations (shared by top bar, Today, Chat, tray) ---- */
 
@@ -26,7 +29,7 @@ export type Confirmation = PendingConfirmation & {
 };
 
 export const confirmationsStore = createStore<Confirmation[]>(
-  pendingConfirmations.map((c) => ({ ...c, status: "pending" as const }))
+  USE_MOCKS ? pendingConfirmations.map((c) => ({ ...c, status: "pending" as const })) : []
 );
 
 export function resolveConfirmation(id: string, status: "approved" | "rejected") {
@@ -73,7 +76,7 @@ const notifSeed: AppNotification[] = [
   },
 ];
 
-export const notificationsStore = createStore<AppNotification[]>(notifSeed);
+export const notificationsStore = createStore<AppNotification[]>(USE_MOCKS ? notifSeed : []);
 
 /* ---- settings (profile, notification prefs, integrations, theme) ---- */
 
