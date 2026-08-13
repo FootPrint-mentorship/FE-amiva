@@ -61,7 +61,7 @@ Vitest + React Testing Library + jsdom. Config in `vitest.config.mts`; global se
 
 Conventions:
 - Test **behavior through roles/labels**, not markup — if a query needs `querySelector`, the component probably needs an aria-label instead (that rule already caught a real bug: the edit-event dialog was announced as "New event").
-- Every screen's spec **acceptance criteria** are the test names; safety rules are non-negotiable tests: email never sends without the explicit confirm, permanent deletes require a confirm step, event cancellation warns about attendees, search returns honest not-found instead of fabricating, timezones always visible.
+- Every screen's spec **acceptance criteria** are the test names; safety rules are non-negotiable tests: permanent deletes require a confirm step, event cancellation warns about attendees, search returns honest not-found instead of fabricating, timezones always visible.
 - `src/__tests__/lib.test.ts` guards the **mock↔API contract** (unique prefixed ids, recurring reminders carry `recurrence_human`, etc.) — keep it in sync when touching `mock.ts`.
 - Mock async latencies (search 700ms, drafts/chat 900ms) use real timers — use `findBy*` with `{ timeout: 2500+ }`, don't add fake-timer plumbing.
 - Components using React 19 `use(params)` must render inside an awaited `act()` with a `Suspense` wrapper (see `lists-pages.test.tsx`).
@@ -107,8 +107,8 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 | Chat (`/app/chat`) | ✅ done (mock echo assistant) |
 | Calendar (`/app/calendar`) | ✅ done (mock) — Day/Week/Agenda views, event view modal + cancel confirm, create/edit modal with overlap warning |
 | Memories (`/app/memories`) | ✅ done (mock) — search, filters, favorites, new-memory modal, inline edit, permanent-delete confirm |
-| Search overlay (⌘K + top bar) | ✅ done (mock canned answers with citations; Email source disabled until Gmail) |
-| Email (`/app/email`) | ✅ done (mock) — connect state shared with Settings, working range filter, suggested actions create real tasks/events, AI draft + approval-gated send |
+| Search overlay (⌘K + top bar) | ✅ done (mock canned answers with citations; sources: Memories/Calendar/Tasks) |
+| Email (`/app/email`) | ❌ REMOVED FROM PRODUCT 13 Aug 2026 (client decision; backend spec §15, contract now 67 paths) — screen, nav item, feature flag, Gmail integration/onboarding step, Email search source, mock threads all deleted. Google sign-in + Calendar unaffected; "Email" stays only as a notification delivery channel + auth email verification |
 | Settings (`/app/settings`) | ✅ done (mock) — Profile (verified badges + phone OTP), Features toggles, verification-gated Notifications matrix, Integrations, Security stubs, Activity tab (moved from sidebar), Privacy. Tone removed |
 | Confirmation tray + notifications panel (top bar) | ✅ done — shared store, badges sync across Today/Chat/tray |
 | Auth guard + sign out | ✅ done (mock localStorage session) |

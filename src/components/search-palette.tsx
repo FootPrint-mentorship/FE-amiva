@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import {
   Search,
   Sparkles,
-  Mail,
   Brain,
   CalendarDays,
   CheckSquare,
@@ -16,11 +15,10 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { runSearch, type SearchResult } from "@/lib/data/search";
 
-const sources = ["Memories", "Email", "Calendar", "Tasks"] as const;
+const sources = ["Memories", "Calendar", "Tasks"] as const;
 
 const citationIcons = {
   memory: Brain,
-  email: Mail,
   event: CalendarDays,
   task: CheckSquare,
 } as const;
@@ -28,7 +26,6 @@ const citationIcons = {
 /** Mounted only while open — state resets naturally on each open. */
 const citationRoutes = {
   memory: "/app/memories",
-  email: "/app/email",
   event: "/app/calendar",
   task: "/app/tasks",
 } as const;
@@ -89,27 +86,21 @@ export function SearchPalette({ onClose }: { onClose: () => void }) {
         <div className="flex flex-wrap gap-1.5 border-b border-line px-4 py-2.5">
           {sources.map((s) => {
             const on = enabled.includes(s);
-            const disabled = s === "Email";
             return (
               <button
                 key={s}
-                disabled={disabled}
                 aria-pressed={on}
-                title={disabled ? "Connect Gmail to search email" : undefined}
                 onClick={() =>
                   setEnabled((cur) => (on ? cur.filter((x) => x !== s) : [...cur, s]))
                 }
                 className={cn(
                   "cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                  disabled
-                    ? "cursor-not-allowed border border-line text-ink-muted/50"
-                    : on
+                  on
                     ? "bg-indigo-900 text-white"
                     : "border border-line text-ink-muted hover:border-indigo-300"
                 )}
               >
                 {s}
-                {disabled && " (connect)"}
               </button>
             );
           })}

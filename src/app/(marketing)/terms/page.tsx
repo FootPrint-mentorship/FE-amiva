@@ -50,7 +50,7 @@ const sections: LegalSection[] = [
     id: "third-parties",
     heading: "Third-party services",
     body: [
-      "Features that use WhatsApp, Google Calendar or Gmail depend on those providers' availability and terms. Connecting a provider is optional and revocable. We are not responsible for third-party service outages or changes.",
+      "Features that use WhatsApp or Google Calendar depend on those providers' availability and terms. Connecting a provider is optional and revocable. We are not responsible for third-party service outages or changes.",
     ],
   },
   {

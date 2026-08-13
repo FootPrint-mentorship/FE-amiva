@@ -46,7 +46,7 @@ export function BrandPanel() {
           Manage your life and work from one conversation.
         </p>
         <p className="mt-4 max-w-90 text-white/60">
-          Reminders, calendar, email and memory, handled by your personal
+          Reminders, calendar, tasks and memory, handled by your personal
           chief of staff on WhatsApp.
         </p>
 

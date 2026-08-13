@@ -8,7 +8,7 @@
 import { api, USE_MOCKS } from "@/lib/api/client";
 import { fmtDay } from "@/lib/mock";
 
-export type CitationKind = "memory" | "email" | "event" | "task";
+export type CitationKind = "memory" | "event" | "task";
 
 export type SearchCitation = {
   source_type: CitationKind;
@@ -27,7 +27,6 @@ export type SearchResult = {
 /** Palette chip label → API source enum. */
 const SOURCE_PARAM: Record<string, string> = {
   Memories: "memories",
-  Email: "email",
   Calendar: "calendar",
   Tasks: "tasks",
 };
@@ -36,7 +35,6 @@ const SOURCE_PARAM: Record<string, string> = {
 const KIND: Record<string, CitationKind> = {
   memories: "memory",
   memory: "memory",
-  email: "email",
   calendar: "event",
   event: "event",
   tasks: "task",
@@ -151,7 +149,7 @@ function mockSearch(q: string): SearchResult {
   }
   return {
     answer:
-      "I couldn't find that in your connected sources (memories, calendar and tasks were searched). Connecting Gmail would let me search your email too.",
+      "I couldn't find that in your connected sources (memories, calendar and tasks were searched).",
     confidence: "low",
     citations: [],
     not_found: true,
