@@ -51,6 +51,8 @@ Also fixed while wiring: Today/Calendar rendered the mock `user` (greeting said 
 
 **Playwright smoke layer exists:** `npm run test:e2e` — `e2e/smoke.spec.ts` runs the critical journey (register with inline OTP → skip onboarding → Today → create reminder → sign out, plus the honest not-found search) against a production build in mock mode on :3100 (a second `next dev` in the same dir is refused, hence the prod build). `E2E_REAL=1 npx playwright test real-backend` additionally logs into the real backend on :3000 and creates a reminder through the chat assistant (verified end-to-end).
 
+**Also wired (13 Aug):** `/link` (WhatsApp deep-link landing) — was still the mock page with a hardcoded dummy number. Now: `data/linking.ts` calls the authed `POST /link/whatsapp/verify`; an unauthenticated visitor's token waits in localStorage (`amiva_pending_wa_link`) and the app layout completes the bind right after sign-in/registration (toast confirms). The page never shows a number — the token carries only a hash by design. Mock mode keeps the old demo path.
+
 **Not yet wired:** Google sign-in (needs GOOGLE_CLIENT_ID; mock flow → /complete-profile). **SSE/cross-channel sync is blocked server-side** — the backend exposes no event-stream endpoint yet; when it lands, invalidate stores on events (spec §7). Note: the assistant needs **no LLM key** — the backend's rule-based fallback parser serves `POST /assistant/messages` in dev, incl. reminders/tasks/memories and calendar agenda/availability/create/reschedule/cancel with the high-risk confirm flow.
 
 ## Testing

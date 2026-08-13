@@ -2,11 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "amiva-web",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "cwd": "/Users/Grace/Documents/Code/Amiva/amiva-web",
-      "port": 3000
+      "name": "amiva-web-verify",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "npm run build && npx next start -p 3055"],
+      "port": 3055
     }
   ]
 }
