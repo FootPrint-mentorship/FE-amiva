@@ -328,7 +328,7 @@ export default function ChatPage() {
           rows={1}
           placeholder="Message Amiva…"
           aria-label="Message Amiva"
-          className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-[15px] text-navy outline-none placeholder:text-ink-muted"
+          className="focus-ring-none max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-[15px] text-navy outline-none placeholder:text-ink-muted"
         />
         <Button
           size="sm"

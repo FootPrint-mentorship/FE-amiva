@@ -170,6 +170,25 @@ function DashboardPreview() {
 export default function HomePage() {
   return (
     <>
+      {/* Structured data declaring the app name "Amiva" — must match the
+          Google OAuth consent screen name for brand verification. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "Amiva",
+            url: "https://tryamiva.com",
+            applicationCategory: "ProductivityApplication",
+            operatingSystem: "Web, WhatsApp",
+            description:
+              "Amiva is a personal assistant that helps you create reminders, manage your meetings and calendar, organise tasks and remember the details that matter, all in one WhatsApp conversation with a web dashboard.",
+            offers: { "@type": "Offer", price: "0" },
+            publisher: { "@type": "Organization", name: "Amiva", url: "https://tryamiva.com" },
+          }),
+        }}
+      />
       {/* ── HERO SECTION ─────────────────────────── */}
       <section className="hero-water-scene relative overflow-hidden pt-10 text-center sm:pt-12">
         <div className="relative z-10 mx-auto max-w-212.5 px-5">
