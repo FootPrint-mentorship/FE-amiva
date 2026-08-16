@@ -94,11 +94,14 @@ describe("Settings page", () => {
 });
 
 describe("Activity log (inside Settings)", () => {
-  it("lists actions with risk chips and expandable approval details", async () => {
+  it("lists actions with risk chips and an expandable action detail", async () => {
     await openTab("Activity");
-    expect(screen.getByText(/Permanently deleted 1 memory/)).toBeInTheDocument();
+    // GET /activity rows carry no approval field any more — the expanded
+    // panel shows the machine action name instead.
+    expect(await screen.findByText(/Permanently deleted 1 memory/)).toBeInTheDocument();
+    expect(screen.getAllByText("high").length).toBeGreaterThan(0); // risk chip
     await userEvent.click(screen.getByText(/Permanently deleted 1 memory/));
-    expect(screen.getByText(/Confirmed by you via web/)).toBeInTheDocument();
+    expect(screen.getByText("memory.delete_permanent")).toBeInTheDocument();
   });
 
   it("filters by risk through the custom dropdown", async () => {

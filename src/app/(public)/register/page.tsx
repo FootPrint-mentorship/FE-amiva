@@ -121,8 +121,11 @@ export default function RegisterPage() {
   };
 
   const google = () => {
-    if (startGoogleSignIn()) return; // real flow: browser is off to Google
-    router.push("/complete-profile"); // mock flow
+    try {
+      startGoogleSignIn(); // browser is off to Google
+    } catch {
+      toast("Google sign-in isn't configured on this server.", { tone: "error" });
+    }
   };
 
   return (

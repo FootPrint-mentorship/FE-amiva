@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/cn";
-import { fmtDay, fmtTime } from "@/lib/mock";
+import { fmtDay, fmtTime } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { settingsStore, type FeatureKey } from "@/lib/stores";
 import { sessionActive, signOut as endSession, loadMe } from "@/lib/data/auth";
@@ -38,7 +38,6 @@ import {
   markNotificationsRead,
   useNotifications,
 } from "@/lib/data/notifications";
-import { USE_MOCKS } from "@/lib/api/client";
 import { SearchPalette } from "@/components/search-palette";
 import { Modal } from "@/components/ui/modal";
 import { Card } from "@/components/ui/card";
@@ -137,9 +136,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(t);
   }, [router]);
 
-  // Real-API mode: pull the user + collections into the shared stores.
+  // Pull the user + collections into the caches once authed.
   useEffect(() => {
-    if (!ready || USE_MOCKS) return;
+    if (!ready) return;
     // A WhatsApp deep-link token may be waiting from before sign-in/signup —
     // complete the link now that we know which account to bind (spec §3.1.3).
     completePendingLink().then((linked) => {

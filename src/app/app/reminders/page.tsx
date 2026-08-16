@@ -15,7 +15,11 @@ import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { ReminderModal } from "@/components/domain/reminder-modal";
 import { cn } from "@/lib/cn";
-import { fmtDay, fmtTime, user, type Reminder } from "@/lib/mock";
+import { fmtDay, fmtTime } from "@/lib/format";
+import type { Reminder } from "@/lib/types";
+import { timezoneAbbr } from "@/lib/timezones";
+import { useStore } from "@/lib/store";
+import { settingsStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
 import {
   completeReminder,
@@ -46,6 +50,8 @@ function matches(r: Reminder, tab: Tab) {
 export default function RemindersPage() {
   const [tab, setTab] = useState<Tab>("Upcoming");
   const { items } = useReminders();
+  const settings = useStore(settingsStore);
+  const tzAbbr = timezoneAbbr(settings.timezone);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Reminder | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -72,14 +78,11 @@ export default function RemindersPage() {
       .catch(fail);
 
   const skipNext = (r: Reminder) => {
-    const next = new Date(r.due_at);
-    if (r.rrule?.startsWith("FREQ=DAILY")) next.setDate(next.getDate() + 1);
-    else if (r.rrule?.startsWith("FREQ=WEEKLY")) next.setDate(next.getDate() + 7);
-    else next.setMonth(next.getMonth() + 1);
-    skipReminder(r.id, next)
+    // The server owns recurrence math — it answers with the real next fire.
+    skipReminder(r.id)
       .then((saved) => {
-        const at = saved?.next_fire_at ?? next.toISOString();
-        toast(`Skipped. Next: ${fmtDay(at)} at ${fmtTime(at)}.`);
+        const at = saved?.next_fire_at;
+        toast(at ? `Skipped. Next: ${fmtDay(at)} at ${fmtTime(at)}.` : "Skipped.");
       })
       .catch(fail);
   };
@@ -176,7 +179,7 @@ export default function RemindersPage() {
                     <p className="text-sm font-semibold tabular-nums text-navy">
                       {fmtTime(r.due_at)}
                     </p>
-                    <p className="text-[11px] text-ink-muted">{user.tz_abbr}</p>
+                    <p className="text-[11px] text-ink-muted">{tzAbbr}</p>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p

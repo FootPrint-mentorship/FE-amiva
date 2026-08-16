@@ -6,12 +6,22 @@ import ChatPage from "@/app/app/chat/page";
 const FIND_TIMEOUT = { timeout: 3000 }; // mock assistant replies after ~900ms
 
 describe("Chat page", () => {
-  it("renders the seed conversation with an embedded resource card and confirmation", () => {
+  it("renders the server-side thread, oldest first", async () => {
     render(<ChatPage />);
-    expect(screen.getByText("Remind me to pay rent on Friday morning")).toBeInTheDocument();
-    expect(screen.getByText("Pay rent")).toBeInTheDocument(); // resource card
-    expect(screen.getByText("Needs your approval")).toBeInTheDocument(); // confirmation card
-    expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
+    // The thread comes from GET /assistant/messages (text-only history —
+    // resource/confirmation cards attach to live replies, not to history).
+    expect(
+      await screen.findByText("Remind me to pay rent on Friday morning")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/I'll remind you Friday 31 Jul, 9:00 AM \(WAT\)/)
+    ).toBeInTheDocument();
+    const thread = screen.getByLabelText("Conversation with Amiva");
+    const texts = thread.textContent!;
+    // oldest first: the first user message renders before the last one
+    expect(texts.indexOf("Remind me to pay rent")).toBeLessThan(
+      texts.indexOf("Move my 2pm with Tunde")
+    );
   });
 
   it("sends a message and receives an honest mock reply", async () => {

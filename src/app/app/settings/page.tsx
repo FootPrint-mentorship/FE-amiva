@@ -58,7 +58,7 @@ import {
   type SessionRow,
 } from "@/lib/data/auth";
 import { deleteAccount, privacyOverview, runExport, saveBlob, type DataCount } from "@/lib/data/privacy";
-import { ApiError, USE_MOCKS } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
 
 const tabs = [
@@ -553,7 +553,7 @@ export default function SettingsPage() {
                 key: "calendar" as const,
                 icon: CalendarDays,
                 name: "Google Calendar",
-                detail: USE_MOCKS ? "ada@gmail.com · 2 calendars selected" : "Connected",
+                detail: "Connected",
                 offDetail: "Events, conflict checks and agenda summaries",
                 disconnectLabel: "Disconnect",
               },
@@ -569,12 +569,7 @@ export default function SettingsPage() {
             const detail = row ? `${row.account_email} · connected` : i.detail;
             const connect = () => {
               if (i.key === "whatsapp") {
-                if (USE_MOCKS) {
-                  setIntegration("whatsapp", true);
-                  toast("WhatsApp connected.");
-                } else {
-                  router.push("/link"); // linking happens in WhatsApp itself
-                }
+                router.push("/link"); // linking happens in WhatsApp itself
                 return;
               }
               connectGoogle(i.key).catch((err) =>
@@ -666,21 +661,32 @@ export default function SettingsPage() {
         <div className="max-w-160 space-y-4">
           <Card className="p-6">
             <p className="font-semibold text-navy">Password</p>
-            <p className="mt-1 text-sm text-ink-muted">
-              We&apos;ll email you a secure link to set a new password.
-            </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="mt-3"
-              onClick={() =>
-                requestPasswordReset(settings.email)
-                  .then(() => toast("Password reset link sent to your email."))
-                  .catch(saveFailed)
-              }
-            >
-              Change password
-            </Button>
+            {settings.hydrated && !settings.hasPassword ? (
+              // §11.4: Google-only accounts have no password — the reset
+              // endpoint silently skips them, so never offer a dead button.
+              <p className="mt-1 text-sm text-ink-muted">
+                You sign in with Google, so there&apos;s no Amiva password to
+                change.
+              </p>
+            ) : (
+              <>
+                <p className="mt-1 text-sm text-ink-muted">
+                  We&apos;ll email you a secure link to set a new password.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() =>
+                    requestPasswordReset(settings.email)
+                      .then(() => toast("Password reset link sent to your email."))
+                      .catch(saveFailed)
+                  }
+                >
+                  Change password
+                </Button>
+              </>
+            )}
           </Card>
           <Card className="p-6">
             <p className="mb-3 font-semibold text-navy">Active sessions</p>

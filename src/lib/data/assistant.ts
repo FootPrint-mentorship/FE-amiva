@@ -1,13 +1,11 @@
 /**
- * Assistant + confirmations repository. Real mode talks to the backend's
- * assistant endpoints (rule-based parser in dev — no LLM key needed); mock
- * mode keeps the self-contained canned reply so the demo runs without a
- * backend. Approving a confirmation re-hydrates the collections so the
+ * Assistant + confirmations repository over the backend's assistant
+ * endpoints. Approving a confirmation re-hydrates the collections so the
  * server-made change shows up everywhere (server-authoritative, PRD: no
  * claimed success without tool confirmation).
  */
 
-import { api, Page, USE_MOCKS } from "@/lib/api/client";
+import { api, Page } from "@/lib/api/client";
 import {
   qk,
   useCollection,
@@ -17,7 +15,7 @@ import {
   getList,
 } from "@/lib/query";
 import { invalidateCollections } from "@/lib/data/collections";
-import { pendingConfirmations, type ChatMessage, type PendingConfirmation } from "@/lib/mock";
+import type { ChatMessage, PendingConfirmation } from "@/lib/types";
 
 export type Confirmation = PendingConfirmation & {
   status: "pending" | "approved" | "rejected";
@@ -51,8 +49,6 @@ type ApiChatMessage = {
   created_at: string;
 };
 
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 function toConfirmation(c: ApiConfirmation): Confirmation {
   return {
     id: c.id,
@@ -80,14 +76,11 @@ const fetchConfirmations = async () => {
 
 /** Pending confirmations (shared by top bar, Today banner, Chat, tray). */
 export function useConfirmations() {
-  return useCollection<Confirmation>(qk.confirmations, fetchConfirmations, () =>
-    pendingConfirmations.map((c) => ({ ...c, status: "pending" as const }))
-  );
+  return useCollection<Confirmation>(qk.confirmations, fetchConfirmations);
 }
 
 /** Warm the confirmations cache with the server's pending set (app layout). */
 export async function hydrateConfirmations(): Promise<void> {
-  if (USE_MOCKS) return;
   setList(qk.confirmations, await fetchConfirmations());
 }
 
@@ -95,9 +88,8 @@ function resolveConfirmation(id: string, status: "approved" | "rejected") {
   patchInList<Confirmation>(qk.confirmations, id, { status });
 }
 
-/** Real mode: the server-side thread. Mock mode: null (page keeps its seed). */
-export async function loadChatHistory(): Promise<ChatMessage[] | null> {
-  if (USE_MOCKS) return null;
+/** The server-side chat thread (shared with WhatsApp). */
+export async function loadChatHistory(): Promise<ChatMessage[]> {
   const page = await api<Page<ApiChatMessage>>("/assistant/messages?limit=50");
   return page.data
     .filter((m) => m.text)
@@ -111,15 +103,6 @@ export async function loadChatHistory(): Promise<ChatMessage[] | null> {
 }
 
 export async function sendAssistantMessage(text: string): Promise<AssistantResponse> {
-  if (USE_MOCKS) {
-    await delay(900);
-    return {
-      reply:
-        "This preview runs on mock data. Once the backend is connected I'll handle that for real. Here's how a confirmation looks:",
-      actions_taken: [],
-      pending_confirmation: null,
-    };
-  }
   const res = await api<AssistantResponse>("/assistant/messages", {
     method: "POST",
     body: { text },
@@ -143,12 +126,6 @@ export async function resolveConfirmationRemote(
   id: string,
   decision: "approved" | "rejected"
 ): Promise<string> {
-  if (USE_MOCKS) {
-    resolveConfirmation(id, decision);
-    return decision === "approved"
-      ? "Approved. Amiva is on it."
-      : "Rejected. Nothing was changed.";
-  }
   const res = await api<{ result: string; resource: unknown; reply: string }>(
     `/assistant/confirmations/${id}/${decision === "approved" ? "approve" : "reject"}`,
     { method: "POST" }

@@ -16,8 +16,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
-import { agendaSummary, fmtTime } from "@/lib/mock";
-import { USE_MOCKS } from "@/lib/api/client";
+import { fmtTime } from "@/lib/format";
 import { timezoneAbbr } from "@/lib/timezones";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
@@ -83,11 +82,9 @@ export default function TodayPage() {
     remindersToday ? `${plural(remindersToday, "reminder")} due` : "",
     tasks.length ? `${plural(tasks.length, "task")} due` : "",
   ].filter(Boolean);
-  const daySummary = USE_MOCKS
-    ? agendaSummary
-    : summaryParts.length
-      ? `Today: ${summaryParts.join(" · ")}.`
-      : "Your day is clear. Anything you tell Amiva on WhatsApp shows up here too.";
+  const daySummary = summaryParts.length
+    ? `Today: ${summaryParts.join(" · ")}.`
+    : "Your day is clear. Anything you tell Amiva on WhatsApp shows up here too.";
 
   const greeting =
     new Date().getHours() < 12

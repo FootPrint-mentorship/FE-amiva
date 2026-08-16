@@ -24,7 +24,8 @@ import {
 import { cn } from "@/lib/cn";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
-import { fmtTime, fmtDay, type CalendarEvent } from "@/lib/mock";
+import { fmtTime, fmtDay } from "@/lib/format";
+import type { CalendarEvent } from "@/lib/types";
 import { timezoneAbbr } from "@/lib/timezones";
 import { newId } from "@/lib/id";
 

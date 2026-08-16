@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -23,6 +23,7 @@ import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { WA_LINK } from "@/lib/site";
 import { sendAssistantMessage } from "@/lib/data/assistant";
+import { connectGoogle } from "@/lib/data/integrations";
 import { setAuthed } from "@/lib/session";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
@@ -72,6 +73,40 @@ export default function OnboardingPage() {
     workEnd: "17:00",
   }));
   const [calendarConnected, setCalendarConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+
+  // Google OAuth bounce-back: the API callback redirects to
+  // /onboarding?connected=google[&error=…] when the flow started here.
+  // Resume at the Calendar step, say what happened, clean the URL.
+  // (Deferred callback, not the effect body — setState-in-effect idiom.)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connected") !== "google") return;
+    const t = setTimeout(() => {
+      setStep(3); // the Calendar step
+      if (params.get("error")) {
+        toast("Google connection didn't complete — nothing was changed. Please try again.", {
+          tone: "error",
+        });
+      } else {
+        setCalendarConnected(true); // the callback only redirects clean after the exchange
+        toast("Google Calendar connected.");
+      }
+      window.history.replaceState(null, "", "/onboarding");
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  const startCalendarConnect = () => {
+    setConnecting(true);
+    connectGoogle("calendar", "/onboarding").catch(() => {
+      setConnecting(false);
+      toast(
+        "Google connections aren't configured on this server yet — you can skip this step.",
+        { tone: "error" }
+      );
+    });
+  };
   const [tryText, setTryText] = useState(
     "Remind me to call Mum tomorrow at 6 pm",
   );
@@ -431,9 +466,10 @@ export default function OnboardingPage() {
                 <Button
                   className="mt-5 w-full"
                   size="lg"
-                  onClick={() => setCalendarConnected(true)}
+                  loading={connecting}
+                  onClick={startCalendarConnect}
                 >
-                  Connect Google Calendar
+                  {connecting ? "Opening Google…" : "Connect Google Calendar"}
                 </Button>
               )}
               <div className="mt-3 flex justify-between">

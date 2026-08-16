@@ -1,5 +1,4 @@
 import { createStore } from "@/lib/store";
-import { USE_MOCKS } from "@/lib/api/client";
 
 /* Server-owned collections (reminders/tasks/memories/events, confirmations,
    notifications) live in the TanStack Query cache — see lib/query.ts and the
@@ -17,6 +16,8 @@ export type Settings = {
   timezone: string;
   emailVerified: boolean;
   phoneVerified: boolean;
+  /** False for Google-only accounts — no password exists to change/reset. */
+  hasPassword: boolean;
   matrix: Record<string, string[]>;
   quietHours: boolean;
   theme: "system" | "light" | "dark";
@@ -27,34 +28,7 @@ export type Settings = {
   hydrated: boolean;
 };
 
-const settingsSeed: Settings = {
-  fullName: "Ada Obi",
-  preferredName: "Ada",
-  email: "ada@example.com",
-  phone: "+234 801 234 5678",
-  timezone: "Africa/Lagos",
-  emailVerified: true,
-  phoneVerified: true,
-  matrix: {
-    Reminders: ["WhatsApp", "Email"],
-    Tasks: ["WhatsApp"],
-    "Daily agenda": ["WhatsApp"],
-    "Product updates": ["Email"],
-  },
-  quietHours: true,
-  theme: "system",
-  integrations: { whatsapp: true, calendar: true },
-  features: {
-    chat: true,
-    reminders: true,
-    calendar: true,
-    tasks: true,
-    memories: true,
-  },
-  hydrated: true, // mock mode has no endpoint to wait for
-};
-
-// Real mode starts blank — absorbUser/loadMe fill the profile, and
+// Starts blank — absorbUser/loadMe fill the profile, and
 // hydrateNotificationPrefs fills the matrix. The matrix keeps its row keys
 // (the settings table indexes them unconditionally); timezone gets the
 // browser zone so nothing formats against an empty tz before /users/me lands.
@@ -66,6 +40,8 @@ const settingsBlank: Settings = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   emailVerified: false,
   phoneVerified: false,
+  hasPassword: true, // assume yes until /users/me answers
+
   matrix: { Reminders: [], Tasks: [], "Daily agenda": [], "Product updates": [] },
   quietHours: false,
   theme: "system",
@@ -80,4 +56,4 @@ const settingsBlank: Settings = {
   hydrated: false, // real mode: wait for /users/me
 };
 
-export const settingsStore = createStore<Settings>(USE_MOCKS ? settingsSeed : settingsBlank);
+export const settingsStore = createStore<Settings>(settingsBlank);

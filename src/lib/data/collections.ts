@@ -1,13 +1,11 @@
 /**
  * Collection repositories on the TanStack Query cache. Screens render from
- * the `useReminders`/`useTasks`/… hooks; in real-API mode every mutation
- * goes to the backend first and the cache is updated from the server's
- * response (server-authoritative). In mock mode (NEXT_PUBLIC_USE_MOCKS=1)
- * mutations edit the cache directly — the original self-contained demo
- * behaviour (the cache seeds from mock.ts via initialData).
+ * the `useReminders`/`useTasks`/… hooks; every mutation goes to the backend
+ * first and the cache is updated from the server's response
+ * (server-authoritative). Tests fake the api() boundary.
  */
 
-import { api, Page, USE_MOCKS } from "@/lib/api/client";
+import { api, Page } from "@/lib/api/client";
 import {
   qk,
   queryClient,
@@ -17,16 +15,7 @@ import {
   patchInList,
 } from "@/lib/query";
 import { settingsStore } from "@/lib/stores";
-import {
-  reminders as mockReminders,
-  tasks as mockTasks,
-  memories as mockMemories,
-  weekEvents as mockEvents,
-  type Reminder,
-  type Task,
-  type Memory,
-  type CalendarEvent,
-} from "@/lib/mock";
+import type { Reminder, Task, Memory, CalendarEvent } from "@/lib/types";
 
 /* ------------------------------ hydration ------------------------------ */
 
@@ -50,7 +39,6 @@ const fetchEvents = () =>
 /** Warm every collection cache once authed (app layout). fetchQuery — not
  * prefetchQuery — so a dead backend still rejects into the layout's toast. */
 export async function hydrateAll(): Promise<void> {
-  if (USE_MOCKS) return;
   await Promise.all([
     queryClient.fetchQuery({ queryKey: qk.reminders, queryFn: fetchReminders }),
     queryClient.fetchQuery({ queryKey: qk.tasks, queryFn: fetchTasks }),
@@ -74,9 +62,8 @@ export function invalidateCollections(): Promise<void> {
 
 /* ------------------------------ reminders ------------------------------ */
 
-/** The reminders collection (server cache in real mode, mock seed otherwise). */
 export function useReminders() {
-  return useCollection<Reminder>(qk.reminders, fetchReminders, () => mockReminders);
+  return useCollection<Reminder>(qk.reminders, fetchReminders);
 }
 
 function upsertReminder(r: Reminder) {
@@ -84,7 +71,6 @@ function upsertReminder(r: Reminder) {
 }
 
 export async function saveReminder(r: Reminder, isNew: boolean): Promise<void> {
-  if (USE_MOCKS) return upsertReminder(r);
   const body = {
     title: r.title,
     notes: r.notes,
@@ -100,22 +86,10 @@ export async function saveReminder(r: Reminder, isNew: boolean): Promise<void> {
 }
 
 export async function completeReminder(id: string): Promise<void> {
-  if (USE_MOCKS) {
-    patchInList<Reminder>(qk.reminders, id, { status: "completed" });
-    return;
-  }
   upsertReminder(await api<Reminder>(`/reminders/${id}/complete`, { method: "POST" }));
 }
 
 export async function snoozeReminder(id: string, until: Date): Promise<void> {
-  if (USE_MOCKS) {
-    patchInList<Reminder>(qk.reminders, id, {
-      status: "snoozed",
-      snoozed_until: until.toISOString(),
-      next_fire_at: until.toISOString(),
-    });
-    return;
-  }
   upsertReminder(
     await api<Reminder>(`/reminders/${id}/snooze`, {
       method: "POST",
@@ -124,31 +98,13 @@ export async function snoozeReminder(id: string, until: Date): Promise<void> {
   );
 }
 
-export async function skipReminder(id: string, fallbackNext: Date): Promise<Reminder | null> {
-  if (USE_MOCKS) {
-    let updated: Reminder | null = null;
-    patchInList<Reminder>(qk.reminders, id, (r) => {
-      updated = {
-        ...r,
-        due_at: fallbackNext.toISOString(),
-        next_fire_at: fallbackNext.toISOString(),
-      };
-      return updated;
-    });
-    return updated;
-  }
+export async function skipReminder(id: string): Promise<Reminder | null> {
   const saved = await api<Reminder>(`/reminders/${id}/skip`, { method: "POST" });
   upsertReminder(saved);
   return saved;
 }
 
 export async function toggleReminderPause(id: string, pause: boolean): Promise<void> {
-  if (USE_MOCKS) {
-    patchInList<Reminder>(qk.reminders, id, {
-      status: pause ? "paused" : "scheduled",
-    });
-    return;
-  }
   upsertReminder(
     await api<Reminder>(`/reminders/${id}`, {
       method: "PATCH",
@@ -158,15 +114,14 @@ export async function toggleReminderPause(id: string, pause: boolean): Promise<v
 }
 
 export async function deleteReminder(id: string): Promise<void> {
-  if (!USE_MOCKS) await api(`/reminders/${id}`, { method: "DELETE" });
+  await api(`/reminders/${id}`, { method: "DELETE" });
   removeFromList<Reminder>(qk.reminders, id);
 }
 
 /* -------------------------------- tasks -------------------------------- */
 
-/** The tasks collection (server cache in real mode, mock seed otherwise). */
 export function useTasks() {
-  return useCollection<Task>(qk.tasks, fetchTasks, () => mockTasks);
+  return useCollection<Task>(qk.tasks, fetchTasks);
 }
 
 function upsertTask(t: Task) {
@@ -174,10 +129,6 @@ function upsertTask(t: Task) {
 }
 
 export async function createTask(t: Omit<Task, "id"> & { id?: string }): Promise<void> {
-  if (USE_MOCKS) {
-    upsertTask({ ...t, id: t.id ?? `tsk_${Date.now()}` } as Task);
-    return;
-  }
   upsertTask(
     await api<Task>("/tasks", {
       method: "POST",
@@ -193,18 +144,10 @@ export async function createTask(t: Omit<Task, "id"> & { id?: string }): Promise
 }
 
 export async function patchTask(id: string, changes: Partial<Task>): Promise<void> {
-  if (USE_MOCKS) {
-    patchInList<Task>(qk.tasks, id, changes);
-    return;
-  }
   upsertTask(await api<Task>(`/tasks/${id}`, { method: "PATCH", body: changes }));
 }
 
 export async function setTaskStatus(id: string, status: Task["status"]): Promise<void> {
-  if (USE_MOCKS) {
-    patchInList<Task>(qk.tasks, id, { status });
-    return;
-  }
   upsertTask(
     await api<Task>(`/tasks/${id}/${status === "completed" ? "complete" : "reopen"}`, {
       method: "POST",
@@ -232,7 +175,6 @@ export async function toggleSubtask(task: Task, subId: string): Promise<void> {
     s.id === subId ? { ...s, completed: !s.completed } : s
   );
   patchInList<Task>(qk.tasks, task.id, { subtasks: flipped });
-  if (USE_MOCKS) return;
   const sub = flipped.find((s) => s.id === subId)!;
   try {
     reconcileSubtask(
@@ -249,40 +191,19 @@ export async function toggleSubtask(task: Task, subId: string): Promise<void> {
   }
 }
 
-/** Ideas for breaking a task down. Real mode asks the backend; mock mode
- * keeps the canned demo ideas. Already-present titles are filtered out. */
+/** Ideas for breaking a task down (backend LLM; 502 PROVIDER_ERROR without a
+ * key). Already-present titles are filtered out. */
 export async function suggestSubtaskIdeas(task: Task): Promise<string[]> {
-  const fresh = (titles: string[]) =>
-    titles.filter((title) => !task.subtasks.some((s) => s.title === title));
-  if (USE_MOCKS) {
-    return fresh([
-      `Outline what “${task.title.toLowerCase()}” needs`,
-      "Draft the first version",
-      "Review and send",
-    ]);
-  }
   const res = await api<{ suggestions: string[] }>(
     `/tasks/${task.id}/suggest-subtasks`,
     { method: "POST" }
   );
-  return fresh(res.suggestions);
+  return res.suggestions.filter(
+    (title) => !task.subtasks.some((s) => s.title === title)
+  );
 }
 
 export async function addSubtasks(task: Task, titles: string[]): Promise<void> {
-  if (USE_MOCKS) {
-    patchInList<Task>(qk.tasks, task.id, (t) => ({
-      ...t,
-      subtasks: [
-        ...t.subtasks,
-        ...titles.map((title, i) => ({
-          id: `sub_${Date.now()}_${i}`,
-          title,
-          completed: false,
-        })),
-      ],
-    }));
-    return;
-  }
   // POST returns the created SubtaskOut — append each into the cached task
   // as it lands, so suggestions appear one by one instead of all-or-nothing.
   for (const title of titles) {
@@ -299,9 +220,8 @@ export async function addSubtasks(task: Task, titles: string[]): Promise<void> {
 
 /* ------------------------------- memories ------------------------------ */
 
-/** The memories collection (server cache in real mode, mock seed otherwise). */
 export function useMemories() {
-  return useCollection<Memory>(qk.memories, fetchMemories, () => mockMemories);
+  return useCollection<Memory>(qk.memories, fetchMemories);
 }
 
 function upsertMemory(m: Memory) {
@@ -309,19 +229,6 @@ function upsertMemory(m: Memory) {
 }
 
 export async function createMemory(content: string, category: Memory["category"] | null): Promise<void> {
-  if (USE_MOCKS) {
-    upsertMemory({
-      id: `mem_${Date.now()}`,
-      content,
-      category: category ?? "other",
-      tags: [],
-      source_channel: "web",
-      favorite: false,
-      archived: false,
-      created_at: new Date().toISOString(),
-    });
-    return;
-  }
   upsertMemory(
     await api<Memory>("/memories", {
       method: "POST",
@@ -331,24 +238,18 @@ export async function createMemory(content: string, category: Memory["category"]
 }
 
 export async function patchMemory(id: string, changes: Partial<Memory>): Promise<void> {
-  if (USE_MOCKS) {
-    patchInList<Memory>(qk.memories, id, changes);
-    return;
-  }
   upsertMemory(await api<Memory>(`/memories/${id}`, { method: "PATCH", body: changes }));
 }
 
 export async function deleteMemoryForever(id: string): Promise<void> {
-  if (!USE_MOCKS)
-    await api(`/memories/${id}`, { method: "DELETE", body: { confirm: true } });
+  await api(`/memories/${id}`, { method: "DELETE", body: { confirm: true } });
   removeFromList<Memory>(qk.memories, id);
 }
 
 /* -------------------------------- events ------------------------------- */
 
-/** The calendar events collection (server cache in real mode, mock seed otherwise). */
 export function useEvents() {
-  return useCollection<CalendarEvent>(qk.events, fetchEvents, () => mockEvents);
+  return useCollection<CalendarEvent>(qk.events, fetchEvents);
 }
 
 function upsertEvent(e: CalendarEvent) {
@@ -356,10 +257,6 @@ function upsertEvent(e: CalendarEvent) {
 }
 
 export async function saveEvent(e: CalendarEvent, isNew: boolean): Promise<void> {
-  if (USE_MOCKS) {
-    upsertEvent(e);
-    return;
-  }
   // Contract check (16 Aug 2026, found via a live 422): EventCreate REQUIRES
   // `timezone`, and `attendees` is a list of plain email strings — not
   // {email} objects. PATCH takes the same shapes, optional.
@@ -380,10 +277,9 @@ export async function saveEvent(e: CalendarEvent, isNew: boolean): Promise<void>
 }
 
 export async function cancelEvent(id: string): Promise<void> {
-  if (!USE_MOCKS)
-    await api(`/calendar/events/${id}`, {
-      method: "DELETE",
-      body: { notify_attendees: true },
-    });
+  await api(`/calendar/events/${id}`, {
+    method: "DELETE",
+    body: { notify_attendees: true },
+  });
   patchInList<CalendarEvent>(qk.events, id, { status: "cancelled" });
 }

@@ -17,15 +17,16 @@ import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
-import { auditEvents, fmtDay, fmtTime } from "@/lib/mock";
+import { fmtDay, fmtTime } from "@/lib/format";
+import { useActivity } from "@/lib/data/activity";
 
-const moduleIcons = {
+const moduleIcons: Record<string, typeof AlarmClock> = {
   reminders: AlarmClock,
   calendar: CalendarDays,
   memory: Brain,
   tasks: CheckSquare,
   account: UserRound,
-} as const;
+};
 
 const riskTone = { low: "neutral", medium: "warning", high: "danger" } as const;
 
@@ -34,6 +35,7 @@ const riskOptions = ["all", "low", "medium", "high"];
 
 /** The audit trail (PRD trust feature), rendered inside Settings → Activity. */
 export function ActivityLog() {
+  const { items: auditEvents, loading } = useActivity();
   const [moduleFilter, setModuleFilter] = useState("all");
   const [riskFilter, setRiskFilter] = useState("all");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export function ActivityLog() {
           (moduleFilter === "all" || e.module === moduleFilter) &&
           (riskFilter === "all" || e.risk === riskFilter),
       ),
-    [moduleFilter, riskFilter],
+    [auditEvents, moduleFilter, riskFilter],
   );
 
   return (
@@ -87,12 +89,12 @@ export function ActivityLog() {
 
       {visible.length === 0 ? (
         <Card className="p-12 text-center text-sm text-ink-muted">
-          No activity matches these filters.
+          {loading ? "Loading your activity…" : "No activity matches these filters."}
         </Card>
       ) : (
         <div className="space-y-2">
           {visible.map((e) => {
-            const Icon = moduleIcons[e.module];
+            const Icon = moduleIcons[e.module ?? ""] ?? UserRound;
             const isOpen = expanded === e.id;
             return (
               <Card key={e.id} className="px-4 py-3">
@@ -145,7 +147,6 @@ export function ActivityLog() {
                     <p>
                       Action: <code className="text-navy">{e.action}</code>
                     </p>
-                    {e.approval && <p className="mt-1">✓ {e.approval}</p>}
                     {e.result === "failure" && (
                       <p className="mt-1 text-danger">
                         The provider did not confirm this action, so no change

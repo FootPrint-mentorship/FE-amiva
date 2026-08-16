@@ -1,5 +1,5 @@
-import { api, clearTokens, hasSession, setTokens, USE_MOCKS } from "@/lib/api/client";
-import { isAuthed, setAuthed } from "@/lib/session";
+import { api, clearTokens, hasSession, setTokens } from "@/lib/api/client";
+import { setAuthed } from "@/lib/session";
 import { settingsStore } from "@/lib/stores";
 import type { Settings } from "@/lib/stores";
 
@@ -21,10 +21,9 @@ type ApiUser = {
   phone_verified?: boolean;
   whatsapp_linked?: boolean;
   profile_complete: boolean;
+  has_password?: boolean;
   features?: Record<string, boolean>;
 };
-
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Push the freshly authenticated user into the settings store. */
 function absorbUser(u: ApiUser) {
@@ -41,22 +40,21 @@ function absorbUser(u: ApiUser) {
       ...c.integrations,
       whatsapp: u.whatsapp_linked ?? c.integrations.whatsapp,
     },
+    hasPassword: u.has_password ?? true,
     features: (u.features as Settings["features"]) ?? c.features,
     hydrated: true, // server truth is in — badges may now assert state
   }));
 }
 
 export function sessionActive(): boolean {
-  return USE_MOCKS ? isAuthed() : hasSession();
+  return hasSession();
 }
 
 export async function sendEmailCode(email: string): Promise<void> {
-  if (USE_MOCKS) return delay(500).then(() => undefined);
   await api("/auth/email/send-code", { method: "POST", body: { email }, auth: false });
 }
 
 export async function verifyEmailCode(email: string, code: string): Promise<void> {
-  if (USE_MOCKS) return;
   await api("/auth/email/verify", { method: "POST", body: { email, code }, auth: false });
 }
 
@@ -67,19 +65,6 @@ export async function register(data: {
   password: string;
   timezone: string;
 }): Promise<void> {
-  if (USE_MOCKS) {
-    await delay(600);
-    settingsStore.set((c) => ({
-      ...c,
-      fullName: data.name,
-      preferredName: data.name.split(" ")[0],
-      timezone: data.timezone,
-      emailVerified: true,
-      phoneVerified: false,
-    }));
-    setAuthed(true);
-    return;
-  }
   const res = await api<TokenResponse>("/auth/register", {
     method: "POST",
     // Omit phone entirely when the user left it empty — an empty string
@@ -89,15 +74,10 @@ export async function register(data: {
   });
   setTokens(res.access_token, res.refresh_token);
   absorbUser(res.user);
-  setAuthed(true); // guard flag stays the single source for both modes
+  setAuthed(true); // guard flag stays the single source for the route guard
 }
 
 export async function login(identifier: string, password: string): Promise<void> {
-  if (USE_MOCKS) {
-    await delay(500);
-    setAuthed(true);
-    return;
-  }
   const res = await api<TokenResponse>("/auth/login", {
     method: "POST",
     body: { identifier, password },
@@ -132,17 +112,6 @@ export async function completeProfile(data: {
   preferredName: string | null;
   timezone: string | null;
 }): Promise<void> {
-  if (USE_MOCKS) {
-    settingsStore.set((c) => ({
-      ...c,
-      preferredName: data.preferredName ?? c.preferredName,
-      phone: data.phone ?? c.phone,
-      timezone: data.timezone ?? c.timezone,
-      emailVerified: true,
-    }));
-    setAuthed(true);
-    return;
-  }
   const user = await api<ApiUser>("/auth/complete-profile", {
     method: "POST",
     body: {
@@ -156,19 +125,16 @@ export async function completeProfile(data: {
 }
 
 export async function signOut(): Promise<void> {
-  if (!USE_MOCKS) {
-    try {
-      await api("/auth/logout", { method: "POST" });
-    } catch {
-      /* the session is being discarded either way */
-    }
-    clearTokens();
+  try {
+    await api("/auth/logout", { method: "POST" });
+  } catch {
+    /* the session is being discarded either way */
   }
+  clearTokens();
   setAuthed(false);
 }
 
 export async function loadMe(): Promise<void> {
-  if (USE_MOCKS) return;
   absorbUser(await api<ApiUser>("/users/me"));
 }
 
@@ -184,34 +150,23 @@ export type SessionRow = {
   created_at: string;
 };
 
-const MOCK_SESSIONS: SessionRow[] = [
-  {
-    id: "ses-this", device_label: "MacBook · Lagos", ip: null, user_agent: null,
-    current: true, last_used_at: new Date().toISOString(), created_at: new Date().toISOString(),
-  },
-];
-
 export async function listSessions(): Promise<SessionRow[]> {
-  if (USE_MOCKS) return delay(300).then(() => MOCK_SESSIONS);
   const res = await api<{ data: SessionRow[] }>("/auth/sessions");
   return res.data;
 }
 
 export async function revokeSession(id: string): Promise<void> {
-  if (USE_MOCKS) return delay(300).then(() => undefined);
   await api(`/auth/sessions/${id}`, { method: "DELETE" });
 }
 
 /** §11.4 forgot-password flow doubles as authed "change password". */
 export async function requestPasswordReset(email: string): Promise<void> {
-  if (USE_MOCKS) return delay(400).then(() => undefined);
   await api("/auth/password/forgot", { method: "POST", body: { email }, auth: false });
 }
 
 /** §11.4 step 2: the emailed link carries the token; a successful reset
  * revokes every existing session family server-side. */
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  if (USE_MOCKS) return delay(400).then(() => undefined);
   await api("/auth/password/reset", {
     method: "POST",
     body: { token, new_password: newPassword },
