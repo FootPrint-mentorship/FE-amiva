@@ -82,7 +82,11 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Set scrollTop directly: smooth scrollIntoView animations cancel each
+    // other when messages land in quick succession (optimistic → typing →
+    // reply), stranding the thread mid-scroll with the answer off-screen.
+    const thread = endRef.current?.parentElement;
+    if (thread) thread.scrollTop = thread.scrollHeight;
   }, [messages, typing]);
 
   const send = (text?: string) => {
@@ -127,7 +131,7 @@ export default function ChatPage() {
     <div className="mx-auto flex h-[calc(100vh-8.5rem)] max-w-190 flex-col">
       {/* Thread */}
       <div
-        className="flex-1 space-y-4 overflow-y-auto pb-4"
+        className="flex-1 space-y-4 overflow-y-auto pb-4 pr-3"
         aria-live="polite"
         aria-label="Conversation with Amiva"
       >
