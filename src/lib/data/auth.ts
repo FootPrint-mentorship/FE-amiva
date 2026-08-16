@@ -207,3 +207,14 @@ export async function requestPasswordReset(email: string): Promise<void> {
   if (USE_MOCKS) return delay(400).then(() => undefined);
   await api("/auth/password/forgot", { method: "POST", body: { email }, auth: false });
 }
+
+/** §11.4 step 2: the emailed link carries the token; a successful reset
+ * revokes every existing session family server-side. */
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  if (USE_MOCKS) return delay(400).then(() => undefined);
+  await api("/auth/password/reset", {
+    method: "POST",
+    body: { token, new_password: newPassword },
+    auth: false,
+  });
+}
