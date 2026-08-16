@@ -42,6 +42,7 @@ function absorbUser(u: ApiUser) {
       whatsapp: u.whatsapp_linked ?? c.integrations.whatsapp,
     },
     features: (u.features as Settings["features"]) ?? c.features,
+    hydrated: true, // server truth is in — badges may now assert state
   }));
 }
 

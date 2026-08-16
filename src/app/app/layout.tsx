@@ -18,6 +18,7 @@ import {
   X,
   LogOut,
   ShieldCheck,
+  Globe,
 } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/cn";
@@ -156,6 +157,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       toast("Couldn't reach the Amiva backend. Showing what's cached.", {
         tone: "error",
       });
+      // Unblock the hydration gates — better to show cached/blank values
+      // than skeletons that never resolve.
+      settingsStore.set((c) => ({ ...c, hydrated: true }));
     });
   }, [ready]);
 
@@ -226,6 +230,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <Settings className="size-4.5" aria-hidden />
             Settings
+          </Link>
+          <Link
+            href="/"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-indigo-50 hover:text-navy"
+          >
+            <Globe className="size-4.5" aria-hidden />
+            About Amiva
           </Link>
           <div className="mt-1 flex items-center gap-3 rounded-lg px-3 py-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-violet-500 text-sm font-semibold text-white">
@@ -486,6 +497,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               onNavigate={() => setDrawerOpen(false)}
             />
             <div className="border-t border-line p-3">
+              <Link
+                href="/"
+                onClick={() => setDrawerOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-indigo-50 hover:text-navy"
+              >
+                <Globe className="size-4.5" aria-hidden />
+                About Amiva
+              </Link>
               <Link
                 href="/app/settings"
                 onClick={() => setDrawerOpen(false)}

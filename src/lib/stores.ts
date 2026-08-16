@@ -95,6 +95,9 @@ export type Settings = {
   theme: "system" | "light" | "dark";
   integrations: { whatsapp: boolean; calendar: boolean };
   features: Record<FeatureKey, boolean>;
+  /** False until /users/me has answered — screens must not assert server
+   * state (verified badges, connection status) while this is false. */
+  hydrated: boolean;
 };
 
 const settingsSeed: Settings = {
@@ -121,6 +124,7 @@ const settingsSeed: Settings = {
     tasks: true,
     memories: true,
   },
+  hydrated: true, // mock mode has no endpoint to wait for
 };
 
 // Real mode starts blank — absorbUser/loadMe fill the profile, and
@@ -146,6 +150,7 @@ const settingsBlank: Settings = {
     tasks: true,
     memories: true,
   },
+  hydrated: false, // real mode: wait for /users/me
 };
 
 export const settingsStore = createStore<Settings>(USE_MOCKS ? settingsSeed : settingsBlank);

@@ -50,7 +50,7 @@ function IntegNode({
 export function IntegrationsChaos() {
   return (
     <section
-      className="relative overflow-hidden border-y border-[#eceaf3] bg-[#f8f7fb]"
+      className="relative overflow-hidden border-y border-lavender-100 bg-surface"
       style={{ minHeight: 680 }}
     >
       {/* Orbit container */}
@@ -73,13 +73,13 @@ export function IntegrationsChaos() {
         />
 
         {/* Decorative Arcs */}
-        <div className="absolute top-[31%] left-[11%] h-25 w-45 rotate-[17deg] rounded-t-full border-t border-[#aaa5bf]" />
-        <div className="absolute top-[33%] right-[14%] h-25 w-45 rotate-[58deg] rounded-t-full border-t border-[#aaa5bf]" />
-        <div className="absolute bottom-[22%] right-[24%] h-25 w-45 -rotate-[20deg] rounded-t-full border-t border-[#aaa5bf]" />
+        <div className="absolute top-[31%] left-[11%] h-25 w-45 rotate-[17deg] rounded-t-full border-t border-mist-400" />
+        <div className="absolute top-[33%] right-[14%] h-25 w-45 rotate-[58deg] rounded-t-full border-t border-mist-400" />
+        <div className="absolute bottom-[22%] right-[24%] h-25 w-45 -rotate-[20deg] rounded-t-full border-t border-mist-400" />
       </div>
 
       {/* Centered message */}
-      <Reveal className="relative z-[4] mx-auto w-[min(620px,88%)] pt-[205px] text-center">
+      <Reveal className="relative z-[4] mx-auto w-[min(620px,88%)] pt-51.25 text-center">
         <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-violet-500">
           Integrations
         </span>
@@ -90,7 +90,7 @@ export function IntegrationsChaos() {
       </Reveal>
 
       {/* Principles footer */}
-      <div className="absolute bottom-7.5 left-1/2 z-[4] grid w-[min(720px,88%)] -translate-x-1/2 grid-cols-2 gap-5 border-t border-[#dfdce8] pt-5 text-[10px] uppercase tracking-[0.08em] text-[#777487]">
+      <div className="absolute bottom-7.5 left-1/2 z-[4] grid w-[min(720px,88%)] -translate-x-1/2 grid-cols-2 gap-5 border-t border-line-soft pt-5 text-[10px] uppercase tracking-[0.08em] text-ink-soft">
         <span>End-to-end encrypted</span>
         <a
           href="/privacy-policy"

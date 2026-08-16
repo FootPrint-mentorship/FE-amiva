@@ -167,7 +167,7 @@ export default function RegisterPage() {
             {emailStage !== "verified" && (
               <Button
                 variant="secondary"
-                className="mt-[28px] h-11 shrink-0"
+                className="mt-7 h-11 shrink-0"
                 loading={sending}
                 onClick={sendEmailCode}
               >

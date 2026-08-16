@@ -91,6 +91,18 @@ const featureMeta: { key: FeatureKey; label: string; body: string; icon: typeof 
   { key: "memories", label: "Memories", body: "Your personal, searchable memory.", icon: Brain },
 ];
 
+/** Placeholder shown where server truth (verified badges, connection
+ * status) hasn't arrived yet — asserting "Verified"/"Not verified" from
+ * store defaults flashes wrong information. */
+function Pulse({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={cn("inline-block h-3 animate-pulse rounded bg-line", className)}
+    />
+  );
+}
+
 function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; label: string }) {
   return (
     <button
@@ -162,6 +174,7 @@ export default function SettingsPage() {
       .catch(saveFailed);
 
   const toggleCell = (row: string, ch: string) => {
+    if (!settings.hydrated) return; // channel availability unknown until /users/me
     if (ch === "Push") return; // mobile app is Release 2
     // §11.5 as amended: a linked WhatsApp IS the verified channel.
     if (ch === "WhatsApp" && !settings.integrations.whatsapp) return;
@@ -249,7 +262,9 @@ export default function SettingsPage() {
           <div>
             <Field label="Email" value={settings.email} disabled onChange={() => {}} />
             <p className="mt-1 flex items-center gap-1.5 text-xs">
-              {settings.emailVerified ? (
+              {!settings.hydrated ? (
+                <Pulse className="w-16" />
+              ) : settings.emailVerified ? (
                 <span className="flex items-center gap-1 font-medium text-success">
                   <BadgeCheck className="size-3.5" aria-hidden /> Verified
                 </span>
@@ -261,7 +276,9 @@ export default function SettingsPage() {
           <div>
             <Field label="Phone" value={settings.phone} disabled onChange={() => {}} />
             <p className="mt-1 flex items-center gap-2 text-xs">
-              {settings.phoneVerified ? (
+              {!settings.hydrated ? (
+                <Pulse className="w-24" />
+              ) : settings.phoneVerified ? (
                 <span className="flex items-center gap-1 font-medium text-success">
                   <BadgeCheck className="size-3.5" aria-hidden /> Verified
                 </span>
@@ -387,9 +404,10 @@ export default function SettingsPage() {
                   {notifChannels.map((ch) => {
                     const on = matrix[row].includes(ch);
                     const unverified =
-                      (ch === "WhatsApp" && !settings.integrations.whatsapp) ||
-                      (ch === "Email" && !settings.emailVerified);
-                    const disabled = ch === "Push" || unverified;
+                      settings.hydrated &&
+                      ((ch === "WhatsApp" && !settings.integrations.whatsapp) ||
+                        (ch === "Email" && !settings.emailVerified));
+                    const disabled = ch === "Push" || unverified || !settings.hydrated;
                     return (
                       <td key={ch} className="py-3 text-center">
                         <button
@@ -463,7 +481,7 @@ export default function SettingsPage() {
                 key: "calendar" as const,
                 icon: CalendarDays,
                 name: "Google Calendar",
-                detail: "ada@gmail.com · 2 calendars selected",
+                detail: USE_MOCKS ? "ada@gmail.com · 2 calendars selected" : "Connected",
                 offDetail: "Events, conflict checks and agenda summaries",
                 disconnectLabel: "Disconnect",
               },
@@ -504,11 +522,17 @@ export default function SettingsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 font-semibold text-navy">
                     {i.name}
-                    {on && <Chip tone="success">Connected</Chip>}
+                    {settings.hydrated && on && <Chip tone="success">Connected</Chip>}
                   </p>
-                  <p className="text-sm text-ink-muted">{on ? detail : i.offDetail}</p>
+                  {!settings.hydrated ? (
+                    <Pulse className="mt-1 w-40" />
+                  ) : (
+                    <p className="text-sm text-ink-muted">{on ? detail : i.offDetail}</p>
+                  )}
                 </div>
-                {on ? (
+                {!settings.hydrated ? (
+                  <Pulse className="h-8 w-20 rounded-control" />
+                ) : on ? (
                   <Button variant="ghost" size="sm" onClick={() => setDisconnecting(i.key)}>
                     {i.disconnectLabel}
                   </Button>

@@ -73,7 +73,7 @@ function MiniAppCard({ item, dark }: { item: (typeof practical)[number]; dark?: 
     <div
       className={`relative flex min-h-52.5 flex-col justify-between overflow-hidden rounded-[18px] border p-7 shadow-[0_20px_55px_rgba(38,28,92,0.08)] ${dark
           ? "border-indigo-800 bg-indigo-900 text-white"
-          : "border-[#e7e3f1] bg-[#f3f0fb] text-navy"
+          : "border-line-soft bg-lavender-50 text-navy"
         }`}
     >
       <div className="flex items-center justify-between">
@@ -95,11 +95,11 @@ function MiniAppCard({ item, dark }: { item: (typeof practical)[number]; dark?: 
 
 function DashboardPreview() {
   return (
-    <div className="overflow-hidden rounded-[18px] border border-[#ded9ec] bg-white shadow-[0_30px_90px_rgba(31,24,91,0.15)]">
-      <div className="flex h-8 items-center gap-1.5 border-b border-line bg-[#f7f6fa] px-3">
-        <i className="size-1.5 rounded-full bg-[#cbc8d7]" />
-        <i className="size-1.5 rounded-full bg-[#cbc8d7]" />
-        <i className="size-1.5 rounded-full bg-[#cbc8d7]" />
+    <div className="overflow-hidden rounded-[18px] border border-line-soft bg-white shadow-[0_30px_90px_rgba(31,24,91,0.15)]">
+      <div className="flex h-8 items-center gap-1.5 border-b border-line bg-surface px-3">
+        <i className="size-1.5 rounded-full bg-mist-300" />
+        <i className="size-1.5 rounded-full bg-mist-300" />
+        <i className="size-1.5 rounded-full bg-mist-300" />
       </div>
       <div className="grid min-h-75 grid-cols-[74px_1fr] sm:min-h-90 sm:grid-cols-[150px_1fr]">
         <aside className="bg-indigo-900 p-4 text-white sm:p-6">
@@ -134,12 +134,12 @@ export default function HomePage() {
         <div className="relative z-10 mx-auto max-w-212.5 px-5">
           <h1 className="animate-rise mx-auto mt-2 max-w-175 text-[clamp(36px,5vw,64px)] font-bold leading-[1.04] tracking-[-0.06em] text-navy">
             Your personal chief of staff,{" "}
-            <span className="mt-2 inline-block rounded-2xl bg-[#6653cd] px-4 py-1 text-white shadow-xs">
+            <span className="mt-2 inline-block rounded-2xl bg-iris-600 px-4 py-1 text-white shadow-xs">
               on WhatsApp.
             </span>
           </h1>
           <p
-            className="animate-rise mx-auto mt-5 max-w-135 text-[13px] leading-relaxed text-[#73708a] sm:text-sm"
+            className="animate-rise mx-auto mt-5 max-w-135 text-[13px] leading-relaxed text-ink-soft sm:text-sm"
             style={{ animationDelay: "120ms" }}
           >
             Create reminders, manage meetings, organise tasks and remember the details that matter, in one calm conversation.
@@ -161,26 +161,26 @@ export default function HomePage() {
             width={530}
             height={1126}
             priority
-            className="absolute -bottom-117.5 left-1/2 z-10 h-215 w-auto -translate-x-1/2 object-contain drop-shadow-[0_40px_70px_rgba(30,21,84,0.24)] sm:bottom-[-535px] sm:h-[975px] md:-bottom-145 md:h-265"
+            className="absolute -bottom-117.5 left-1/2 z-10 h-215 w-auto -translate-x-1/2 object-contain drop-shadow-[0_40px_70px_rgba(30,21,84,0.24)] sm:-bottom-133.75 sm:h-243.75 md:-bottom-145 md:h-265"
           />
 
           {/* LEFT FLOATING CARD */}
-          <div className="group/card absolute left-[2%] top-18 z-20 hidden w-62.5 items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:left-[5%] md:top-22 lg:left-[9%]">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc] transition-transform duration-300 group-hover/card:-rotate-6 group-hover/card:scale-110">
-              <AlarmClock className="size-5 text-[#7059db]" aria-hidden />
+          <div className="group/card absolute left-[2%] top-18 z-20 hidden w-62.5 items-center gap-3 rounded-[20px] border border-line-soft bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:left-[5%] md:top-22 lg:left-[9%]">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-lavender-50 transition-transform duration-300 group-hover/card:-rotate-6 group-hover/card:scale-110">
+              <AlarmClock className="size-5 text-iris-500" aria-hidden />
             </div>
             <div className="flex-1 min-w-0 text-left">
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#86839b]">
+                <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-soft">
                   REMINDER
                 </span>
-                <span className="rounded-full bg-[#f3f0fb] px-2.5 py-0.5 text-[10px] font-semibold text-[#7059db]">
+                <span className="rounded-full bg-lavender-50 px-2.5 py-0.5 text-[10px] font-semibold text-iris-500">
                   ✓ Set
                 </span>
               </div>
               <h4 className="mt-0.5 text-xs font-bold text-navy truncate">Pay rent</h4>
-              <p className="text-[11px] text-[#73708a]">Friday, 9:00 AM</p>
-              <div className="mt-2.5 flex items-center gap-1.5 border-t border-[#f0edfa] pt-2 text-[10px] font-semibold text-[#7059db]">
+              <p className="text-[11px] text-ink-soft">Friday, 9:00 AM</p>
+              <div className="mt-2.5 flex items-center gap-1.5 border-t border-lavender-50 pt-2 text-[10px] font-semibold text-iris-500">
                 <Bell className="size-3.5 transition-transform duration-300 group-hover/card:rotate-12" aria-hidden />
                 <span>WhatsApp alert ready</span>
               </div>
@@ -188,22 +188,22 @@ export default function HomePage() {
           </div>
 
           {/* RIGHT FLOATING CARD */}
-          <div className="group/card absolute right-[2%] top-35 z-20 hidden w-67 items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:right-[5%] md:top-41 lg:right-[9%]">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc] transition-transform duration-300 group-hover/card:rotate-6 group-hover/card:scale-110">
-              <CalendarDays className="size-5 text-[#7059db]" aria-hidden />
+          <div className="group/card absolute right-[2%] top-35 z-20 hidden w-67 items-center gap-3 rounded-[20px] border border-line-soft bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:right-[5%] md:top-41 lg:right-[9%]">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-lavender-50 transition-transform duration-300 group-hover/card:rotate-6 group-hover/card:scale-110">
+              <CalendarDays className="size-5 text-iris-500" aria-hidden />
             </div>
             <div className="flex-1 min-w-0 text-left">
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#86839b]">
+                <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-ink-soft">
                   NEXT MEETING
                 </span>
-                <span className="rounded-full bg-[#f3f0fb] px-2.5 py-0.5 text-[10px] font-semibold text-[#7059db]">
+                <span className="rounded-full bg-lavender-50 px-2.5 py-0.5 text-[10px] font-semibold text-iris-500">
                   ✓ Synced
                 </span>
               </div>
               <h4 className="mt-0.5 text-xs font-bold text-navy truncate">Product planning</h4>
-              <p className="text-[11px] text-[#73708a]">Tuesday, 2:30 PM</p>
-              <div className="mt-2.5 flex items-center gap-2 border-t border-[#f0edfa] pt-2 text-[10px] text-[#73708a]">
+              <p className="text-[11px] text-ink-soft">Tuesday, 2:30 PM</p>
+              <div className="mt-2.5 flex items-center gap-2 border-t border-lavender-50 pt-2 text-[10px] text-ink-soft">
                 {/* Initials, not stock photos: no third-party requests on the
                     LCP path, and no implying these are real users. */}
                 <div className="flex -space-x-2">
@@ -238,7 +238,7 @@ export default function HomePage() {
             {toolLogos.map((tool) => (
               <span
                 key={tool.name}
-                className="flex size-10 items-center justify-center rounded-xl border border-line/70 bg-[#faf9fe] p-2 shadow-xs transition-transform hover:scale-105"
+                className="flex size-10 items-center justify-center rounded-xl border border-line/70 bg-surface p-2 shadow-xs transition-transform hover:scale-105"
                 title={tool.name}
               >
                 <Image
@@ -255,7 +255,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FEATURES SECTION ─────────────────────────── */}
-      <section id="features" className="scroll-mt-20 bg-[#fbfaff] px-5 py-28">
+      <section id="features" className="scroll-mt-20 bg-surface px-5 py-28">
         <div className="mx-auto max-w-270">
           <Reveal>
             <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-end">
@@ -270,7 +270,7 @@ export default function HomePage() {
               [ShieldCheck, "You stay in control", "Review important actions before anything changes or gets sent."],
             ].map(([Icon, title, body], i) => {
               const I = Icon as typeof Sparkles;
-              return <Reveal key={title as string} variant="scale" delay={i * 120}><div className={`min-h-[245px] rounded-[18px] border p-7 ${i === 2 ? "border-indigo-800 bg-indigo-900 text-white" : "border-[#e7e3f1] bg-[#f5f2fb] text-navy"}`}><I className={`size-5 ${i === 2 ? "text-cyan-400" : "text-violet-500"}`} /><h3 className="mt-20 text-lg font-bold">{title as string}</h3><p className={`mt-3 text-xs leading-6 ${i === 2 ? "text-white/60" : "text-ink-muted"}`}>{body as string}</p></div></Reveal>;
+              return <Reveal key={title as string} variant="scale" delay={i * 120}><div className={`min-h-61.25 rounded-[18px] border p-7 ${i === 2 ? "border-indigo-800 bg-indigo-900 text-white" : "border-line-soft bg-lavender-50 text-navy"}`}><I className={`size-5 ${i === 2 ? "text-cyan-400" : "text-violet-500"}`} /><h3 className="mt-20 text-lg font-bold">{title as string}</h3><p className={`mt-3 text-xs leading-6 ${i === 2 ? "text-white/60" : "text-ink-muted"}`}>{body as string}</p></div></Reveal>;
             })}
           </div>
         </div>
@@ -280,13 +280,13 @@ export default function HomePage() {
       <IntegrationsChaos />
 
       <section className="bg-white px-5 py-28">
-        <Reveal><div className="mx-auto grid max-w-270 items-center gap-14 rounded-[28px] bg-[#f1eef9] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16">
+        <Reveal><div className="mx-auto grid max-w-270 items-center gap-14 rounded-[28px] bg-lavender-50 p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">One continuous conversation</p><h2 className="mt-5 text-[clamp(38px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">The conversation continues, wherever you are.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Start on WhatsApp, then open the web when you need more space. Your context stays with you.</p><Link href="/register" className="mt-7 inline-flex rounded-full bg-white px-5 py-3 text-xs font-semibold text-indigo-900 shadow-card">Explore your dashboard</Link></div>
           <DashboardPreview />
         </div></Reveal>
       </section>
 
-      <section className="bg-[#fbfaff] px-5 py-28">
+      <section className="bg-surface px-5 py-28">
         <div className="mx-auto max-w-270">
           <Reveal>
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">What Amiva handles</p>
@@ -305,19 +305,19 @@ export default function HomePage() {
         </div></Reveal>
       </section>
 
-      <section className="bg-[#fbfaff] px-5 py-28">
+      <section className="bg-surface px-5 py-28">
         <Reveal><div className="mx-auto max-w-270"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Amiva on the web</p><h2 className="mt-5 max-w-180 text-[clamp(42px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Everything from your chats, organised on the web.</h2><div className="mt-14"><DashboardPreview /></div></div></Reveal>
       </section>
 
-      <section id="pricing" className="scroll-mt-20 bg-[#f1eef9] px-5 py-28">
+      <section id="pricing" className="scroll-mt-20 bg-lavender-50 px-5 py-28">
         <div className="mx-auto max-w-270"><Reveal><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Simple pricing</p><h2 className="mt-5 max-w-162.5 text-[clamp(42px,5vw,64px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Start free. Upgrade when you need more help.</h2></Reveal><div className="mx-auto mt-14 grid max-w-190 gap-5 md:grid-cols-2">{[
           { name: "Free", price: "₦0", per: null, desc: "Get organised with the essentials.", items: ["Reminders and tasks", "Basic memory", "WhatsApp conversation"] },
           { name: "Pro", price: "₦1,500", per: "/mo", desc: "More capacity for a fuller schedule.", items: ["Everything in Free", "Voice-note requests", "Priority support"], popular: true },
-        ].map((plan, i) => <Reveal key={plan.name} variant="scale" delay={i * 140} className="flex"><div className={`relative flex min-h-97.5 w-full flex-col rounded-[20px] border bg-white p-8 ${plan.popular ? "border-indigo-900 shadow-[0_25px_70px_rgba(32,24,91,0.12)]" : "border-line"}`}>{plan.popular && <span className="absolute right-6 top-6 rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-bold uppercase text-indigo-900">Most popular</span>}<p className="text-xs font-semibold text-violet-500">{plan.name}</p><h3 className="mt-8 text-5xl font-bold tracking-[-0.06em] text-navy">{plan.price}{plan.per && <span className="text-base font-medium text-ink-muted">{plan.per}</span>}</h3><p className="mt-3 text-xs text-ink-muted">{plan.desc}</p><ul className="mt-8 space-y-4 text-xs text-navy">{plan.items.map(x => <li key={x} className="flex gap-2"><Check className="size-4 text-violet-500" />{x}</li>)}</ul>{plan.popular ? <Link href="/register" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-indigo-900 text-xs font-semibold text-white">Get started</Link> : <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-[#f4f2f8] text-xs font-semibold text-indigo-900">Start on WhatsApp</a>}</div></Reveal>)}</div><p className="mt-8 text-center text-[10px] text-ink-muted">Fair-use limits apply. Prices shown in NGN; KES and USD available at checkout.</p></div>
+        ].map((plan, i) => <Reveal key={plan.name} variant="scale" delay={i * 140} className="flex"><div className={`relative flex min-h-97.5 w-full flex-col rounded-[20px] border bg-white p-8 ${plan.popular ? "border-indigo-900 shadow-[0_25px_70px_rgba(32,24,91,0.12)]" : "border-line"}`}>{plan.popular && <span className="absolute right-6 top-6 rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-bold uppercase text-indigo-900">Most popular</span>}<p className="text-xs font-semibold text-violet-500">{plan.name}</p><h3 className="mt-8 text-5xl font-bold tracking-[-0.06em] text-navy">{plan.price}{plan.per && <span className="text-base font-medium text-ink-muted">{plan.per}</span>}</h3><p className="mt-3 text-xs text-ink-muted">{plan.desc}</p><ul className="mt-8 space-y-4 text-xs text-navy">{plan.items.map(x => <li key={x} className="flex gap-2"><Check className="size-4 text-violet-500" />{x}</li>)}</ul>{plan.popular ? <Link href="/register" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-indigo-900 text-xs font-semibold text-white">Get started</Link> : <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-lavender-50 text-xs font-semibold text-indigo-900">Start on WhatsApp</a>}</div></Reveal>)}</div><p className="mt-8 text-center text-[10px] text-ink-muted">Fair-use limits apply. Prices shown in NGN; KES and USD available at checkout.</p></div>
       </section>
 
       <section id="faq" className="scroll-mt-20 bg-white px-5 py-28">
-        <Reveal><div className="mx-auto grid max-w-270 gap-16 rounded-[28px] bg-[#fbfaff] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Here when you need it</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Frequently asked questions.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Still have a question? We are happy to help.</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex rounded-full bg-indigo-900 px-5 py-3 text-xs font-semibold text-white">Chat with us on WhatsApp</a><p className="mt-4 text-xs text-ink-muted">Or email <a href="mailto:support@tryamiva.com" className="font-semibold text-indigo-900 hover:underline">support@tryamiva.com</a></p></div><FaqAccordion /></div></Reveal>
+        <Reveal><div className="mx-auto grid max-w-270 gap-16 rounded-[28px] bg-surface p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Here when you need it</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Frequently asked questions.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Still have a question? We are happy to help.</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex rounded-full bg-indigo-900 px-5 py-3 text-xs font-semibold text-white">Chat with us on WhatsApp</a><p className="mt-4 text-xs text-ink-muted">Or email <a href="mailto:support@tryamiva.com" className="font-semibold text-indigo-900 hover:underline">support@tryamiva.com</a></p></div><FaqAccordion /></div></Reveal>
       </section>
     </>
   );
