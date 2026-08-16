@@ -16,7 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Modal } from "@/components/ui/modal";
 import { toast } from "@/components/ui/toast";
-import { cancelEvent as cancelEventApi, saveEvent } from "@/lib/data/collections";
+import {
+  cancelEvent as cancelEventApi,
+  saveEvent,
+} from "@/lib/data/collections";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/lib/store";
 import { eventsStore, settingsStore } from "@/lib/stores";
@@ -59,7 +62,7 @@ function EventBlock({
     (start.getHours() + start.getMinutes() / 60 - HOUR_START) * PX_PER_HOUR;
   const height = Math.max(
     ((end.getTime() - start.getTime()) / 3_600_000) * PX_PER_HOUR,
-    26
+    26,
   );
   return (
     <button
@@ -68,13 +71,22 @@ function EventBlock({
         "absolute inset-x-1 cursor-pointer overflow-hidden rounded-lg border px-2 py-1 text-left transition-opacity hover:opacity-90",
         event.status === "tentative"
           ? "border-dashed border-violet-500 bg-violet-100 text-violet-700"
-          : "border-indigo-700 bg-indigo-900 text-white"
+          : "border-indigo-700 bg-indigo-900 text-white",
       )}
       style={{ top, height }}
     >
-      <p className="truncate text-xs font-semibold leading-tight">{event.title}</p>
+      <p className="truncate text-xs font-semibold leading-tight">
+        {event.title}
+      </p>
       {height > 40 && (
-        <p className={cn("truncate text-[11px]", event.status === "tentative" ? "text-violet-700/80" : "text-white/70")}>
+        <p
+          className={cn(
+            "truncate text-[11px]",
+            event.status === "tentative"
+              ? "text-violet-700/80"
+              : "text-white/70",
+          )}
+        >
           {fmtTime(event.start_at)}–{fmtTime(event.end_at)}
         </p>
       )}
@@ -125,7 +137,8 @@ export default function CalendarPage() {
 
   const createEvent = () => {
     if (!draft.title.trim()) return setDraftError("Give the event a title.");
-    if (draft.end <= draft.start) return setDraftError("End time must be after start time.");
+    if (draft.end <= draft.start)
+      return setDraftError("End time must be after start time.");
     const startAt = new Date(`${draft.date}T${draft.start}:00`);
     const endAt = new Date(`${draft.date}T${draft.end}:00`);
     const clash = items.find(
@@ -133,10 +146,12 @@ export default function CalendarPage() {
         e.id !== editingId &&
         e.status !== "cancelled" &&
         new Date(e.start_at) < endAt &&
-        new Date(e.end_at) > startAt
+        new Date(e.end_at) > startAt,
     );
     if (clash && !draftError.startsWith("Heads up")) {
-      return setDraftError(`Heads up: this overlaps “${clash.title}”. Click again to book anyway.`);
+      return setDraftError(
+        `Heads up: this overlaps “${clash.title}”. Click again to book anyway.`,
+      );
     }
     const built: CalendarEvent = {
       id: editingId ?? newId("evt"),
@@ -150,7 +165,11 @@ export default function CalendarPage() {
         .split(",")
         .map((a) => a.trim())
         .filter(Boolean)
-        .map((email) => ({ email, name: email.split("@")[0], response_status: "needsAction" })),
+        .map((email) => ({
+          email,
+          name: email.split("@")[0],
+          response_status: "needsAction",
+        })),
       status: "confirmed",
     };
     saveEvent(built, !editingId).catch(fail);
@@ -184,7 +203,7 @@ export default function CalendarPage() {
       [...byDay.entries()]
         .filter(([k]) => k >= dayKey(new Date()))
         .sort(([a], [b]) => (a < b ? -1 : 1)),
-    [byDay]
+    [byDay],
   );
 
   const shift = (dir: -1 | 1) => {
@@ -196,10 +215,14 @@ export default function CalendarPage() {
   useEffect(() => {
     if (view !== "Week" || !gridRef.current) return;
     const el = gridRef.current;
-    const todayIdx = daysShown.findIndex((d) => dayKey(d) === dayKey(new Date()));
+    const todayIdx = daysShown.findIndex(
+      (d) => dayKey(d) === dayKey(new Date()),
+    );
     if (todayIdx < 0 || el.scrollWidth <= el.clientWidth) return;
     const colWidth = (el.scrollWidth - 56) / 7;
-    el.scrollTo({ left: Math.max(0, 56 + todayIdx * colWidth - el.clientWidth / 2) });
+    el.scrollTo({
+      left: Math.max(0, 56 + todayIdx * colWidth - el.clientWidth / 2),
+    });
   }, [view, daysShown]);
 
   const now = new Date();
@@ -207,11 +230,15 @@ export default function CalendarPage() {
     (now.getHours() + now.getMinutes() / 60 - HOUR_START) * PX_PER_HOUR;
 
   const fail = (err: unknown) =>
-    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
+    toast(err instanceof Error ? err.message : "That didn't go through.", {
+      tone: "error",
+    });
 
   const cancelEvent = (id: string) => {
     cancelEventApi(id)
-      .then(() => toast("Event cancelled. Attendees were notified.", { tone: "info" }))
+      .then(() =>
+        toast("Event cancelled. Attendees were notified.", { tone: "info" }),
+      )
       .catch(fail);
     setCancelling(false);
     setOpenEvent(null);
@@ -220,18 +247,22 @@ export default function CalendarPage() {
   // Conflict-free slots with the same duration over the next few days,
   // inside working hours. Mirrors GET /calendar/availability.
   const suggestSlots = (ev: CalendarEvent): Date[] => {
-    const duration = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
-    const busy = items.filter((e) => e.status !== "cancelled" && e.id !== ev.id);
+    const duration =
+      new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
+    const busy = items.filter(
+      (e) => e.status !== "cancelled" && e.id !== ev.id,
+    );
     const slots: Date[] = [];
     for (let day = 1; day <= 5 && slots.length < 3; day++) {
-      for (let half = 18; half < 34 && slots.length < 3; half++) { // 09:00 to 17:00
+      for (let half = 18; half < 34 && slots.length < 3; half++) {
+        // 09:00 to 17:00
         const start = new Date();
         start.setDate(start.getDate() + day);
         start.setHours(Math.floor(half / 2), (half % 2) * 30, 0, 0);
         const end = new Date(start.getTime() + duration);
         if (end.getHours() >= 17 && end.getMinutes() > 0) continue;
         const clash = busy.some(
-          (e) => new Date(e.start_at) < end && new Date(e.end_at) > start
+          (e) => new Date(e.start_at) < end && new Date(e.end_at) > start,
         );
         if (!clash) {
           slots.push(start);
@@ -243,14 +274,17 @@ export default function CalendarPage() {
   };
 
   const applySlot = (ev: CalendarEvent, start: Date) => {
-    const duration = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
+    const duration =
+      new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
     const end = new Date(start.getTime() + duration);
     saveEvent(
       { ...ev, start_at: start.toISOString(), end_at: end.toISOString() },
-      false
+      false,
     )
       .then(() =>
-        toast(`Rescheduled to ${fmtDay(start.toISOString())} at ${fmtTime(start.toISOString())}. Attendees notified.`)
+        toast(
+          `Rescheduled to ${fmtDay(start.toISOString())} at ${fmtTime(start.toISOString())}. Attendees notified.`,
+        ),
       )
       .catch(fail);
     setRescheduling(false);
@@ -262,7 +296,9 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-navy">Calendar</h1>
+          <h1 className="text-[28px] font-semibold tracking-tight text-navy">
+            Calendar
+          </h1>
           <p className="text-sm text-ink-muted">
             Google Calendar · all times in {settings.timezone} ({tzAbbr})
           </p>
@@ -277,26 +313,38 @@ export default function CalendarPage() {
       {creating && (
         <Modal
           label={editingId ? "Edit event" : "New event"}
-          onClose={() => { setCreating(false); setEditingId(null); setDraftError(""); }}
+          onClose={() => {
+            setCreating(false);
+            setEditingId(null);
+            setDraftError("");
+          }}
           panelClassName="w-full max-w-120"
         >
           <Card className="max-h-[90vh] overflow-y-auto p-6">
             <button
               aria-label="Close"
-              onClick={() => { setCreating(false); setEditingId(null); setDraftError(""); }}
+              onClick={() => {
+                setCreating(false);
+                setEditingId(null);
+                setDraftError("");
+              }}
               className="absolute right-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50"
             >
               <X className="size-4" aria-hidden />
             </button>
-            <h2 className="text-lg font-semibold text-navy">{editingId ? "Edit event" : "New event"}</h2>
+            <h2 className="text-lg font-semibold text-navy">
+              {editingId ? "Edit event" : "New event"}
+            </h2>
             <div className="mt-5 space-y-4">
               <label className="block text-sm font-medium text-navy">
                 Title
                 <input
                   value={draft.title}
-                  onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                  onChange={(e) =>
+                    setDraft({ ...draft, title: e.target.value })
+                  }
                   placeholder="Lunch with Kemi"
-                  className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-3.5 text-[15px] font-normal text-navy placeholder:text-ink-muted focus:border-indigo-300"
+                  className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-3.5 text-[15px] font-normal text-navy placeholder:text-ink-muted focus:border-indigo-300"
                 />
               </label>
               <div className="grid grid-cols-3 gap-3">
@@ -305,8 +353,10 @@ export default function CalendarPage() {
                   <input
                     type="date"
                     value={draft.date}
-                    onChange={(e) => setDraft({ ...draft, date: e.target.value })}
-                    className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal"
+                    onChange={(e) =>
+                      setDraft({ ...draft, date: e.target.value })
+                    }
+                    className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-2.5 text-sm font-normal"
                   />
                 </label>
                 <label className="text-sm font-medium text-navy">
@@ -314,8 +364,10 @@ export default function CalendarPage() {
                   <input
                     type="time"
                     value={draft.start}
-                    onChange={(e) => setDraft({ ...draft, start: e.target.value })}
-                    className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal"
+                    onChange={(e) =>
+                      setDraft({ ...draft, start: e.target.value })
+                    }
+                    className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-2.5 text-sm font-normal"
                   />
                 </label>
                 <label className="text-sm font-medium text-navy">
@@ -323,48 +375,79 @@ export default function CalendarPage() {
                   <input
                     type="time"
                     value={draft.end}
-                    onChange={(e) => setDraft({ ...draft, end: e.target.value })}
-                    className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal"
+                    onChange={(e) =>
+                      setDraft({ ...draft, end: e.target.value })
+                    }
+                    className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-2.5 text-sm font-normal"
                   />
                 </label>
               </div>
-              <p className="text-xs text-ink-muted">All times in {settings.timezone} ({tzAbbr}).</p>
+              <p className="text-xs text-ink-muted">
+                All times in {settings.timezone} ({tzAbbr}).
+              </p>
               <label className="block text-sm font-medium text-navy">
-                Attendees <span className="font-normal text-ink-muted">(emails, comma-separated)</span>
+                Attendees{" "}
+                <span className="font-normal text-ink-muted">
+                  (emails, comma-separated)
+                </span>
                 <input
                   value={draft.attendees}
-                  onChange={(e) => setDraft({ ...draft, attendees: e.target.value })}
+                  onChange={(e) =>
+                    setDraft({ ...draft, attendees: e.target.value })
+                  }
                   placeholder="kemi@client.com"
-                  className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-3.5 text-[15px] font-normal text-navy placeholder:text-ink-muted focus:border-indigo-300"
+                  className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-3.5 text-[15px] font-normal text-navy placeholder:text-ink-muted focus:border-indigo-300"
                 />
               </label>
               <label className="block text-sm font-medium text-navy">
-                Location <span className="font-normal text-ink-muted">(optional)</span>
+                Location{" "}
+                <span className="font-normal text-ink-muted">(optional)</span>
                 <input
                   value={draft.location}
-                  onChange={(e) => setDraft({ ...draft, location: e.target.value })}
-                  className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-3.5 text-[15px] font-normal text-navy focus:border-indigo-300"
+                  onChange={(e) =>
+                    setDraft({ ...draft, location: e.target.value })
+                  }
+                  className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-3.5 text-[15px] font-normal text-navy focus:border-indigo-300"
                 />
               </label>
               <label className="flex cursor-pointer items-center gap-2.5 text-sm text-navy">
                 <input
                   type="checkbox"
                   checked={draft.meet}
-                  onChange={(e) => setDraft({ ...draft, meet: e.target.checked })}
+                  onChange={(e) =>
+                    setDraft({ ...draft, meet: e.target.checked })
+                  }
                   className="size-4 cursor-pointer accent-indigo-900"
                 />
                 Add Google Meet link
               </label>
               {draftError && (
-                <p className={cn("text-sm", draftError.startsWith("Heads up") ? "text-warning-ink" : "text-danger")} role="alert">
+                <p
+                  className={cn(
+                    "text-sm",
+                    draftError.startsWith("Heads up")
+                      ? "text-warning-ink"
+                      : "text-danger",
+                  )}
+                  role="alert"
+                >
                   {draftError}
                 </p>
               )}
               <div className="flex justify-end gap-2 pt-1">
-                <Button variant="ghost" onClick={() => { setCreating(false); setEditingId(null); setDraftError(""); }}>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setCreating(false);
+                    setEditingId(null);
+                    setDraftError("");
+                  }}
+                >
                   Cancel
                 </Button>
-                <Button onClick={createEvent}>{editingId ? "Save changes" : "Create event"}</Button>
+                <Button onClick={createEvent}>
+                  {editingId ? "Save changes" : "Create event"}
+                </Button>
               </div>
             </div>
           </Card>
@@ -377,25 +460,35 @@ export default function CalendarPage() {
           <button
             aria-label="Previous"
             onClick={() => shift(-1)}
-            className="flex size-9 cursor-pointer items-center justify-center rounded-[10px] border border-line bg-white text-ink-muted hover:border-indigo-300"
+            className="flex size-9 cursor-pointer items-center justify-center rounded-control border border-line bg-white text-ink-muted hover:border-indigo-300"
           >
             <ChevronLeft className="size-4" aria-hidden />
           </button>
-          <Button variant="ghost" size="sm" onClick={() => setAnchor(new Date())}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAnchor(new Date())}
+          >
             Today
           </Button>
           <button
             aria-label="Next"
             onClick={() => shift(1)}
-            className="flex size-9 cursor-pointer items-center justify-center rounded-[10px] border border-line bg-white text-ink-muted hover:border-indigo-300"
+            className="flex size-9 cursor-pointer items-center justify-center rounded-control border border-line bg-white text-ink-muted hover:border-indigo-300"
           >
             <ChevronRight className="size-4" aria-hidden />
           </button>
           <p className="ml-2 text-sm font-semibold text-navy">
-            {anchor.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
+            {anchor.toLocaleDateString("en-GB", {
+              month: "long",
+              year: "numeric",
+            })}
           </p>
         </div>
-        <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
+        <div
+          role="tablist"
+          className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1"
+        >
           {views.map((v) => (
             <button
               key={v}
@@ -404,7 +497,9 @@ export default function CalendarPage() {
               onClick={() => setView(v)}
               className={cn(
                 "shrink-0 cursor-pointer rounded-[9px] px-4 py-1.5 text-sm font-medium transition-colors",
-                view === v ? "bg-white text-indigo-900 shadow-card" : "text-ink-muted hover:text-navy"
+                view === v
+                  ? "bg-white text-indigo-900 shadow-card"
+                  : "text-ink-muted hover:text-navy",
               )}
             >
               {v}
@@ -420,20 +515,25 @@ export default function CalendarPage() {
             {/* Day headers */}
             <div
               className="grid border-b border-line"
-              style={{ gridTemplateColumns: `56px repeat(${daysShown.length}, 1fr)` }}
+              style={{
+                gridTemplateColumns: `56px repeat(${daysShown.length}, 1fr)`,
+              }}
             >
               <div />
               {daysShown.map((d) => {
                 const isToday = dayKey(d) === dayKey(new Date());
                 return (
-                  <div key={d.toISOString()} className="border-l border-line px-2 py-2.5 text-center">
+                  <div
+                    key={d.toISOString()}
+                    className="border-l border-line px-2 py-2.5 text-center"
+                  >
                     <p className="text-[11px] uppercase tracking-wide text-ink-muted">
                       {d.toLocaleDateString("en-GB", { weekday: "short" })}
                     </p>
                     <p
                       className={cn(
                         "mx-auto mt-0.5 flex size-7 items-center justify-center rounded-full text-sm font-semibold",
-                        isToday ? "bg-indigo-900 text-white" : "text-navy"
+                        isToday ? "bg-indigo-900 text-white" : "text-navy",
                       )}
                     >
                       {d.getDate()}
@@ -445,7 +545,9 @@ export default function CalendarPage() {
             {/* Hour grid */}
             <div
               className="relative grid"
-              style={{ gridTemplateColumns: `56px repeat(${daysShown.length}, 1fr)` }}
+              style={{
+                gridTemplateColumns: `56px repeat(${daysShown.length}, 1fr)`,
+              }}
             >
               {/* Hour labels */}
               <div>
@@ -468,28 +570,40 @@ export default function CalendarPage() {
                 return (
                   <div
                     key={d.toISOString()}
-                    className={cn("relative border-l border-line", isToday && "bg-cyan-500/4")}
+                    className={cn(
+                      "relative border-l border-line",
+                      isToday && "bg-cyan-500/4",
+                    )}
                     style={{ height: (HOUR_END - HOUR_START) * PX_PER_HOUR }}
                   >
-                    {Array.from({ length: HOUR_END - HOUR_START - 1 }, (_, i) => (
-                      <div
-                        key={i}
-                        className="absolute inset-x-0 border-b border-line/60"
-                        style={{ top: (i + 1) * PX_PER_HOUR }}
-                      />
-                    ))}
-                    {isToday && nowTop > 0 && nowTop < (HOUR_END - HOUR_START) * PX_PER_HOUR && (
-                      <div
-                        className="absolute inset-x-0 z-10 flex items-center"
-                        style={{ top: nowTop }}
-                        aria-hidden
-                      >
-                        <span className="size-2 -translate-x-1 rounded-full bg-danger" />
-                        <span className="h-px flex-1 bg-danger" />
-                      </div>
+                    {Array.from(
+                      { length: HOUR_END - HOUR_START - 1 },
+                      (_, i) => (
+                        <div
+                          key={i}
+                          className="absolute inset-x-0 border-b border-line/60"
+                          style={{ top: (i + 1) * PX_PER_HOUR }}
+                        />
+                      ),
                     )}
+                    {isToday &&
+                      nowTop > 0 &&
+                      nowTop < (HOUR_END - HOUR_START) * PX_PER_HOUR && (
+                        <div
+                          className="absolute inset-x-0 z-10 flex items-center"
+                          style={{ top: nowTop }}
+                          aria-hidden
+                        >
+                          <span className="size-2 -translate-x-1 rounded-full bg-danger" />
+                          <span className="h-px flex-1 bg-danger" />
+                        </div>
+                      )}
                     {(byDay.get(dayKey(d)) ?? []).map((e) => (
-                      <EventBlock key={e.id} event={e} onClick={() => setOpenEvent(e)} />
+                      <EventBlock
+                        key={e.id}
+                        event={e}
+                        onClick={() => setOpenEvent(e)}
+                      />
                     ))}
                   </div>
                 );
@@ -505,7 +619,8 @@ export default function CalendarPage() {
               <CalendarDays className="size-8 text-violet-300" aria-hidden />
               <p className="font-medium text-navy">No upcoming events</p>
               <p className="max-w-80 text-sm text-ink-muted">
-                Ask Amiva to schedule something, like “book lunch with Kemi on Thursday”.
+                Ask Amiva to schedule something, like “book lunch with Kemi on
+                Thursday”.
               </p>
             </Card>
           ) : (
@@ -532,20 +647,26 @@ export default function CalendarPage() {
                           </p>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[15px] font-medium text-navy">{e.title}</p>
+                          <p className="truncate text-[15px] font-medium text-navy">
+                            {e.title}
+                          </p>
                           <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink-muted">
                             {e.conference_url ? (
                               <>
-                                <Video className="size-3" aria-hidden /> Google Meet
+                                <Video className="size-3" aria-hidden /> Google
+                                Meet
                               </>
                             ) : e.location ? (
                               <>
-                                <MapPin className="size-3" aria-hidden /> {e.location}
+                                <MapPin className="size-3" aria-hidden />{" "}
+                                {e.location}
                               </>
                             ) : null}
                           </p>
                         </div>
-                        {e.status === "tentative" && <Chip tone="violet">Tentative</Chip>}
+                        {e.status === "tentative" && (
+                          <Chip tone="violet">Tentative</Chip>
+                        )}
                         {e.attendees.length > 0 && (
                           <span className="flex items-center gap-1 text-xs text-ink-muted">
                             <Users className="size-3.5" aria-hidden />
@@ -565,26 +686,42 @@ export default function CalendarPage() {
       {openEvent && (
         <Modal
           label={openEvent.title}
-          onClose={() => { setOpenEvent(null); setCancelling(false); setRescheduling(false); }}
+          onClose={() => {
+            setOpenEvent(null);
+            setCancelling(false);
+            setRescheduling(false);
+          }}
           panelClassName="w-full max-w-110"
         >
           <Card className="p-6">
             <button
               aria-label="Close"
-              onClick={() => { setOpenEvent(null); setCancelling(false); setRescheduling(false); }}
+              onClick={() => {
+                setOpenEvent(null);
+                setCancelling(false);
+                setRescheduling(false);
+              }}
               className="absolute right-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50"
             >
               <X className="size-4" aria-hidden />
             </button>
-            <h2 className="pr-8 text-lg font-semibold text-navy">{openEvent.title}</h2>
+            <h2 className="pr-8 text-lg font-semibold text-navy">
+              {openEvent.title}
+            </h2>
             <p className="mt-1 text-sm text-ink-muted">
-              {fmtDay(openEvent.start_at)} · {fmtTime(openEvent.start_at)}–{fmtTime(openEvent.end_at)} ({tzAbbr})
+              {fmtDay(openEvent.start_at)} · {fmtTime(openEvent.start_at)}–
+              {fmtTime(openEvent.end_at)} ({tzAbbr})
             </p>
             <div className="mt-4 space-y-2.5 text-sm text-navy">
               {openEvent.conference_url && (
                 <p className="flex items-center gap-2">
                   <Video className="size-4 text-violet-500" aria-hidden />
-                  <a href={openEvent.conference_url} className="text-indigo-900 hover:underline" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={openEvent.conference_url}
+                    className="text-indigo-900 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Join Google Meet
                   </a>
                 </p>
@@ -597,10 +734,20 @@ export default function CalendarPage() {
               )}
               {openEvent.attendees.length > 0 && (
                 <div className="flex items-start gap-2">
-                  <Users className="mt-0.5 size-4 text-violet-500" aria-hidden />
+                  <Users
+                    className="mt-0.5 size-4 text-violet-500"
+                    aria-hidden
+                  />
                   <div className="flex flex-wrap gap-1.5">
                     {openEvent.attendees.map((a) => (
-                      <Chip key={a.email} tone={a.response_status === "accepted" ? "success" : "neutral"}>
+                      <Chip
+                        key={a.email}
+                        tone={
+                          a.response_status === "accepted"
+                            ? "success"
+                            : "neutral"
+                        }
+                      >
                         {a.name}
                       </Chip>
                     ))}
@@ -611,25 +758,36 @@ export default function CalendarPage() {
 
             {cancelling ? (
               <div className="mt-5 rounded-xl border border-danger/40 bg-danger/5 p-4">
-                <p className="text-sm font-medium text-navy">Cancel this event?</p>
+                <p className="text-sm font-medium text-navy">
+                  Cancel this event?
+                </p>
                 <p className="mt-1 text-xs text-ink-muted">
                   {openEvent.attendees.length > 0
                     ? "Attendees will be notified of the cancellation."
                     : "This event will be removed from your calendar."}
                 </p>
                 <div className="mt-3 flex gap-2">
-                  <Button variant="danger" size="sm" onClick={() => cancelEvent(openEvent.id)}>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => cancelEvent(openEvent.id)}
+                  >
                     Yes, cancel event
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setCancelling(false)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCancelling(false)}
+                  >
                     Keep it
                   </Button>
                 </div>
               </div>
-            ) : (
-              rescheduling ? (
+            ) : rescheduling ? (
               <div className="mt-5 rounded-xl border border-cyan-500/40 bg-cyan-500/8 p-4">
-                <p className="text-sm font-medium text-navy">Free slots that fit everyone:</p>
+                <p className="text-sm font-medium text-navy">
+                  Free slots that fit everyone:
+                </p>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {suggestSlots(openEvent).map((slot) => (
                     <button
@@ -637,10 +795,18 @@ export default function CalendarPage() {
                       onClick={() => applySlot(openEvent, slot)}
                       className="cursor-pointer rounded-full border border-cyan-600/50 bg-white px-3.5 py-1.5 text-[13px] font-medium text-navy hover:border-cyan-600"
                     >
-                      {fmtDay(slot.toISOString())} · {fmtTime(slot.toISOString())}
+                      {fmtDay(slot.toISOString())} ·{" "}
+                      {fmtTime(slot.toISOString())}
                     </button>
                   ))}
-                  <Button size="sm" variant="ghost" onClick={() => { setRescheduling(false); startEdit(openEvent); }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setRescheduling(false);
+                      startEdit(openEvent);
+                    }}
+                  >
                     Pick my own time
                   </Button>
                 </div>
@@ -651,15 +817,31 @@ export default function CalendarPage() {
                   Never mind
                 </button>
               </div>
-              ) : (
+            ) : (
               <div className="mt-5 flex gap-2">
-                <Button variant="secondary" size="sm" onClick={() => startEdit(openEvent)}>Edit</Button>
-                <Button variant="secondary" size="sm" onClick={() => setRescheduling(true)}>Reschedule</Button>
-                <Button variant="ghost" size="sm" className="ml-auto text-danger" onClick={() => setCancelling(true)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => startEdit(openEvent)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setRescheduling(true)}
+                >
+                  Reschedule
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto text-danger"
+                  onClick={() => setCancelling(true)}
+                >
                   Cancel event
                 </Button>
               </div>
-              )
             )}
           </Card>
         </Modal>

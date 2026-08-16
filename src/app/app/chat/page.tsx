@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Send, AlarmClock, CheckSquare, CalendarDays, ShieldAlert } from "lucide-react";
+import {
+  Send,
+  AlarmClock,
+  CheckSquare,
+  CalendarDays,
+  ShieldAlert,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
@@ -39,10 +45,10 @@ function actionResource(actions: ActionTaken[]): ChatMessage["resource"] {
   const kind = a.type.startsWith("reminder")
     ? ("reminder" as const)
     : a.type.startsWith("task")
-    ? ("task" as const)
-    : a.type.startsWith("calendar")
-    ? ("event" as const)
-    : null;
+      ? ("task" as const)
+      : a.type.startsWith("calendar")
+        ? ("event" as const)
+        : null;
   if (!kind) return undefined;
   const r = a.resource;
   // Some actions return only an id (e.g. task.create) — the reply text
@@ -58,7 +64,9 @@ function actionResource(actions: ActionTaken[]): ChatMessage["resource"] {
 
 export default function ChatPage() {
   const confirmations = useStore(confirmationsStore);
-  const [messages, setMessages] = useState<ChatMessage[]>(USE_MOCKS ? chatSeed : []);
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    USE_MOCKS ? chatSeed : [],
+  );
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -138,20 +146,25 @@ export default function ChatPage() {
                 className="mt-1 size-7.5 shrink-0 rounded-full"
               />
             )}
-            <div className={cn("max-w-[78%] space-y-2", m.role === "user" && "items-end")}>
+            <div
+              className={cn(
+                "max-w-[78%] space-y-2",
+                m.role === "user" && "items-end",
+              )}
+            >
               <div
                 className={cn(
                   "rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed shadow-card",
                   m.role === "user"
                     ? "rounded-tr-sm bg-indigo-900 text-white"
-                    : "rounded-tl-sm border border-line bg-white text-navy"
+                    : "rounded-tl-sm border border-line bg-white text-navy",
                 )}
               >
                 {m.text}
                 <span
                   className={cn(
                     "mt-1 block text-right text-[10px]",
-                    m.role === "user" ? "text-white/50" : "text-ink-muted"
+                    m.role === "user" ? "text-white/50" : "text-ink-muted",
                   )}
                 >
                   {fmtTime(m.at)}
@@ -164,7 +177,7 @@ export default function ChatPage() {
                   {(() => {
                     const Icon = resourceIcons[m.resource.kind];
                     return (
-                      <span className="flex size-8 items-center justify-center rounded-[10px] bg-indigo-50">
+                      <span className="flex size-8 items-center justify-center rounded-control bg-indigo-50">
                         <Icon className="size-4 text-indigo-900" aria-hidden />
                       </span>
                     );
@@ -181,23 +194,36 @@ export default function ChatPage() {
               {/* Embedded confirmation, live from the shared store */}
               {m.confirmation &&
                 (() => {
-                  const live = confirmations.find((c) => c.id === m.confirmation!.id);
+                  const live = confirmations.find(
+                    (c) => c.id === m.confirmation!.id,
+                  );
                   const status = live?.status ?? "pending";
                   return (
                     <div className="rounded-xl border border-warning/50 bg-warning/10 p-3.5">
                       <div className="flex items-start gap-2">
-                        <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
+                        <ShieldAlert
+                          className="mt-0.5 size-4 shrink-0 text-warning-ink"
+                          aria-hidden
+                        />
                         <div>
-                          <p className="text-sm text-navy">{m.confirmation.summary}</p>
+                          <p className="text-sm text-navy">
+                            {m.confirmation.summary}
+                          </p>
                           <Chip
-                            tone={status === "approved" ? "success" : status === "rejected" ? "neutral" : "warning"}
+                            tone={
+                              status === "approved"
+                                ? "success"
+                                : status === "rejected"
+                                  ? "neutral"
+                                  : "warning"
+                            }
                             className="mt-1.5"
                           >
                             {status === "approved"
                               ? "Approved"
                               : status === "rejected"
-                              ? "Rejected"
-                              : "Needs your approval"}
+                                ? "Rejected"
+                                : "Needs your approval"}
                           </Chip>
                         </div>
                       </div>
@@ -206,9 +232,17 @@ export default function ChatPage() {
                           <Button
                             size="sm"
                             onClick={() => {
-                              resolveConfirmationRemote(m.confirmation!.id, "approved")
+                              resolveConfirmationRemote(
+                                m.confirmation!.id,
+                                "approved",
+                              )
                                 .then((reply) => toast(reply))
-                                .catch(() => toast("That didn't go through — nothing was changed.", { tone: "error" }));
+                                .catch(() =>
+                                  toast(
+                                    "That didn't go through — nothing was changed.",
+                                    { tone: "error" },
+                                  ),
+                                );
                             }}
                           >
                             Approve
@@ -217,9 +251,17 @@ export default function ChatPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => {
-                              resolveConfirmationRemote(m.confirmation!.id, "rejected")
+                              resolveConfirmationRemote(
+                                m.confirmation!.id,
+                                "rejected",
+                              )
                                 .then((reply) => toast(reply, { tone: "info" }))
-                                .catch(() => toast("That didn't go through — nothing was changed.", { tone: "error" }));
+                                .catch(() =>
+                                  toast(
+                                    "That didn't go through — nothing was changed.",
+                                    { tone: "error" },
+                                  ),
+                                );
                             }}
                           >
                             Reject
@@ -289,7 +331,12 @@ export default function ChatPage() {
           aria-label="Message Amiva"
           className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-[15px] text-navy outline-none placeholder:text-ink-muted"
         />
-        <Button size="sm" onClick={() => send()} disabled={!draft.trim() || typing} aria-label="Send">
+        <Button
+          size="sm"
+          onClick={() => send()}
+          disabled={!draft.trim() || typing}
+          aria-label="Send"
+        >
           <Send className="size-4" aria-hidden />
         </Button>
       </div>

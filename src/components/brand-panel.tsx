@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Logo } from "@/components/logo";
 import { Year } from "@/components/year";
 
@@ -33,15 +32,6 @@ export function BrandPanel() {
       </Link>
 
       <div className="relative">
-        <div aria-hidden className="brand-mark-float mb-8 w-fit">
-          <Image
-            src="/brand/mark.svg"
-            alt=""
-            width={56}
-            height={56}
-            className="rounded-[22%] shadow-pop"
-          />
-        </div>
         <p className="max-w-90 text-3xl font-semibold leading-snug text-white">
           Manage your life and work from one conversation.
         </p>

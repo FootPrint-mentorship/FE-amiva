@@ -11,7 +11,7 @@ const sections: LegalSection[] = [
     id: "who-we-are",
     heading: "Who we are",
     body: [
-      "Amiva is an AI personal assistant that helps you manage reminders, calendars, tasks, email and personal notes through WhatsApp and a web dashboard. This policy explains what data we collect, why, how it is protected, and the controls you have over it.",
+      "Amiva is an AI personal assistant that helps you manage reminders, calendars, tasks and personal notes through WhatsApp and a web dashboard. This policy explains what data we collect, why, how it is protected, and the controls you have over it.",
       "This policy applies to the Amiva WhatsApp assistant, the web application, and any Amiva mobile applications.",
     ],
   },
@@ -30,8 +30,8 @@ const sections: LegalSection[] = [
     heading: "How we use your data",
     body: [
       "We process your data solely to provide Amiva's features: interpreting your requests, executing the actions you approve, delivering notifications on the channels you choose, and retrieving information you ask for.",
-      "We do not sell your personal data. We do not use your content, including email, calendar and memories, to train AI models.",
-      "Consequential actions (sending email, cancelling meetings, deleting data, sharing information) always require your explicit approval before execution, and every such action is recorded in an activity log you can review.",
+      "We do not sell your personal data. We do not use your content, including your calendar and memories, to train AI models.",
+      "Consequential actions (cancelling meetings, deleting data, sharing information) always require your explicit approval before execution, and every such action is recorded in an activity log you can review.",
     ],
   },
   {
@@ -53,7 +53,7 @@ const sections: LegalSection[] = [
     id: "storage-security",
     heading: "Storage and security",
     body: [
-      "All data is encrypted in transit (TLS 1.2+) and at rest (AES-256). Provider access tokens are stored in an encrypted vault. Access to production systems is restricted, logged and audited.",
+      "All data is encrypted in transit (TLS 1.2+) and at rest (AES-256). Your data is hosted with our infrastructure providers in the European Union (Amsterdam). Provider access tokens are stored in an encrypted vault. Access to production systems is restricted, logged and audited.",
       "Personal content and identifiers are masked in operational logs.",
     ],
   },
@@ -97,7 +97,7 @@ const sections: LegalSection[] = [
     id: "contact",
     heading: "Contact",
     body: [
-      "For privacy questions or data requests, contact privacy@amiva.app.",
+      "For privacy questions or data requests, contact support@tryamiva.com.",
     ],
   },
 ];
@@ -107,7 +107,15 @@ export default function PrivacyPolicyPage() {
     <LegalProse
       title="Privacy Policy"
       effectiveDate="1 August 2026"
-      draft
+      draft={false}
+      summary={[
+        "We collect what you give us: your name, email, phone/WhatsApp number, and the reminders, tasks, events and memories you create.",
+        "Your data powers your Amiva only we never sell it, and nothing is shared with advertisers.",
+        "If you connect Google Calendar, we only touch the calendar data needed to do what you asked, and you can disconnect it any time.",
+        "Everything is encrypted in transit and at rest, hosted in the EU.",
+        "You can export everything from Settings → Privacy in one click, and deleting your account permanently removes your data after a 14-day grace period.",
+        "Data questions or deletion requests: support@tryamiva.com.",
+      ]}
       sections={sections}
     />
   );

@@ -12,7 +12,13 @@ import { Select } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
 import { tasksStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
-import { addSubtasks, createTask, patchTask as patchTaskApi, setTaskStatus, toggleSubtask as toggleSubtaskApi } from "@/lib/data/collections";
+import {
+  addSubtasks,
+  createTask,
+  patchTask as patchTaskApi,
+  setTaskStatus,
+  toggleSubtask as toggleSubtaskApi,
+} from "@/lib/data/collections";
 
 const tabs = ["Today", "Upcoming", "Overdue", "Completed"] as const;
 type Tab = (typeof tabs)[number];
@@ -55,25 +61,35 @@ export default function TasksPage() {
   const visible = useMemo(
     () =>
       items.filter(
-        (t) => matches(t, tab) && (category === "all" || t.category === category)
+        (t) =>
+          matches(t, tab) && (category === "all" || t.category === category),
       ),
-    [items, tab, category]
+    [items, tab, category],
   );
   const presentCategories = useMemo(
-    () => [...new Set(items.filter((t) => t.category).map((t) => t.category as string))],
-    [items]
+    () => [
+      ...new Set(
+        items.filter((t) => t.category).map((t) => t.category as string),
+      ),
+    ],
+    [items],
   );
   const open = items.find((t) => t.id === openId) ?? null;
 
   const fail = (err: unknown) =>
-    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
+    toast(err instanceof Error ? err.message : "That didn't go through.", {
+      tone: "error",
+    });
 
   const complete = (id: string) =>
     setTaskStatus(id, "completed")
       .then(() =>
         toast("Task completed.", {
-          action: { label: "Undo", onClick: () => void setTaskStatus(id, "open") },
-        })
+          action: {
+            label: "Undo",
+            onClick: () => void setTaskStatus(id, "open"),
+          },
+        }),
       )
       .catch(fail);
 
@@ -88,7 +104,11 @@ export default function TasksPage() {
       "Review and send",
     ].filter((title) => !t.subtasks.some((s) => s.title === title));
     addSubtasks(t, ideas)
-      .then(() => toast(`Added ${ideas.length} suggested subtasks. Edit or delete freely.`))
+      .then(() =>
+        toast(
+          `Added ${ideas.length} suggested subtasks. Edit or delete freely.`,
+        ),
+      )
       .catch(fail)
       .finally(() => setSuggesting(false));
   };
@@ -117,7 +137,9 @@ export default function TasksPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-navy">Tasks</h1>
+          <h1 className="text-[28px] font-semibold tracking-tight text-navy">
+            Tasks
+          </h1>
           <p className="text-sm text-ink-muted">
             Captured from your chats and meetings, organised here.
           </p>
@@ -132,7 +154,7 @@ export default function TasksPage() {
           onKeyDown={(e) => e.key === "Enter" && quickAdd()}
           placeholder="Add a task…"
           aria-label="Add a task"
-          className="h-10 flex-1 rounded-[10px] border border-line bg-white px-3 text-sm text-navy placeholder:text-ink-muted"
+          className="h-10 flex-1 rounded-control border border-line bg-white px-3 text-sm text-navy placeholder:text-ink-muted"
         />
         <Button onClick={quickAdd}>
           <Plus className="size-4" aria-hidden />
@@ -141,7 +163,10 @@ export default function TasksPage() {
       </div>
 
       {/* Tabs */}
-      <div role="tablist" className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1">
+      <div
+        role="tablist"
+        className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl bg-indigo-50 p-1"
+      >
         {tabs.map((t) => {
           const count = items.filter((x) => matches(x, t)).length;
           return (
@@ -154,7 +179,7 @@ export default function TasksPage() {
                 "flex cursor-pointer items-center gap-1.5 rounded-[9px] px-4 py-1.5 text-sm font-medium transition-colors",
                 tab === t
                   ? "bg-white text-indigo-900 shadow-card"
-                  : "text-ink-muted hover:text-navy"
+                  : "text-ink-muted hover:text-navy",
               )}
             >
               {t}
@@ -180,7 +205,7 @@ export default function TasksPage() {
                 "cursor-pointer rounded-full px-3.5 py-1.5 text-[13px] font-medium capitalize transition-colors",
                 category === c
                   ? "bg-indigo-900 text-white"
-                  : "border border-line bg-white text-ink-muted hover:border-indigo-300"
+                  : "border border-line bg-white text-ink-muted hover:border-indigo-300",
               )}
             >
               {c === "all" ? "All categories" : c}
@@ -218,7 +243,7 @@ export default function TasksPage() {
                     "flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-2",
                     t.status === "completed"
                       ? "border-success bg-success text-white"
-                      : "border-indigo-300 hover:border-indigo-900 hover:bg-indigo-50"
+                      : "border-indigo-300 hover:border-indigo-900 hover:bg-indigo-50",
                   )}
                 >
                   {t.status === "completed" && "✓"}
@@ -226,7 +251,7 @@ export default function TasksPage() {
                 <span
                   className={cn(
                     "min-w-0 flex-1 truncate text-[15px] font-medium text-navy",
-                    t.status === "completed" && "line-through opacity-60"
+                    t.status === "completed" && "line-through opacity-60",
                   )}
                 >
                   {t.title}
@@ -251,7 +276,7 @@ export default function TasksPage() {
                       high: "text-warning",
                       medium: "text-violet-500",
                       low: "text-ink-muted",
-                    }[t.priority]
+                    }[t.priority],
                   )}
                   aria-label={`Priority: ${t.priority}`}
                 />
@@ -263,16 +288,26 @@ export default function TasksPage() {
 
       {/* Detail drawer */}
       {open && (
-        <Modal label={open.title} position="right" onClose={() => setOpenId(null)}>
+        <Modal
+          label={open.title}
+          position="right"
+          onClose={() => setOpenId(null)}
+        >
           <div className="flex h-screen w-screen max-w-120 flex-col bg-white shadow-pop">
             <div className="flex items-start justify-between gap-4 border-b border-line p-5">
               <div>
-                <h2 className="text-lg font-semibold text-navy">{open.title}</h2>
+                <h2 className="text-lg font-semibold text-navy">
+                  {open.title}
+                </h2>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Chip tone={priorityTone[open.priority]}>{open.priority}</Chip>
+                  <Chip tone={priorityTone[open.priority]}>
+                    {open.priority}
+                  </Chip>
                   {open.project && <Chip tone="indigo">{open.project}</Chip>}
                   {open.due_date && (
-                    <Chip tone="neutral">Due {fmtDay(`${open.due_date}T12:00:00Z`)}</Chip>
+                    <Chip tone="neutral">
+                      Due {fmtDay(`${open.due_date}T12:00:00Z`)}
+                    </Chip>
                   )}
                 </div>
               </div>
@@ -291,8 +326,10 @@ export default function TasksPage() {
                   <input
                     type="date"
                     value={open.due_date ?? ""}
-                    onChange={(e) => patch(open.id, { due_date: e.target.value || null })}
-                    className="mt-1.5 h-10 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal text-navy"
+                    onChange={(e) =>
+                      patch(open.id, { due_date: e.target.value || null })
+                    }
+                    className="mt-1.5 h-10 w-full rounded-control border border-line bg-white px-2.5 text-sm font-normal text-navy"
                   />
                 </label>
                 <div className="text-sm font-medium text-navy">
@@ -300,7 +337,9 @@ export default function TasksPage() {
                   <Select
                     label="Category"
                     value={open.category ?? "none"}
-                    onChange={(v) => patch(open.id, { category: v === "none" ? null : v })}
+                    onChange={(v) =>
+                      patch(open.id, { category: v === "none" ? null : v })
+                    }
                     options={[
                       { value: "none", label: "None" },
                       ...taskCategories.map((c) => ({ value: c, label: c })),
@@ -313,33 +352,41 @@ export default function TasksPage() {
                   <input
                     value={open.project ?? ""}
                     placeholder="None"
-                    onChange={(e) => patch(open.id, { project: e.target.value || null })}
-                    className="mt-1.5 h-10 w-full rounded-[10px] border border-line bg-white px-2.5 text-sm font-normal text-navy placeholder:text-ink-muted"
+                    onChange={(e) =>
+                      patch(open.id, { project: e.target.value || null })
+                    }
+                    className="mt-1.5 h-10 w-full rounded-control border border-line bg-white px-2.5 text-sm font-normal text-navy placeholder:text-ink-muted"
                   />
                 </label>
                 <div className="col-span-2">
-                  <p className="mb-1.5 text-sm font-medium text-navy">Priority</p>
+                  <p className="mb-1.5 text-sm font-medium text-navy">
+                    Priority
+                  </p>
                   <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
-                    {(["low", "medium", "high", "urgent"] as const).map((pr) => (
-                      <button
-                        key={pr}
-                        aria-pressed={open.priority === pr}
-                        onClick={() => patch(open.id, { priority: pr })}
-                        className={cn(
-                          "cursor-pointer rounded-[9px] px-3 py-1 text-xs font-medium capitalize transition-colors",
-                          open.priority === pr
-                            ? "bg-white text-indigo-900 shadow-card"
-                            : "text-ink-muted hover:text-navy"
-                        )}
-                      >
-                        {pr}
-                      </button>
-                    ))}
+                    {(["low", "medium", "high", "urgent"] as const).map(
+                      (pr) => (
+                        <button
+                          key={pr}
+                          aria-pressed={open.priority === pr}
+                          onClick={() => patch(open.id, { priority: pr })}
+                          className={cn(
+                            "cursor-pointer rounded-[9px] px-3 py-1 text-xs font-medium capitalize transition-colors",
+                            open.priority === pr
+                              ? "bg-white text-indigo-900 shadow-card"
+                              : "text-ink-muted hover:text-navy",
+                          )}
+                        >
+                          {pr}
+                        </button>
+                      ),
+                    )}
                   </div>
                 </div>
               </section>
               <section>
-                <h3 className="mb-2 text-sm font-semibold text-ink-muted">Subtasks</h3>
+                <h3 className="mb-2 text-sm font-semibold text-ink-muted">
+                  Subtasks
+                </h3>
                 {open.subtasks.length === 0 ? (
                   <p className="text-sm text-ink-muted">No subtasks yet.</p>
                 ) : (
@@ -353,7 +400,7 @@ export default function TasksPage() {
                             "flex size-4.5 shrink-0 cursor-pointer items-center justify-center rounded border-2 text-[10px]",
                             s.completed
                               ? "border-success bg-success text-white"
-                              : "border-indigo-300 hover:border-indigo-900"
+                              : "border-indigo-300 hover:border-indigo-900",
                           )}
                         >
                           {s.completed && "✓"}
@@ -361,7 +408,7 @@ export default function TasksPage() {
                         <span
                           className={cn(
                             "text-sm text-navy",
-                            s.completed && "line-through opacity-60"
+                            s.completed && "line-through opacity-60",
                           )}
                         >
                           {s.title}
@@ -382,8 +429,12 @@ export default function TasksPage() {
                 </Button>
               </section>
               <section>
-                <h3 className="mb-1 text-sm font-semibold text-ink-muted">Source</h3>
-                <p className="text-sm text-navy">Created via WhatsApp · today</p>
+                <h3 className="mb-1 text-sm font-semibold text-ink-muted">
+                  Source
+                </h3>
+                <p className="text-sm text-navy">
+                  Created via WhatsApp · today
+                </p>
               </section>
             </div>
             <div className="border-t border-line p-4">

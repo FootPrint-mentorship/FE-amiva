@@ -74,6 +74,15 @@ const iso = (h: number, m = 0, dayOffset = 0) => {
   return d.toISOString();
 };
 
+const dateKey = (dayOffset = 0) => {
+  const d = new Date(today);
+  d.setDate(d.getDate() + dayOffset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 export const agendaSummary =
   "You have 3 meetings today, with a free stretch from 2:30 PM. Two reminders are due this morning, and the proposal for Kemi is due by end of day.";
 
@@ -194,7 +203,7 @@ export const tasks: Task[] = [
   {
     id: "tsk_01",
     title: "Send proposal to Kemi",
-    due_date: iso(17, 0).slice(0, 10),
+    due_date: dateKey(0),
     priority: "high",
     status: "open",
     project: "Client: Kemi",
@@ -207,7 +216,7 @@ export const tasks: Task[] = [
   {
     id: "tsk_02",
     title: "Review Q3 budget draft",
-    due_date: iso(17, 0).slice(0, 10),
+    due_date: dateKey(0),
     priority: "medium",
     status: "open",
     project: null,
@@ -217,7 +226,7 @@ export const tasks: Task[] = [
   {
     id: "tsk_03",
     title: "Book flight to Nairobi",
-    due_date: iso(17, 0, 2).slice(0, 10),
+    due_date: dateKey(2),
     priority: "urgent",
     status: "open",
     project: null,
