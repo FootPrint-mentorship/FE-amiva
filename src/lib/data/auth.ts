@@ -63,7 +63,7 @@ export async function verifyEmailCode(email: string, code: string): Promise<void
 export async function register(data: {
   name: string;
   email: string;
-  phone: string; // E.164
+  phone?: string; // E.164 — optional (§11.1 as amended 16 Aug 2026)
   password: string;
   timezone: string;
 }): Promise<void> {
@@ -82,7 +82,9 @@ export async function register(data: {
   }
   const res = await api<TokenResponse>("/auth/register", {
     method: "POST",
-    body: data,
+    // Omit phone entirely when the user left it empty — an empty string
+    // would fail the API's E.164 validation.
+    body: { ...data, ...(data.phone ? {} : { phone: undefined }) },
     auth: false,
   });
   setTokens(res.access_token, res.refresh_token);
@@ -103,6 +105,53 @@ export async function login(identifier: string, password: string): Promise<void>
   });
   setTokens(res.access_token, res.refresh_token);
   absorbUser(res.user);
+  setAuthed(true);
+}
+
+/** §11 Google sign-in: exchange the OAuth code (from /google-callback) for a
+ * session. Returns whether the profile still needs completing. */
+export async function googleSignIn(
+  code: string,
+  redirectUri: string
+): Promise<{ profileComplete: boolean }> {
+  const res = await api<TokenResponse & { profile_complete: boolean }>("/auth/google", {
+    method: "POST",
+    body: { code, redirect_uri: redirectUri },
+    auth: false,
+  });
+  setTokens(res.access_token, res.refresh_token);
+  absorbUser(res.user);
+  setAuthed(true);
+  return { profileComplete: res.profile_complete };
+}
+
+/** §11.1 as amended: everything optional — phone only if the user wants
+ * WhatsApp features (they can add it later in Settings). */
+export async function completeProfile(data: {
+  phone: string | null;
+  preferredName: string | null;
+  timezone: string | null;
+}): Promise<void> {
+  if (USE_MOCKS) {
+    settingsStore.set((c) => ({
+      ...c,
+      preferredName: data.preferredName ?? c.preferredName,
+      phone: data.phone ?? c.phone,
+      timezone: data.timezone ?? c.timezone,
+      emailVerified: true,
+    }));
+    setAuthed(true);
+    return;
+  }
+  const user = await api<ApiUser>("/auth/complete-profile", {
+    method: "POST",
+    body: {
+      phone: data.phone,
+      preferred_name: data.preferredName,
+      timezone: data.timezone,
+    },
+  });
+  absorbUser(user);
   setAuthed(true);
 }
 

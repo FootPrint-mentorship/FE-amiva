@@ -50,7 +50,8 @@ export default function LoginPage() {
   };
 
   const google = () => {
-    startGoogleSignIn();
+    if (startGoogleSignIn()) return; // real flow: browser is off to Google
+    // Mock flow: continue locally with the stashed profile.
     if (isProfileComplete()) {
       setAuthed(true);
       router.push("/app/today");
@@ -66,12 +67,13 @@ export default function LoginPage() {
       </h1>
 
       <div className="mt-6">
-        <GoogleButton onClick={google} />
+        <GoogleButton label="Sign in with Google" onClick={google} />
         <OrDivider />
       </div>
 
       <div className="space-y-4">
         <Field
+          required
           label="Email or phone number"
           placeholder="you@example.com or 08012345678"
           autoComplete="username"
@@ -81,6 +83,7 @@ export default function LoginPage() {
         />
         <div>
           <PasswordField
+            required
             label="Password"
             placeholder="••••••••"
             autoComplete="current-password"

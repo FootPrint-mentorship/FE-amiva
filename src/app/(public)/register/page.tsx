@@ -96,7 +96,7 @@ export default function RegisterPage() {
     if (!form.name.trim()) errs.name = "Your name is required.";
     if (!EMAIL_RE.test(form.email)) errs.email = "Enter a valid email address.";
     else if (emailStage !== "verified") errs.email = "Verify your email to continue.";
-    if (form.phone.length < 7) errs.phone = "Enter a valid phone number.";
+    if (form.phone && form.phone.length < 7) errs.phone = "Enter a valid phone number, or leave it empty.";
     if (form.password.length < 8) errs.password = "Use at least 8 characters.";
     if (!form.consent) errs.consent = "Please accept the terms to continue.";
     setErrors(errs);
@@ -106,7 +106,7 @@ export default function RegisterPage() {
       await registerAccount({
         name: form.name.trim(),
         email: form.email,
-        phone: `${form.cc}${form.phone}`,
+        phone: form.phone ? `${form.cc}${form.phone.replace(/^0/, "")}` : undefined,
         password: form.password,
         timezone: form.timezone,
       });
@@ -121,8 +121,8 @@ export default function RegisterPage() {
   };
 
   const google = () => {
-    startGoogleSignIn();
-    router.push("/complete-profile");
+    if (startGoogleSignIn()) return; // real flow: browser is off to Google
+    router.push("/complete-profile"); // mock flow
   };
 
   return (
@@ -132,12 +132,13 @@ export default function RegisterPage() {
       </h1>
 
       <div className="mt-6">
-        <GoogleButton onClick={google} />
+        <GoogleButton label="Sign up with Google" onClick={google} />
         <OrDivider />
       </div>
 
       <div className="space-y-4">
         <Field
+          required
           label="Full name"
           placeholder="Ada Obi"
           value={form.name}
@@ -151,6 +152,7 @@ export default function RegisterPage() {
               error line under the input pushed the button out of alignment. */}
           <div className="flex items-start gap-2">
             <Field
+              required
               label="Email"
               type="email"
               placeholder="you@example.com"
@@ -195,12 +197,13 @@ export default function RegisterPage() {
           phone={form.phone}
           onCcChange={(cc) => setForm({ ...form, cc })}
           onPhoneChange={(phone) => setForm({ ...form, phone })}
-          hint="The number you use for WhatsApp. Amiva will meet you there."
+          hint="Optional — the number you use for WhatsApp. You can add it any time in Settings."
           error={errors.phone}
         />
 
         <div>
           <PasswordField
+            required
             label="Password"
             placeholder="At least 8 characters"
             value={form.password}

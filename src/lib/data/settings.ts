@@ -92,14 +92,31 @@ export async function saveNotificationPrefs(): Promise<void> {
 
 /* ---- phone verification (Settings → Profile, onboarding step 3) ---- */
 
-export async function sendPhoneCode(): Promise<void> {
+/** §11.2 as amended 16 Aug 2026: pass `phone` to change/add the number — it
+ * stays PENDING server-side until the OTP (sent to that new number) is
+ * verified. Verification is the only way the number ever changes. */
+export async function sendPhoneCode(phone?: string): Promise<void> {
   if (USE_MOCKS) return;
-  await api("/auth/phone/send-code", { method: "POST", body: {} });
+  await api("/auth/phone/send-code", {
+    method: "POST",
+    body: phone ? { phone } : {},
+  });
 }
 
 export async function verifyPhoneCode(code: string): Promise<void> {
-  if (!USE_MOCKS) {
-    await api("/auth/phone/verify", { method: "POST", body: { code } });
+  if (USE_MOCKS) {
+    settingsStore.set((c) => ({ ...c, phoneVerified: true }));
+    return;
   }
-  settingsStore.set((c) => ({ ...c, phoneVerified: true }));
+  // The server answers with the canonical user — the (possibly new) number
+  // and its verified status come from there, not from local guesses.
+  const user = await api<{ phone: string | null; phone_verified: boolean }>(
+    "/auth/phone/verify",
+    { method: "POST", body: { code } }
+  );
+  settingsStore.set((c) => ({
+    ...c,
+    phone: user.phone ?? c.phone,
+    phoneVerified: user.phone_verified,
+  }));
 }

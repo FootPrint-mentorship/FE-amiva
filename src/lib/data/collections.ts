@@ -12,6 +12,7 @@ import {
   tasksStore,
   memoriesStore,
   eventsStore,
+  settingsStore,
 } from "@/lib/stores";
 import type { Reminder, Task, Memory, CalendarEvent } from "@/lib/mock";
 
@@ -298,12 +299,17 @@ export async function saveEvent(e: CalendarEvent, isNew: boolean): Promise<void>
     else upsertEvent(e);
     return;
   }
+  // Contract check (16 Aug 2026, found via a live 422): EventCreate REQUIRES
+  // `timezone`, and `attendees` is a list of plain email strings — not
+  // {email} objects. PATCH takes the same shapes, optional.
   const body = {
     title: e.title,
     start_at: e.start_at,
     end_at: e.end_at,
+    // The modal's time inputs are in the user's zone — send that zone.
+    timezone: settingsStore.get().timezone,
     location: e.location,
-    attendees: e.attendees.map((a) => ({ email: a.email })),
+    attendees: e.attendees.map((a) => a.email),
     conference: !!e.conference_url,
   };
   const saved = isNew

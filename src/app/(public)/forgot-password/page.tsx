@@ -51,6 +51,7 @@ export default function ForgotPasswordPage() {
       </p>
       <div className="mt-6 space-y-4">
         <Field
+          required
           label="Email"
           type="email"
           placeholder="you@example.com"
