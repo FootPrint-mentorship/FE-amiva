@@ -72,10 +72,14 @@ export default function MarketingLayout({
                   {n.label}
                 </a>
               ) : (
-                <Link key={n.label} href={n.href} className="hover:text-indigo-900">
+                <Link
+                  key={n.label}
+                  href={n.href}
+                  className="hover:text-indigo-900"
+                >
                   {n.label}
                 </Link>
-              )
+              ),
             )}
           </nav>
 
@@ -111,7 +115,11 @@ export default function MarketingLayout({
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            {mobileOpen ? (
+              <X className="size-5" />
+            ) : (
+              <Menu className="size-5" />
+            )}
           </button>
         </div>
 
@@ -140,7 +148,7 @@ export default function MarketingLayout({
                   >
                     {n.label}
                   </Link>
-                )
+                ),
               )}
             </nav>
             <div className="mt-5 flex gap-3">
@@ -199,10 +207,21 @@ export default function MarketingLayout({
           <div className="relative z-[2] grid gap-10 px-6 md:grid-cols-[2fr_repeat(3,1fr)] md:px-13.5">
             {/* Brand */}
             <div className="flex flex-col items-start gap-3 text-[13px]">
-              <Logo size={20} />
-              <p className="max-w-62.5 leading-[1.6] text-ink-muted">
+              <Logo size={30} />
+              <p className="max-w-72 leading-[1.6] text-ink-muted">
                 Your personal chief of staff, on WhatsApp.
               </p>
+              {/* <p className="max-w-72 leading-[1.6] text-ink-muted">
+                If you connect Google Calendar, Amiva only accesses the calendar
+                data needed to create and manage the events you ask for. See our{" "}
+                <Link
+                  href="/privacy-policy"
+                  className="font-semibold text-navy hover:text-indigo-900"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </p> */}
             </div>
 
             {/* Product */}
@@ -280,6 +299,7 @@ export default function MarketingLayout({
               transformOrigin: "bottom",
               position: "relative",
               bottom: "-180px",
+              marginTop: "-90px",
             }}
           >
             Amiva
