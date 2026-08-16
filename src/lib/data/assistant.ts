@@ -14,6 +14,7 @@ import {
   upsertInList,
   patchInList,
   setList,
+  getList,
 } from "@/lib/query";
 import { invalidateCollections } from "@/lib/data/collections";
 import { pendingConfirmations, type ChatMessage, type PendingConfirmation } from "@/lib/mock";
@@ -63,10 +64,19 @@ function toConfirmation(c: ApiConfirmation): Confirmation {
   };
 }
 
-const fetchConfirmations = async () =>
-  (
+const fetchConfirmations = async () => {
+  const pending = (
     await api<Page<ApiConfirmation>>("/assistant/confirmations?status=pending")
   ).data.map(toConfirmation);
+  // The endpoint only returns pending items. Keep this session's resolved
+  // ones in the cache — Chat's in-thread cards read their status from here,
+  // and dropping them on a refetch (e.g. window refocus) would re-arm an
+  // already-approved card's buttons.
+  const resolved = getList<Confirmation>(qk.confirmations).filter(
+    (c) => c.status !== "pending" && !pending.some((p) => p.id === c.id)
+  );
+  return [...pending, ...resolved];
+};
 
 /** Pending confirmations (shared by top bar, Today banner, Chat, tray). */
 export function useConfirmations() {
