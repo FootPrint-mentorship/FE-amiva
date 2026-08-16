@@ -24,6 +24,7 @@ vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => {
     const { src, alt, priority: _priority, ...rest } = props;
     return (
+      // eslint-disable-next-line @next/next/no-img-element -- this IS the test double for next/image
       <img src={typeof src === "string" ? src : ""} alt={String(alt ?? "")} {...rest} />
     );
   },

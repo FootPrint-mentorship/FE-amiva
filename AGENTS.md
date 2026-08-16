@@ -138,6 +138,9 @@ public/brand/               # brand SVGs (mark.svg = cropped app icon)
 ## Known non-issues
 
 - `npm run dev` logs 4 “Encountered two children with the same key” errors on every hard page load — including routes with no list rendering at all (e.g. `/login`). This comes from Turbopack’s injected dev scripts, not app code: client-side navigation logs zero, and the production build (`npm run build && npx next start`) is completely clean. Verified 26 Jul 2026; don’t chase it.
+- Lint is fully clean as of 17 Aug 2026 (0 errors, 0 warnings): unused-var rule ignores `^_` (the drop-a-key destructure idiom), the test double for `next/image` carries a scoped eslint-disable, and `ui/select.tsx` gained the missing `aria-controls` wiring (trigger ↔ listbox via `useId`). Keep it clean.
+- Chat auto-scroll sets `scrollTop` directly (16 Aug) — queued smooth `scrollIntoView` animations cancel each other when optimistic message → typing → reply land in quick succession, stranding the reply off-screen. The thread container also carries `pr-3` so the overlay scrollbar never covers text.
+- Resolved confirmations stay in the query cache on refetch (16 Aug, `data/assistant.ts`): the pending-only endpoint would otherwise drop a just-approved item and Chat's in-thread card would re-arm its buttons on window refocus.
 
 ## Known intentional shortcuts
 
