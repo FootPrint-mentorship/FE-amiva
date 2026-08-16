@@ -8,11 +8,12 @@ import { Year } from "@/components/year";
 import { CtaPair } from "@/components/marketing/cta-pair";
 import { useState } from "react";
 
+// Contact goes straight to the WhatsApp chat — the product IS the chat.
 const nav = [
   { href: "/#features", label: "Features" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "Questions" },
-  { href: "/#faq", label: "Contact" },
+  { href: WA_LINK, label: "Contact", external: true },
 ];
 
 const footerProduct = [
@@ -48,11 +49,23 @@ export default function MarketingLayout({
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-8 text-[14px] text-[#4f5060] md:flex">
-            {nav.map((n) => (
-              <Link key={n.label} href={n.href} className="hover:text-indigo-900">
-                {n.label}
-              </Link>
-            ))}
+            {nav.map((n) =>
+              n.external ? (
+                <a
+                  key={n.label}
+                  href={n.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-indigo-900"
+                >
+                  {n.label}
+                </a>
+              ) : (
+                <Link key={n.label} href={n.href} className="hover:text-indigo-900">
+                  {n.label}
+                </Link>
+              )
+            )}
           </nav>
 
           {/* Desktop actions */}
@@ -86,16 +99,29 @@ export default function MarketingLayout({
         {mobileOpen && (
           <div className="absolute left-0 right-0 top-full border-b border-line bg-white px-5 py-6 shadow-[0_20px_30px_rgba(32,24,91,0.08)] md:hidden">
             <nav className="flex flex-col gap-4">
-              {nav.map((n) => (
-                <Link
-                  key={n.label}
-                  href={n.href}
-                  className="text-[15px] font-medium text-navy"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {n.label}
-                </Link>
-              ))}
+              {nav.map((n) =>
+                n.external ? (
+                  <a
+                    key={n.label}
+                    href={n.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[15px] font-medium text-navy"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {n.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={n.label}
+                    href={n.href}
+                    className="text-[15px] font-medium text-navy"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {n.label}
+                  </Link>
+                )
+              )}
             </nav>
             <div className="mt-5 flex gap-3">
               <Link
@@ -186,6 +212,12 @@ export default function MarketingLayout({
               >
                 <MessageCircle className="size-4" aria-hidden />
                 Open WhatsApp
+              </a>
+              <a
+                href="mailto:support@tryamiva.com"
+                className="text-[#696b7a] hover:text-navy"
+              >
+                support@tryamiva.com
               </a>
             </div>
           </div>

@@ -48,7 +48,6 @@ next-env.d.ts
 .claude/
 .cursor/
 .codex/
-AGENTS.md
 SKILL.md
 **/SKILL.md
 skills/

@@ -39,13 +39,20 @@ export function Select({
   const selected = options.find((o) => o.value === value) ?? null;
   const filtered = query.trim()
     ? options.filter((o) =>
-        `${o.label} ${o.hint ?? ""}`.toLowerCase().includes(query.trim().toLowerCase())
+        `${o.label} ${o.hint ?? ""}`
+          .toLowerCase()
+          .includes(query.trim().toLowerCase()),
       )
     : options;
 
   const openPanel = () => {
     setQuery("");
-    setActive(Math.max(0, options.findIndex((o) => o.value === value)));
+    setActive(
+      Math.max(
+        0,
+        options.findIndex((o) => o.value === value),
+      ),
+    );
     setOpen(true);
   };
 
@@ -67,9 +74,10 @@ export function Select({
     }
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      const next = e.key === "ArrowDown"
-        ? Math.min(active + 1, filtered.length - 1)
-        : Math.max(active - 1, 0);
+      const next =
+        e.key === "ArrowDown"
+          ? Math.min(active + 1, filtered.length - 1)
+          : Math.max(active - 1, 0);
       setActive(next);
       listRef.current?.children[next]?.scrollIntoView({ block: "nearest" });
     }
@@ -80,7 +88,10 @@ export function Select({
   };
 
   return (
-    <div className={cn("relative", className)} onKeyDown={open ? onKey : undefined}>
+    <div
+      className={cn("relative", className)}
+      onKeyDown={open ? onKey : undefined}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -90,21 +101,34 @@ export function Select({
         aria-label={label}
         onClick={() => (open ? setOpen(false) : openPanel())}
         onKeyDown={(e) => {
-          if (!open && (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")) {
+          if (
+            !open &&
+            (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")
+          ) {
             e.preventDefault();
             openPanel();
           }
         }}
-        className="flex h-11 w-full cursor-pointer items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 text-left text-[15px] text-navy hover:border-indigo-300"
+        className="flex h-11 w-full cursor-pointer items-center gap-2 rounded-control border border-line bg-white px-3.5 text-left text-[15px] text-navy hover:border-indigo-300"
       >
-        <span className={cn("min-w-0 flex-1 truncate", !selected && "text-ink-muted")}>
+        <span
+          className={cn(
+            "min-w-0 flex-1 truncate",
+            !selected && "text-ink-muted",
+          )}
+        >
           {selected ? selected.label : placeholder}
         </span>
         {selected?.hint && !hideHintInTrigger && (
-          <span className="shrink-0 text-xs text-ink-muted">{selected.hint}</span>
+          <span className="shrink-0 text-xs text-ink-muted">
+            {selected.hint}
+          </span>
         )}
         <ChevronDown
-          className={cn("size-4 shrink-0 text-ink-muted transition-transform", open && "rotate-180")}
+          className={cn(
+            "size-4 shrink-0 text-ink-muted transition-transform",
+            open && "rotate-180",
+          )}
           aria-hidden
         />
       </button>
@@ -115,7 +139,10 @@ export function Select({
           <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-line bg-white shadow-pop">
             {searchable && (
               <div className="flex items-center gap-2 border-b border-line px-3">
-                <Search className="size-3.5 shrink-0 text-ink-muted" aria-hidden />
+                <Search
+                  className="size-3.5 shrink-0 text-ink-muted"
+                  aria-hidden
+                />
                 <input
                   autoFocus
                   value={query}
@@ -138,7 +165,9 @@ export function Select({
               className="max-h-64 overflow-y-auto py-1"
             >
               {filtered.length === 0 ? (
-                <li className="px-3.5 py-2.5 text-sm text-ink-muted">No matches</li>
+                <li className="px-3.5 py-2.5 text-sm text-ink-muted">
+                  No matches
+                </li>
               ) : (
                 filtered.map((o, i) => (
                   <li
@@ -149,13 +178,20 @@ export function Select({
                     onClick={() => pick(o.value)}
                     className={cn(
                       "flex cursor-pointer items-center gap-2 px-3.5 py-2.5 text-sm text-navy",
-                      i === active && "bg-indigo-50"
+                      i === active && "bg-indigo-50",
                     )}
                   >
                     <span className="min-w-0 flex-1 truncate">{o.label}</span>
-                    {o.hint && <span className="shrink-0 text-xs text-ink-muted">{o.hint}</span>}
+                    {o.hint && (
+                      <span className="shrink-0 text-xs text-ink-muted">
+                        {o.hint}
+                      </span>
+                    )}
                     {o.value === value && (
-                      <Check className="size-4 shrink-0 text-indigo-900" aria-hidden />
+                      <Check
+                        className="size-4 shrink-0 text-indigo-900"
+                        aria-hidden
+                      />
                     )}
                   </li>
                 ))

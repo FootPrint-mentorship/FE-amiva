@@ -44,13 +44,16 @@ export function OtpInput({
           }}
           onPaste={(e) => {
             e.preventDefault();
-            const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+            const digits = e.clipboardData
+              .getData("text")
+              .replace(/\D/g, "")
+              .slice(0, 6);
             if (digits) {
               onChange(digits);
               refs.current[Math.min(digits.length, 5)]?.focus();
             }
           }}
-          className="size-12 rounded-[10px] border border-line bg-white text-center text-lg font-semibold text-navy focus:border-indigo-300"
+          className="size-12 rounded-control border border-line bg-white text-center text-lg font-semibold text-navy focus:border-indigo-300"
         />
       ))}
     </div>

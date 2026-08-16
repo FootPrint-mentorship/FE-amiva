@@ -7,7 +7,6 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
-  Mail,
   Search,
   ShieldCheck,
   Sparkles,
@@ -51,17 +50,9 @@ const practical = [
     icon: Brain,
   },
   {
-    eyebrow: "Email",
-    title: "Your inbox, summarised.",
-    body: "Summaries, important threads, draft replies and approvals stay clear and controlled.",
-    prompt: "Reply to Chioma",
-    result: "Draft ready for approval",
-    icon: Mail,
-  },
-  {
     eyebrow: "Intelligent search",
     title: "Ask once. Search everything you authorised.",
-    body: "Find practical answers across reminders, email, calendar and memory without digging.",
+    body: "Find practical answers across reminders, calendar, tasks and memory without digging.",
     prompt: "Budget review is next Thursday",
     result: "Found across 3 sources",
     icon: Search,
@@ -71,7 +62,6 @@ const practical = [
 const toolLogos = [
   { name: "WhatsApp", src: "/logos/whatsapp.svg" },
   { name: "Google Calendar", src: "/logos/google-calendar.svg" },
-  { name: "Gmail", src: "/logos/gmail.svg" },
   { name: "Google Drive", src: "/logos/google-drive.svg" },
   { name: "Slack", src: "/logos/slack.svg" },
   { name: "Notion", src: "/logos/notion.svg" },
@@ -151,7 +141,7 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-[540px] text-[13px] leading-relaxed text-[#73708a] sm:text-sm">
-            Create reminders, manage meetings, organise tasks and work with email through one calm conversation.
+            Create reminders, manage meetings, organise tasks and remember the details that matter, in one calm conversation.
           </p>
           <CtaPair className="mt-6 justify-center" />
         </div>
@@ -250,16 +240,16 @@ export default function HomePage() {
       </section>
 
       {/* ── FEATURES SECTION ─────────────────────────── */}
-      <section id="features" className="bg-[#fbfaff] px-5 py-28">
+      <section id="features" className="scroll-mt-20 bg-[#fbfaff] px-5 py-28">
         <div className="mx-auto max-w-[1080px]">
           <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-end">
-            <h2 className="max-w-[620px] text-[clamp(42px,5vw,68px)] font-bold leading-[0.98] tracking-[-0.065em] text-navy">Less managing tools.<br />More moving forward.</h2>
+            <h2 className="max-w-[620px] text-[clamp(42px,5vw,68px)] font-bold leading-[0.98] tracking-[-0.065em] text-navy">Less time managing tools.<br />More time moving forward.</h2>
             <p className="max-w-[360px] text-sm leading-7 text-ink-muted">Your tools work better together. Amiva connects the details, keeps everything organised and asks before acting.</p>
           </div>
           <div className="mt-14 grid gap-4 md:grid-cols-3">
             {[
               [CheckCircle2, "Say what you need", "Use natural conversation to create tasks, reminders or plans."],
-              [Sparkles, "Amiva organises it", "Your intent becomes a clear, structured action across your tools."],
+              [Sparkles, "Amiva organises it", "What you say becomes reminders, events and tasks in the right place."],
               [ShieldCheck, "You stay in control", "Review important actions before anything changes or gets sent."],
             ].map(([Icon, title, body], i) => {
               const I = Icon as typeof Sparkles;
@@ -281,17 +271,17 @@ export default function HomePage() {
 
       <section className="bg-[#fbfaff] px-5 py-28">
         <div className="mx-auto max-w-[1080px]">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Practical help for real life</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">What Amiva handles</p>
           <h2 className="mt-5 text-[clamp(44px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Practical help for a full life.</h2>
           <div className="mt-16 divide-y divide-line">
-            {practical.map((item, i) => <div key={item.title} className="grid items-center gap-8 py-14 md:grid-cols-[1fr_1fr] md:gap-20"><div className={i % 2 ? "md:order-2" : ""}><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-violet-500">{item.eyebrow}</p><h3 className="mt-4 max-w-[430px] text-[clamp(28px,3vw,42px)] font-bold leading-[1.03] tracking-[-0.05em] text-navy">{item.title}</h3><p className="mt-4 max-w-[390px] text-sm leading-7 text-ink-muted">{item.body}</p><a href={WA_LINK} className="mt-5 inline-flex text-xs font-semibold text-indigo-900">Try on WhatsApp →</a></div><div className={i % 2 ? "md:order-1" : ""}><MiniAppCard item={item} dark={i === 1 || i === 4} /></div></div>)}
+            {practical.map((item, i) => <div key={item.title} className="grid items-center gap-8 py-14 md:grid-cols-[1fr_1fr] md:gap-20"><div className={i % 2 ? "md:order-2" : ""}><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-violet-500">{item.eyebrow}</p><h3 className="mt-4 max-w-[430px] text-[clamp(28px,3vw,42px)] font-bold leading-[1.03] tracking-[-0.05em] text-navy">{item.title}</h3><p className="mt-4 max-w-[390px] text-sm leading-7 text-ink-muted">{item.body}</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex text-xs font-semibold text-indigo-900">Try on WhatsApp →</a></div><div className={i % 2 ? "md:order-1" : ""}><MiniAppCard item={item} dark={i === 1 || i === 4} /></div></div>)}
           </div>
         </div>
       </section>
 
       <section className="bg-white px-5 py-24">
         <div className="mx-auto grid max-w-[1080px] gap-14 rounded-[28px] bg-indigo-900 p-8 text-white md:grid-cols-2 md:p-16">
-          <div><ShieldCheck className="size-6 text-cyan-400" /><p className="mt-12 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">Power that stays accountable</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em]">Powerful help,<br />under your control.</h2><p className="mt-5 max-w-[430px] text-sm leading-7 text-white/60">Amiva is designed to be useful without becoming invisible. You decide what connects and approve important actions.</p><Link href="/privacy-policy" className="mt-6 inline-flex text-xs font-semibold text-cyan-300">Read our privacy policy →</Link></div>
+          <div><ShieldCheck className="size-6 text-cyan-400" /><p className="mt-12 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">Privacy and control</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em]">Powerful help,<br />under your control.</h2><p className="mt-5 max-w-[430px] text-sm leading-7 text-white/60">Amiva is designed to be useful without becoming invisible. You decide what connects and approve important actions.</p><Link href="/privacy-policy" className="mt-6 inline-flex text-xs font-semibold text-cyan-300">Read our privacy policy →</Link></div>
           <div className="self-center divide-y divide-white/15">{["You approve important actions", "Your data is encrypted and yours to delete", "Everything Amiva does stays visible"].map(x => <p key={x} className="flex items-center gap-3 py-6 text-sm"><Check className="size-4 text-cyan-400" />{x}</p>)}</div>
         </div>
       </section>
@@ -300,15 +290,15 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1080px]"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Amiva on the web</p><h2 className="mt-5 max-w-[720px] text-[clamp(42px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Everything from your chats, organised on the web.</h2><div className="mt-14"><DashboardPreview /></div></div>
       </section>
 
-      <section id="pricing" className="bg-[#f1eef9] px-5 py-28">
+      <section id="pricing" className="scroll-mt-20 bg-[#f1eef9] px-5 py-28">
         <div className="mx-auto max-w-[1080px]"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Simple pricing</p><h2 className="mt-5 max-w-[650px] text-[clamp(42px,5vw,64px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Start free. Upgrade when you need more help.</h2><div className="mx-auto mt-14 grid max-w-[760px] gap-5 md:grid-cols-2">{[
-          { name: "Free", price: "₦0", desc: "Get organised with the essentials.", items: ["Reminders and tasks", "Basic memory", "WhatsApp conversation"] },
-          { name: "Pro", price: "₦1,500", desc: "More capacity for a fuller schedule.", items: ["Everything in Free", "Email summaries", "Priority support"], popular: true },
-        ].map(plan => <div key={plan.name} className={`relative flex min-h-[390px] flex-col rounded-[20px] border bg-white p-8 ${plan.popular ? "border-indigo-900 shadow-[0_25px_70px_rgba(32,24,91,0.12)]" : "border-line"}`}>{plan.popular && <span className="absolute right-6 top-6 rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-bold uppercase text-indigo-900">Most popular</span>}<p className="text-xs font-semibold text-violet-500">{plan.name}</p><h3 className="mt-8 text-5xl font-bold tracking-[-0.06em] text-navy">{plan.price}</h3><p className="mt-3 text-xs text-ink-muted">{plan.desc}</p><ul className="mt-8 space-y-4 text-xs text-navy">{plan.items.map(x => <li key={x} className="flex gap-2"><Check className="size-4 text-violet-500" />{x}</li>)}</ul><Link href="/register" className={`mt-auto flex min-h-11 items-center justify-center rounded-full text-xs font-semibold ${plan.popular ? "bg-indigo-900 text-white" : "bg-[#f4f2f8] text-indigo-900"}`}>{plan.popular ? "Join the waitlist" : "Get started"}</Link></div>)}</div><p className="mt-8 text-center text-[10px] text-ink-muted">See full pricing details and fair-use limits at checkout.</p></div>
+          { name: "Free", price: "₦0", per: null, desc: "Get organised with the essentials.", items: ["Reminders and tasks", "Basic memory", "WhatsApp conversation"] },
+          { name: "Pro", price: "₦1,500", per: "/mo", desc: "More capacity for a fuller schedule.", items: ["Everything in Free", "Voice-note requests", "Priority support"], popular: true },
+        ].map(plan => <div key={plan.name} className={`relative flex min-h-[390px] flex-col rounded-[20px] border bg-white p-8 ${plan.popular ? "border-indigo-900 shadow-[0_25px_70px_rgba(32,24,91,0.12)]" : "border-line"}`}>{plan.popular && <span className="absolute right-6 top-6 rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-bold uppercase text-indigo-900">Most popular</span>}<p className="text-xs font-semibold text-violet-500">{plan.name}</p><h3 className="mt-8 text-5xl font-bold tracking-[-0.06em] text-navy">{plan.price}{plan.per && <span className="text-base font-medium text-ink-muted">{plan.per}</span>}</h3><p className="mt-3 text-xs text-ink-muted">{plan.desc}</p><ul className="mt-8 space-y-4 text-xs text-navy">{plan.items.map(x => <li key={x} className="flex gap-2"><Check className="size-4 text-violet-500" />{x}</li>)}</ul>{plan.popular ? <Link href="/register" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-indigo-900 text-xs font-semibold text-white">Get started</Link> : <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-[#f4f2f8] text-xs font-semibold text-indigo-900">Start on WhatsApp</a>}</div>)}</div><p className="mt-8 text-center text-[10px] text-ink-muted">Fair-use limits apply. Prices shown in NGN; KES and USD available at checkout.</p></div>
       </section>
 
-      <section id="faq" className="bg-white px-5 py-28">
-        <div className="mx-auto grid max-w-[1080px] gap-16 rounded-[28px] bg-[#fbfaff] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Here when you need it</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Frequently asked questions.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Still have a question? We are happy to help.</p><a href={WA_LINK} className="mt-7 inline-flex rounded-full bg-indigo-900 px-5 py-3 text-xs font-semibold text-white">Contact us</a></div><FaqAccordion /></div>
+      <section id="faq" className="scroll-mt-20 bg-white px-5 py-28">
+        <div className="mx-auto grid max-w-[1080px] gap-16 rounded-[28px] bg-[#fbfaff] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Here when you need it</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Frequently asked questions.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Still have a question? We are happy to help.</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex rounded-full bg-indigo-900 px-5 py-3 text-xs font-semibold text-white">Chat with us on WhatsApp</a><p className="mt-4 text-xs text-ink-muted">Or email <a href="mailto:support@tryamiva.com" className="font-semibold text-indigo-900 hover:underline">support@tryamiva.com</a></p></div><FaqAccordion /></div>
       </section>
     </>
   );

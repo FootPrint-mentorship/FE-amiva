@@ -22,9 +22,22 @@ import { fmtDay, type Memory } from "@/lib/mock";
 import { useStore } from "@/lib/store";
 import { memoriesStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
-import { createMemory, deleteMemoryForever, patchMemory } from "@/lib/data/collections";
+import {
+  createMemory,
+  deleteMemoryForever,
+  patchMemory,
+} from "@/lib/data/collections";
 
-const categories = ["all", "personal", "work", "people", "travel", "finance", "ideas", "other"] as const;
+const categories = [
+  "all",
+  "personal",
+  "work",
+  "people",
+  "travel",
+  "finance",
+  "ideas",
+  "other",
+] as const;
 
 const categoryTone = {
   personal: "cyan",
@@ -47,7 +60,9 @@ export default function MemoriesPage() {
   const [editContent, setEditContent] = useState("");
   const [creating, setCreating] = useState(false);
   const [newContent, setNewContent] = useState("");
-  const [newCategory, setNewCategory] = useState<Memory["category"] | "auto">("auto");
+  const [newCategory, setNewCategory] = useState<Memory["category"] | "auto">(
+    "auto",
+  );
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -58,12 +73,14 @@ export default function MemoriesPage() {
         (!favOnly || m.favorite) &&
         (!needle ||
           m.content.toLowerCase().includes(needle) ||
-          m.tags.some((t) => t.includes(needle)))
+          m.tags.some((t) => t.includes(needle))),
     );
   }, [items, q, cat, favOnly]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: items.filter((m) => !m.archived).length };
+    const c: Record<string, number> = {
+      all: items.filter((m) => !m.archived).length,
+    };
     for (const m of items.filter((m) => !m.archived)) {
       c[m.category] = (c[m.category] ?? 0) + 1;
     }
@@ -71,7 +88,9 @@ export default function MemoriesPage() {
   }, [items]);
 
   const fail = (err: unknown) =>
-    toast(err instanceof Error ? err.message : "That didn't go through.", { tone: "error" });
+    toast(err instanceof Error ? err.message : "That didn't go through.", {
+      tone: "error",
+    });
 
   const toggleFav = (id: string) => {
     const m = items.find((x) => x.id === id);
@@ -87,7 +106,9 @@ export default function MemoriesPage() {
   };
 
   const exportAll = () => {
-    const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(items, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -101,9 +122,12 @@ export default function MemoriesPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-navy">Memories</h1>
+          <h1 className="text-[28px] font-semibold tracking-tight text-navy">
+            Memories
+          </h1>
           <p className="text-sm text-ink-muted">
-            Everything you&apos;ve asked Amiva to remember. Search it, edit it, delete it.
+            Everything you&apos;ve asked Amiva to remember. Search it, edit it,
+            delete it.
           </p>
         </div>
         <div className="flex gap-2">
@@ -120,13 +144,16 @@ export default function MemoriesPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-muted" aria-hidden />
+        <Search
+          className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-muted"
+          aria-hidden
+        />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search your memories…"
           aria-label="Search your memories"
-          className="h-11 w-full rounded-[10px] border border-line bg-white pl-10 pr-4 text-[15px] text-navy placeholder:text-ink-muted focus:border-indigo-300"
+          className="h-11 w-full rounded-control border border-line bg-white pl-10 pr-4 text-[15px] text-navy placeholder:text-ink-muted focus:border-indigo-300"
         />
       </div>
 
@@ -141,10 +168,13 @@ export default function MemoriesPage() {
               "cursor-pointer rounded-full px-3.5 py-1.5 text-[13px] font-medium capitalize transition-colors",
               cat === c
                 ? "bg-indigo-900 text-white"
-                : "border border-line bg-white text-ink-muted hover:border-indigo-300"
+                : "border border-line bg-white text-ink-muted hover:border-indigo-300",
             )}
           >
-            {c} {counts[c] ? <span className="opacity-60">({counts[c]})</span> : null}
+            {c}{" "}
+            {counts[c] ? (
+              <span className="opacity-60">({counts[c]})</span>
+            ) : null}
           </button>
         ))}
         <button
@@ -154,10 +184,13 @@ export default function MemoriesPage() {
             "ml-auto flex cursor-pointer items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
             favOnly
               ? "bg-warning/20 text-warning-ink"
-              : "border border-line bg-white text-ink-muted hover:border-indigo-300"
+              : "border border-line bg-white text-ink-muted hover:border-indigo-300",
           )}
         >
-          <Star className={cn("size-3.5", favOnly && "fill-current")} aria-hidden />
+          <Star
+            className={cn("size-3.5", favOnly && "fill-current")}
+            aria-hidden
+          />
           Favorites
         </button>
       </div>
@@ -183,31 +216,46 @@ export default function MemoriesPage() {
               className="flex cursor-pointer flex-col p-4 transition-colors hover:border-indigo-300"
               onClick={() => setOpen(m)}
             >
-              <p className="line-clamp-4 flex-1 text-sm leading-relaxed text-navy">{m.content}</p>
+              <p className="line-clamp-4 flex-1 text-sm leading-relaxed text-navy">
+                {m.content}
+              </p>
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 <Chip tone={categoryTone[m.category]} className="capitalize">
                   {m.category}
                 </Chip>
                 {m.tags.slice(0, 2).map((t) => (
-                  <span key={t} className="text-xs text-ink-muted">#{t}</span>
+                  <span key={t} className="text-xs text-ink-muted">
+                    #{t}
+                  </span>
                 ))}
                 <span className="ml-auto flex items-center gap-1.5 text-xs text-ink-muted">
                   {m.source_channel === "whatsapp" ? (
-                    <MessageCircle className="size-3.5 text-success" aria-label="Saved from WhatsApp" />
+                    <MessageCircle
+                      className="size-3.5 text-success"
+                      aria-label="Saved from WhatsApp"
+                    />
                   ) : (
                     <Globe className="size-3.5" aria-label="Saved from web" />
                   )}
                   {fmtDay(m.created_at)}
                 </span>
                 <button
-                  aria-label={m.favorite ? "Remove from favorites" : "Add to favorites"}
+                  aria-label={
+                    m.favorite ? "Remove from favorites" : "Add to favorites"
+                  }
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleFav(m.id);
                   }}
                   className="cursor-pointer text-ink-muted hover:text-warning"
                 >
-                  <Star className={cn("size-4", m.favorite && "fill-warning text-warning")} aria-hidden />
+                  <Star
+                    className={cn(
+                      "size-4",
+                      m.favorite && "fill-warning text-warning",
+                    )}
+                    aria-hidden
+                  />
                 </button>
               </div>
             </Card>
@@ -217,7 +265,11 @@ export default function MemoriesPage() {
 
       {/* New memory modal */}
       {creating && (
-        <Modal label="New memory" onClose={() => setCreating(false)} panelClassName="w-full max-w-120">
+        <Modal
+          label="New memory"
+          onClose={() => setCreating(false)}
+          panelClassName="w-full max-w-120"
+        >
           <Card className="p-6">
             <button
               aria-label="Close"
@@ -234,7 +286,7 @@ export default function MemoriesPage() {
               autoFocus
               placeholder="What should Amiva remember? Try “Generator mechanic: Emeka, 0803 555 1234”"
               aria-label="Memory content"
-              className="mt-4 w-full rounded-[10px] border border-line bg-white p-3 text-sm leading-relaxed text-navy placeholder:text-ink-muted focus:border-indigo-300"
+              className="mt-4 w-full rounded-control border border-line bg-white p-3 text-sm leading-relaxed text-navy placeholder:text-ink-muted focus:border-indigo-300"
             />
             <div className="mt-3">
               <p className="mb-1.5 text-sm font-medium text-navy">Category</p>
@@ -246,18 +298,23 @@ export default function MemoriesPage() {
                   { value: "auto", label: "Let Amiva decide" },
                   ...categories
                     .filter((c) => c !== "all")
-                    .map((c) => ({ value: c, label: c[0].toUpperCase() + c.slice(1) })),
+                    .map((c) => ({
+                      value: c,
+                      label: c[0].toUpperCase() + c.slice(1),
+                    })),
                 ]}
               />
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
+              <Button variant="ghost" onClick={() => setCreating(false)}>
+                Cancel
+              </Button>
               <Button
                 disabled={!newContent.trim()}
                 onClick={() => {
                   createMemory(
                     newContent.trim(),
-                    newCategory === "auto" ? null : newCategory
+                    newCategory === "auto" ? null : newCategory,
                   ).catch(fail);
                   setNewContent("");
                   setNewCategory("auto");
@@ -275,18 +332,28 @@ export default function MemoriesPage() {
       {open && (
         <Modal
           label="Memory detail"
-          onClose={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }}
+          onClose={() => {
+            setOpen(null);
+            setConfirmDelete(false);
+            setEditing(false);
+          }}
           panelClassName="w-full max-w-120"
         >
           <Card className="p-6">
             <button
               aria-label="Close"
-              onClick={() => { setOpen(null); setConfirmDelete(false); setEditing(false); }}
+              onClick={() => {
+                setOpen(null);
+                setConfirmDelete(false);
+                setEditing(false);
+              }}
               className="absolute right-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50"
             >
               <X className="size-4" aria-hidden />
             </button>
-            <Chip tone={categoryTone[open.category]} className="capitalize">{open.category}</Chip>
+            <Chip tone={categoryTone[open.category]} className="capitalize">
+              {open.category}
+            </Chip>
             {editing ? (
               <textarea
                 value={editContent}
@@ -294,35 +361,55 @@ export default function MemoriesPage() {
                 rows={4}
                 autoFocus
                 aria-label="Edit memory content"
-                className="mt-3 w-full rounded-[10px] border border-line bg-white p-3 text-[15px] leading-relaxed text-navy focus:border-indigo-300"
+                className="mt-3 w-full rounded-control border border-line bg-white p-3 text-[15px] leading-relaxed text-navy focus:border-indigo-300"
               />
             ) : (
-              <p className="mt-3 pr-6 text-[15px] leading-relaxed text-navy">{open.content}</p>
+              <p className="mt-3 pr-6 text-[15px] leading-relaxed text-navy">
+                {open.content}
+              </p>
             )}
             <p className="mt-3 text-xs text-ink-muted">
-              Saved {fmtDay(open.created_at).toLowerCase()} via {open.source_channel === "whatsapp" ? "WhatsApp" : "the web"}
-              {open.tags.length > 0 && <> · {open.tags.map((t) => `#${t}`).join(" ")}</>}
+              Saved {fmtDay(open.created_at).toLowerCase()} via{" "}
+              {open.source_channel === "whatsapp" ? "WhatsApp" : "the web"}
+              {open.tags.length > 0 && (
+                <> · {open.tags.map((t) => `#${t}`).join(" ")}</>
+              )}
             </p>
 
             {confirmDelete ? (
               <div className="mt-5 rounded-xl border border-danger/40 bg-danger/5 p-4">
-                <p className="text-sm font-medium text-navy">Delete this memory permanently?</p>
+                <p className="text-sm font-medium text-navy">
+                  Delete this memory permanently?
+                </p>
                 <p className="mt-1 text-xs text-ink-muted">
-                  This cannot be undone. The memory and its search index entry are removed immediately.
+                  This cannot be undone. The memory and its search index entry
+                  are removed immediately.
                 </p>
                 <div className="mt-3 flex gap-2">
-                  <Button variant="danger" size="sm" onClick={() => deleteForever(open.id)}>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => deleteForever(open.id)}
+                  >
                     <Trash2 className="size-4" aria-hidden />
                     Delete permanently
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmDelete(false)}
+                  >
                     Keep it
                   </Button>
                 </div>
               </div>
             ) : editing ? (
               <div className="mt-5 flex justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditing(false)}
+                >
                   Cancel
                 </Button>
                 <Button
@@ -330,7 +417,9 @@ export default function MemoriesPage() {
                   disabled={!editContent.trim()}
                   onClick={() => {
                     const updated = { ...open, content: editContent.trim() };
-                    patchMemory(open.id, { content: updated.content }).catch(fail);
+                    patchMemory(open.id, { content: updated.content }).catch(
+                      fail,
+                    );
                     setOpen(updated);
                     setEditing(false);
                   }}
@@ -343,15 +432,33 @@ export default function MemoriesPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => { setEditContent(open.content); setEditing(true); }}
+                  onClick={() => {
+                    setEditContent(open.content);
+                    setEditing(true);
+                  }}
                 >
                   Edit
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => toggleFav(open.id)}>
-                  <Star className={cn("size-4", open.favorite && "fill-warning text-warning")} aria-hidden />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => toggleFav(open.id)}
+                >
+                  <Star
+                    className={cn(
+                      "size-4",
+                      open.favorite && "fill-warning text-warning",
+                    )}
+                    aria-hidden
+                  />
                   {open.favorite ? "Unfavorite" : "Favorite"}
                 </Button>
-                <Button variant="ghost" size="sm" className="ml-auto text-danger" onClick={() => setConfirmDelete(true)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto text-danger"
+                  onClick={() => setConfirmDelete(true)}
+                >
                   Delete
                 </Button>
               </div>

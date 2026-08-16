@@ -30,8 +30,10 @@ describe("Onboarding wizard", () => {
 
     // 5 · First action
     expect(screen.getByText("Try your first request")).toBeInTheDocument();
+    // The request goes through the real assistant repo (mock mode replies
+    // with its canned preview line) — no more hardcoded fake confirmation.
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
-    expect(screen.getByText(/I'll remind you/)).toBeInTheDocument();
+    expect(await screen.findByText(/mock data/i, undefined, { timeout: 3000 })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Go to my dashboard" }));
     expect(nav.push).toHaveBeenCalledWith("/app/today");

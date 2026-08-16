@@ -22,8 +22,13 @@ export function CtaPair({
         rel="noopener noreferrer"
         className={cn(
           "inline-flex min-h-[44px] items-center gap-2 rounded-full px-5 text-[14px] font-semibold transition-all",
-          "bg-indigo-900 text-white hover:bg-[#302477] hover:-translate-y-px active:scale-[0.98]",
-          invert && "bg-white text-indigo-900 border border-white hover:bg-white/90"
+          "hover:-translate-y-px active:scale-[0.98]",
+          // cn() is a plain join (no tailwind-merge): the two color sets must
+          // be mutually exclusive, or stylesheet order decides and the label
+          // renders white-on-white on the dark footer card.
+          invert
+            ? "bg-white text-indigo-900 border border-white hover:bg-white/90"
+            : "bg-indigo-900 text-white hover:bg-indigo-700"
         )}
       >
         <MessageCircle className="size-5" aria-hidden />

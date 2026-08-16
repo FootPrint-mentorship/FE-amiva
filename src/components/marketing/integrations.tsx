@@ -68,13 +68,6 @@ export function IntegrationsChaos() {
           className="left-[32%] top-[9%]"
         />
         <IntegNode
-          name="Gmail"
-          logoSrc="/logos/gmail.svg"
-          tilt={8}
-          delay={0.8}
-          className="right-[10%] top-[20%]"
-        />
-        <IntegNode
           name="Google Drive"
           logoSrc="/logos/google-drive.svg"
           tilt={-7}

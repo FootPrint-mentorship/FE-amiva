@@ -11,7 +11,7 @@ const faqs = [
   },
   {
     q: "What can I ask Amiva to do?",
-    a: "Set one-time or recurring reminders, create and reschedule calendar events, manage tasks and shopping lists, save things to memory (\"remember my landlord's account...\"), search everything you've saved, and summarise your email.",
+    a: "Set one-time or recurring reminders, create and reschedule calendar events, manage tasks and shopping lists, save things to memory (\"remember my landlord's account...\"), and search everything you've saved.",
   },
   {
     q: "Is my data private?",

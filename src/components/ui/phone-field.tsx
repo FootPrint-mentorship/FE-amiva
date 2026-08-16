@@ -50,7 +50,11 @@ export function PhoneField({
           label="Country code"
           value={cc}
           onChange={onCcChange}
-          options={countryCodes.map((c) => ({ value: c.value, label: c.hint, hint: c.label }))}
+          options={countryCodes.map((c) => ({
+            value: c.value,
+            label: c.hint,
+            hint: c.label,
+          }))}
           searchable
           hideHintInTrigger
           className="w-28 shrink-0"
@@ -63,8 +67,8 @@ export function PhoneField({
           value={phone}
           onChange={(e) => onPhoneChange(e.target.value.replace(/\D/g, ""))}
           className={cn(
-            "h-11 min-w-0 flex-1 rounded-[10px] border bg-white px-3.5 text-[15px] tabular-nums text-navy placeholder:text-ink-muted",
-            error ? "border-danger" : "border-line"
+            "h-11 min-w-0 flex-1 rounded-control border bg-white px-3.5 text-[15px] tabular-nums text-navy placeholder:text-ink-muted",
+            error ? "border-danger" : "border-line",
           )}
         />
       </div>
