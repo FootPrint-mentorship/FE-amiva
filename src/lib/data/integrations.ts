@@ -26,7 +26,10 @@ export const integrationsStore = createStore<IntegrationInfo[]>([]);
 type GoogleScope = "calendar";
 
 function active(rows: IntegrationInfo[], scope: GoogleScope): boolean {
-  return rows.some((r) => r.status === "active" && r.scopes.includes(scope));
+  // Contract: status is 'connected' | 'expired' | 'revoked' — checking for a
+  // nonexistent 'active' kept the UI stuck on "not connected" forever
+  // (found via a user recording, 16 Aug 2026).
+  return rows.some((r) => r.status === "connected" && r.scopes.includes(scope));
 }
 
 export async function hydrateIntegrations(): Promise<void> {
@@ -66,7 +69,7 @@ export async function revokeIntegration(scope: GoogleScope): Promise<void> {
   if (!USE_MOCKS) {
     const rows = integrationsStore
       .get()
-      .filter((r) => r.status === "active" && r.scopes.includes(scope));
+      .filter((r) => r.status === "connected" && r.scopes.includes(scope));
     for (const row of rows) {
       await api(`/integrations/${row.id}`, { method: "DELETE" });
     }

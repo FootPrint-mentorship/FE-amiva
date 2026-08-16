@@ -564,7 +564,7 @@ export default function SettingsPage() {
               i.key === "whatsapp"
                 ? null
                 : integrationRows.find(
-                    (r) => r.status === "active" && r.scopes.includes(i.key)
+                    (r) => r.status === "connected" && r.scopes.includes(i.key)
                   );
             const detail = row ? `${row.account_email} · connected` : i.detail;
             const connect = () => {
