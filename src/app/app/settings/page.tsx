@@ -47,8 +47,8 @@ import {
 import {
   connectGoogle,
   hydrateIntegrations,
-  integrationsStore,
   revokeIntegration,
+  useIntegrations,
 } from "@/lib/data/integrations";
 import {
   listSessions,
@@ -130,7 +130,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("profile");
   const settings = useStore(settingsStore);
-  const integrationRows = useStore(integrationsStore);
+  const { items: integrationRows } = useIntegrations();
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [verifyingPhone, setVerifyingPhone] = useState(false);
   const [phoneOtp, setPhoneOtp] = useState("");

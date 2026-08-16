@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Minimal shared-state store. Module-level, so state survives client-side
- * navigation (pages stop losing edits when you move between screens) and
- * multiple components can watch the same data (top-bar badge ↔ Today banner).
- * Replaced by TanStack Query + the real API when the backend lands.
+ * Minimal shared-state store for CLIENT-owned state only (toasts, the
+ * settings/profile singleton with its theme + form state). Module-level, so
+ * state survives client-side navigation and multiple components can watch
+ * the same data. Server-owned data (reminders, tasks, memories, events,
+ * confirmations, notifications, integrations) lives in the TanStack Query
+ * cache — see lib/query.ts (migrated 16 Aug 2026).
  */
 
 type Listener = () => void;

@@ -19,10 +19,11 @@ import { toast } from "@/components/ui/toast";
 import {
   cancelEvent as cancelEventApi,
   saveEvent,
+  useEvents,
 } from "@/lib/data/collections";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/lib/store";
-import { eventsStore, settingsStore } from "@/lib/stores";
+import { settingsStore } from "@/lib/stores";
 import { fmtTime, fmtDay, type CalendarEvent } from "@/lib/mock";
 import { timezoneAbbr } from "@/lib/timezones";
 import { newId } from "@/lib/id";
@@ -100,7 +101,7 @@ export default function CalendarPage() {
   const [openEvent, setOpenEvent] = useState<CalendarEvent | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
-  const items = useStore(eventsStore);
+  const { items } = useEvents();
   const settings = useStore(settingsStore);
   const tzAbbr = timezoneAbbr(settings.timezone);
   const gridRef = useRef<HTMLDivElement>(null);

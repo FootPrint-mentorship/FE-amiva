@@ -20,16 +20,19 @@ import { agendaSummary, fmtTime } from "@/lib/mock";
 import { USE_MOCKS } from "@/lib/api/client";
 import { timezoneAbbr } from "@/lib/timezones";
 import { useStore } from "@/lib/store";
+import { settingsStore } from "@/lib/stores";
 import {
-  confirmationsStore,
-  eventsStore,
-  remindersStore,
-  settingsStore,
-  tasksStore,
-} from "@/lib/stores";
-import { resolveConfirmationRemote } from "@/lib/data/assistant";
+  resolveConfirmationRemote,
+  useConfirmations,
+} from "@/lib/data/assistant";
 import { toast } from "@/components/ui/toast";
-import { completeReminder, setTaskStatus } from "@/lib/data/collections";
+import {
+  completeReminder,
+  setTaskStatus,
+  useEvents,
+  useReminders,
+  useTasks,
+} from "@/lib/data/collections";
 import { cn } from "@/lib/cn";
 
 const priorityTone = {
@@ -41,10 +44,10 @@ const priorityTone = {
 
 export default function TodayPage() {
   const settings = useStore(settingsStore);
-  const allReminders = useStore(remindersStore);
-  const allTasks = useStore(tasksStore);
-  const allEvents = useStore(eventsStore);
-  const confirmations = useStore(confirmationsStore).filter(
+  const { items: allReminders } = useReminders();
+  const { items: allTasks } = useTasks();
+  const { items: allEvents } = useEvents();
+  const confirmations = useConfirmations().items.filter(
     (c) => c.status === "pending",
   );
   const reminders = allReminders.filter((r) => r.status === "scheduled");

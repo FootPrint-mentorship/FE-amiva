@@ -9,12 +9,18 @@
 
 import { api, Page, USE_MOCKS } from "@/lib/api/client";
 import {
-  confirmationsStore,
-  resolveConfirmation,
-  type Confirmation,
-} from "@/lib/stores";
-import { hydrateAll } from "@/lib/data/collections";
-import type { ChatMessage } from "@/lib/mock";
+  qk,
+  useCollection,
+  upsertInList,
+  patchInList,
+  setList,
+} from "@/lib/query";
+import { invalidateCollections } from "@/lib/data/collections";
+import { pendingConfirmations, type ChatMessage, type PendingConfirmation } from "@/lib/mock";
+
+export type Confirmation = PendingConfirmation & {
+  status: "pending" | "approved" | "rejected";
+};
 
 export type ActionTaken = { type: string; resource: Record<string, unknown> };
 
@@ -57,13 +63,26 @@ function toConfirmation(c: ApiConfirmation): Confirmation {
   };
 }
 
-/** Replace the confirmations store with the server's pending set. */
+const fetchConfirmations = async () =>
+  (
+    await api<Page<ApiConfirmation>>("/assistant/confirmations?status=pending")
+  ).data.map(toConfirmation);
+
+/** Pending confirmations (shared by top bar, Today banner, Chat, tray). */
+export function useConfirmations() {
+  return useCollection<Confirmation>(qk.confirmations, fetchConfirmations, () =>
+    pendingConfirmations.map((c) => ({ ...c, status: "pending" as const }))
+  );
+}
+
+/** Warm the confirmations cache with the server's pending set (app layout). */
 export async function hydrateConfirmations(): Promise<void> {
   if (USE_MOCKS) return;
-  const page = await api<Page<ApiConfirmation>>(
-    "/assistant/confirmations?status=pending"
-  );
-  confirmationsStore.set(page.data.map(toConfirmation));
+  setList(qk.confirmations, await fetchConfirmations());
+}
+
+function resolveConfirmation(id: string, status: "approved" | "rejected") {
+  patchInList<Confirmation>(qk.confirmations, id, { status });
 }
 
 /** Real mode: the server-side thread. Mock mode: null (page keeps its seed). */
@@ -96,13 +115,10 @@ export async function sendAssistantMessage(text: string): Promise<AssistantRespo
     body: { text },
   });
   if (res.pending_confirmation) {
-    const cnf = toConfirmation(res.pending_confirmation);
-    confirmationsStore.set((cur) =>
-      cur.some((c) => c.id === cnf.id) ? cur : [cnf, ...cur]
-    );
+    upsertInList(qk.confirmations, toConfirmation(res.pending_confirmation));
   }
   if (res.actions_taken.length > 0) {
-    void hydrateAll().catch(() => {
+    void invalidateCollections().catch(() => {
       /* the reply already reports what happened; lists catch up on next load */
     });
   }
@@ -129,7 +145,7 @@ export async function resolveConfirmationRemote(
   );
   resolveConfirmation(id, decision);
   if (decision === "approved") {
-    void hydrateAll().catch(() => {
+    void invalidateCollections().catch(() => {
       /* see above */
     });
   }

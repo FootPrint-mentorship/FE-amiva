@@ -24,22 +24,19 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/cn";
 import { fmtDay, fmtTime } from "@/lib/mock";
 import { useStore } from "@/lib/store";
-import {
-  confirmationsStore,
-  notificationsStore,
-  settingsStore,
-  type FeatureKey,
-} from "@/lib/stores";
+import { settingsStore, type FeatureKey } from "@/lib/stores";
 import { sessionActive, signOut as endSession, loadMe } from "@/lib/data/auth";
 import { hydrateAll } from "@/lib/data/collections";
 import { completePendingLink } from "@/lib/data/linking";
 import {
   hydrateConfirmations,
   resolveConfirmationRemote,
+  useConfirmations,
 } from "@/lib/data/assistant";
 import {
   hydrateNotifications,
   markNotificationsRead,
+  useNotifications,
 } from "@/lib/data/notifications";
 import { USE_MOCKS } from "@/lib/api/client";
 import { SearchPalette } from "@/components/search-palette";
@@ -125,8 +122,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
-  const confirmations = useStore(confirmationsStore);
-  const notifications = useStore(notificationsStore);
+  const { items: confirmations } = useConfirmations();
+  const { items: notifications } = useNotifications();
   const settings = useStore(settingsStore);
   const pending = confirmations.filter((c) => c.status === "pending");
   const unread = notifications.filter((n) => !n.read);

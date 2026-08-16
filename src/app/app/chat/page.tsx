@@ -13,14 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 import { chatSeed, fmtDay, fmtTime, type ChatMessage } from "@/lib/mock";
-import { useStore } from "@/lib/store";
-import { confirmationsStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
 import { USE_MOCKS } from "@/lib/api/client";
 import {
   loadChatHistory,
   resolveConfirmationRemote,
   sendAssistantMessage,
+  useConfirmations,
   type ActionTaken,
 } from "@/lib/data/assistant";
 
@@ -63,7 +62,7 @@ function actionResource(actions: ActionTaken[]): ChatMessage["resource"] {
 }
 
 export default function ChatPage() {
-  const confirmations = useStore(confirmationsStore);
+  const { items: confirmations } = useConfirmations();
   const [messages, setMessages] = useState<ChatMessage[]>(
     USE_MOCKS ? chatSeed : [],
   );
