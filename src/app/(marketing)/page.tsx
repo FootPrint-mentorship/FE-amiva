@@ -14,6 +14,7 @@ import {
 import { CtaPair } from "@/components/marketing/cta-pair";
 import { FaqAccordion } from "@/components/marketing/faq";
 import { IntegrationsChaos } from "@/components/marketing/integrations";
+import { Reveal } from "@/components/marketing/reveal";
 import { WA_LINK } from "@/lib/site";
 
 const practical = [
@@ -59,21 +60,18 @@ const practical = [
   },
 ];
 
+// Only what Amiva integrates with TODAY — logos join this list as
+// integrations actually ship (client decision, 16 Aug 2026).
 const toolLogos = [
   { name: "WhatsApp", src: "/logos/whatsapp.svg" },
   { name: "Google Calendar", src: "/logos/google-calendar.svg" },
-  { name: "Google Drive", src: "/logos/google-drive.svg" },
-  { name: "Slack", src: "/logos/slack.svg" },
-  { name: "Notion", src: "/logos/notion.svg" },
-  { name: "Zoom", src: "/logos/zoom.svg" },
-  { name: "Telegram", src: "/logos/telegram.svg" },
 ];
 
 function MiniAppCard({ item, dark }: { item: (typeof practical)[number]; dark?: boolean }) {
   const Icon = item.icon;
   return (
     <div
-      className={`relative flex min-h-[210px] flex-col justify-between overflow-hidden rounded-[18px] border p-7 shadow-[0_20px_55px_rgba(38,28,92,0.08)] ${dark
+      className={`relative flex min-h-52.5 flex-col justify-between overflow-hidden rounded-[18px] border p-7 shadow-[0_20px_55px_rgba(38,28,92,0.08)] ${dark
           ? "border-indigo-800 bg-indigo-900 text-white"
           : "border-[#e7e3f1] bg-[#f3f0fb] text-navy"
         }`}
@@ -103,7 +101,7 @@ function DashboardPreview() {
         <i className="size-1.5 rounded-full bg-[#cbc8d7]" />
         <i className="size-1.5 rounded-full bg-[#cbc8d7]" />
       </div>
-      <div className="grid min-h-[300px] grid-cols-[74px_1fr] sm:min-h-[360px] sm:grid-cols-[150px_1fr]">
+      <div className="grid min-h-75 grid-cols-[74px_1fr] sm:min-h-90 sm:grid-cols-[150px_1fr]">
         <aside className="bg-indigo-900 p-4 text-white sm:p-6">
           <Image src="/brand/wordmark-white.svg" alt="Amiva" width={74} height={20} />
           <div className="mt-10 space-y-5 text-[9px] text-white/60 sm:text-[11px]">
@@ -120,7 +118,7 @@ function DashboardPreview() {
             <p className="mt-2 text-xs font-semibold sm:text-sm">Two meetings, three reminders and one item awaiting approval.</p>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {["Next meeting", "Reminders due", "Tasks open"].map((x, i) => <div key={x} className="rounded-[12px] border border-line p-4"><p className="text-[9px] text-ink-muted">{x}</p><b className="mt-2 block text-sm text-navy">{i + 1}</b></div>)}
+            {["Next meeting", "Reminders due", "Tasks open"].map((x, i) => <div key={x} className="rounded-xl border border-line p-4"><p className="text-[9px] text-ink-muted">{x}</p><b className="mt-2 block text-sm text-navy">{i + 1}</b></div>)}
           </div>
         </main>
       </div>
@@ -133,21 +131,26 @@ export default function HomePage() {
     <>
       {/* ── HERO SECTION ─────────────────────────── */}
       <section className="hero-water-scene relative overflow-hidden pt-10 text-center sm:pt-12">
-        <div className="relative z-10 mx-auto max-w-[850px] px-5">
-          <h1 className="mx-auto mt-2 max-w-[700px] text-[clamp(36px,5vw,64px)] font-bold leading-[1.04] tracking-[-0.06em] text-navy">
+        <div className="relative z-10 mx-auto max-w-212.5 px-5">
+          <h1 className="animate-rise mx-auto mt-2 max-w-175 text-[clamp(36px,5vw,64px)] font-bold leading-[1.04] tracking-[-0.06em] text-navy">
             Your personal chief of staff,{" "}
-            <span className="mt-2 inline-block rounded-[16px] bg-[#6653cd] px-4 py-1 text-white shadow-xs">
+            <span className="mt-2 inline-block rounded-2xl bg-[#6653cd] px-4 py-1 text-white shadow-xs">
               on WhatsApp.
             </span>
           </h1>
-          <p className="mx-auto mt-5 max-w-[540px] text-[13px] leading-relaxed text-[#73708a] sm:text-sm">
+          <p
+            className="animate-rise mx-auto mt-5 max-w-135 text-[13px] leading-relaxed text-[#73708a] sm:text-sm"
+            style={{ animationDelay: "120ms" }}
+          >
             Create reminders, manage meetings, organise tasks and remember the details that matter, in one calm conversation.
           </p>
-          <CtaPair className="mt-6 justify-center" />
+          <div className="animate-rise" style={{ animationDelay: "220ms" }}>
+            <CtaPair className="mt-6 justify-center" />
+          </div>
         </div>
 
         {/* Hero Visual: iPhone Mockup (iPhone Amiva_Hero.png) & Floating Cards */}
-        <div className="relative mx-auto mt-6 h-[390px] max-w-[1180px] overflow-hidden sm:h-[440px] md:h-[480px]">
+        <div className="relative mx-auto mt-6 h-97.5 max-w-295 overflow-hidden sm:h-110 md:h-120">
           {/* Subtle refracted-water U-shaped wash */}
           <div className="hero-water-wash" aria-hidden />
 
@@ -158,11 +161,11 @@ export default function HomePage() {
             width={530}
             height={1126}
             priority
-            className="absolute bottom-[-470px] left-1/2 z-10 h-[860px] w-auto -translate-x-1/2 object-contain drop-shadow-[0_40px_70px_rgba(30,21,84,0.24)] sm:bottom-[-535px] sm:h-[975px] md:bottom-[-580px] md:h-[1060px]"
+            className="absolute -bottom-117.5 left-1/2 z-10 h-215 w-auto -translate-x-1/2 object-contain drop-shadow-[0_40px_70px_rgba(30,21,84,0.24)] sm:bottom-[-535px] sm:h-[975px] md:-bottom-145 md:h-265"
           />
 
           {/* LEFT FLOATING CARD */}
-          <div className="group/card absolute left-[2%] top-[72px] z-20 hidden w-[250px] items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:left-[5%] md:top-[88px] lg:left-[9%]">
+          <div className="group/card absolute left-[2%] top-18 z-20 hidden w-62.5 items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:left-[5%] md:top-22 lg:left-[9%]">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc] transition-transform duration-300 group-hover/card:-rotate-6 group-hover/card:scale-110">
               <AlarmClock className="size-5 text-[#7059db]" aria-hidden />
             </div>
@@ -185,7 +188,7 @@ export default function HomePage() {
           </div>
 
           {/* RIGHT FLOATING CARD */}
-          <div className="group/card absolute right-[2%] top-[140px] z-20 hidden w-[268px] items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:right-[5%] md:top-[164px] lg:right-[9%]">
+          <div className="group/card absolute right-[2%] top-35 z-20 hidden w-67 items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:right-[5%] md:top-41 lg:right-[9%]">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc] transition-transform duration-300 group-hover/card:rotate-6 group-hover/card:scale-110">
               <CalendarDays className="size-5 text-[#7059db]" aria-hidden />
             </div>
@@ -201,11 +204,23 @@ export default function HomePage() {
               <h4 className="mt-0.5 text-xs font-bold text-navy truncate">Product planning</h4>
               <p className="text-[11px] text-[#73708a]">Tuesday, 2:30 PM</p>
               <div className="mt-2.5 flex items-center gap-2 border-t border-[#f0edfa] pt-2 text-[10px] text-[#73708a]">
+                {/* Initials, not stock photos: no third-party requests on the
+                    LCP path, and no implying these are real users. */}
                 <div className="flex -space-x-2">
-                  <img className="size-6 rounded-full border-2 border-white object-cover shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80" alt="Kemi" title="Kemi" />
-                  <img className="size-6 rounded-full border-2 border-white object-cover shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&auto=format&fit=crop&q=80" alt="Tunde" title="Tunde" />
-                  <img className="size-6 rounded-full border-2 border-white object-cover shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&auto=format&fit=crop&q=80" alt="Amina" title="Amina" />
-                  <img className="size-6 rounded-full border-2 border-white object-cover shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&auto=format&fit=crop&q=80" alt="David" title="David" />
+                  {[
+                    ["Kemi", "bg-violet-500"],
+                    ["Tunde", "bg-indigo-900"],
+                    ["Amina", "bg-cyan-500 text-navy"],
+                    ["David", "bg-indigo-400"],
+                  ].map(([name, tone]) => (
+                    <span
+                      key={name}
+                      title={name}
+                      className={`flex size-6 items-center justify-center rounded-full border-2 border-white text-[10px] font-semibold text-white shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125 ${tone}`}
+                    >
+                      {name[0]}
+                    </span>
+                  ))}
                 </div>
                 <span className="font-medium">4 attending</span>
               </div>
@@ -217,13 +232,13 @@ export default function HomePage() {
 
       {/* ── INTEGRATIONS STRIP (Works with the tools you already use) ─────────────────────────── */}
       <section className="relative z-20 border-y border-line/60 bg-white px-5 py-7">
-        <div className="mx-auto flex max-w-[1080px] flex-wrap items-center justify-between gap-5 text-[11px] text-ink-muted">
+        <div className="mx-auto flex max-w-270 flex-wrap items-center justify-between gap-5 text-[11px] text-ink-muted">
           <b className="text-navy text-xs font-semibold">Works with the tools you already use</b>
           <div className="flex flex-wrap items-center gap-3 sm:gap-5">
             {toolLogos.map((tool) => (
               <span
                 key={tool.name}
-                className="flex size-10 items-center justify-center rounded-[12px] border border-line/70 bg-[#faf9fe] p-2 shadow-xs transition-transform hover:scale-105"
+                className="flex size-10 items-center justify-center rounded-xl border border-line/70 bg-[#faf9fe] p-2 shadow-xs transition-transform hover:scale-105"
                 title={tool.name}
               >
                 <Image
@@ -241,11 +256,13 @@ export default function HomePage() {
 
       {/* ── FEATURES SECTION ─────────────────────────── */}
       <section id="features" className="scroll-mt-20 bg-[#fbfaff] px-5 py-28">
-        <div className="mx-auto max-w-[1080px]">
-          <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-end">
-            <h2 className="max-w-[620px] text-[clamp(42px,5vw,68px)] font-bold leading-[0.98] tracking-[-0.065em] text-navy">Less time managing tools.<br />More time moving forward.</h2>
-            <p className="max-w-[360px] text-sm leading-7 text-ink-muted">Your tools work better together. Amiva connects the details, keeps everything organised and asks before acting.</p>
-          </div>
+        <div className="mx-auto max-w-270">
+          <Reveal>
+            <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-end">
+              <h2 className="max-w-155 text-[clamp(42px,5vw,68px)] font-bold leading-[0.98] tracking-[-0.065em] text-navy">Less time managing tools.<br />More time moving forward.</h2>
+              <p className="max-w-90 text-sm leading-7 text-ink-muted">Your tools work better together. Amiva connects the details, keeps everything organised and asks before acting.</p>
+            </div>
+          </Reveal>
           <div className="mt-14 grid gap-4 md:grid-cols-3">
             {[
               [CheckCircle2, "Say what you need", "Use natural conversation to create tasks, reminders or plans."],
@@ -253,7 +270,7 @@ export default function HomePage() {
               [ShieldCheck, "You stay in control", "Review important actions before anything changes or gets sent."],
             ].map(([Icon, title, body], i) => {
               const I = Icon as typeof Sparkles;
-              return <div key={title as string} className={`min-h-[245px] rounded-[18px] border p-7 ${i === 2 ? "border-indigo-800 bg-indigo-900 text-white" : "border-[#e7e3f1] bg-[#f5f2fb] text-navy"}`}><I className={`size-5 ${i === 2 ? "text-cyan-400" : "text-violet-500"}`} /><h3 className="mt-20 text-lg font-bold">{title as string}</h3><p className={`mt-3 text-xs leading-6 ${i === 2 ? "text-white/60" : "text-ink-muted"}`}>{body as string}</p></div>;
+              return <Reveal key={title as string} variant="scale" delay={i * 120}><div className={`min-h-[245px] rounded-[18px] border p-7 ${i === 2 ? "border-indigo-800 bg-indigo-900 text-white" : "border-[#e7e3f1] bg-[#f5f2fb] text-navy"}`}><I className={`size-5 ${i === 2 ? "text-cyan-400" : "text-violet-500"}`} /><h3 className="mt-20 text-lg font-bold">{title as string}</h3><p className={`mt-3 text-xs leading-6 ${i === 2 ? "text-white/60" : "text-ink-muted"}`}>{body as string}</p></div></Reveal>;
             })}
           </div>
         </div>
@@ -263,42 +280,44 @@ export default function HomePage() {
       <IntegrationsChaos />
 
       <section className="bg-white px-5 py-28">
-        <div className="mx-auto grid max-w-[1080px] items-center gap-14 rounded-[28px] bg-[#f1eef9] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16">
+        <Reveal><div className="mx-auto grid max-w-270 items-center gap-14 rounded-[28px] bg-[#f1eef9] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">One continuous conversation</p><h2 className="mt-5 text-[clamp(38px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">The conversation continues, wherever you are.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Start on WhatsApp, then open the web when you need more space. Your context stays with you.</p><Link href="/register" className="mt-7 inline-flex rounded-full bg-white px-5 py-3 text-xs font-semibold text-indigo-900 shadow-card">Explore your dashboard</Link></div>
           <DashboardPreview />
-        </div>
+        </div></Reveal>
       </section>
 
       <section className="bg-[#fbfaff] px-5 py-28">
-        <div className="mx-auto max-w-[1080px]">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">What Amiva handles</p>
-          <h2 className="mt-5 text-[clamp(44px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Practical help for a full life.</h2>
+        <div className="mx-auto max-w-270">
+          <Reveal>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">What Amiva handles</p>
+            <h2 className="mt-5 text-[clamp(44px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Practical help for a full life.</h2>
+          </Reveal>
           <div className="mt-16 divide-y divide-line">
-            {practical.map((item, i) => <div key={item.title} className="grid items-center gap-8 py-14 md:grid-cols-[1fr_1fr] md:gap-20"><div className={i % 2 ? "md:order-2" : ""}><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-violet-500">{item.eyebrow}</p><h3 className="mt-4 max-w-[430px] text-[clamp(28px,3vw,42px)] font-bold leading-[1.03] tracking-[-0.05em] text-navy">{item.title}</h3><p className="mt-4 max-w-[390px] text-sm leading-7 text-ink-muted">{item.body}</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex text-xs font-semibold text-indigo-900">Try on WhatsApp →</a></div><div className={i % 2 ? "md:order-1" : ""}><MiniAppCard item={item} dark={i === 1 || i === 4} /></div></div>)}
+            {practical.map((item, i) => <Reveal key={item.title}><div className="grid items-center gap-8 py-14 md:grid-cols-[1fr_1fr] md:gap-20"><div className={i % 2 ? "md:order-2" : ""}><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-violet-500">{item.eyebrow}</p><h3 className="mt-4 max-w-107.5 text-[clamp(28px,3vw,42px)] font-bold leading-[1.03] tracking-[-0.05em] text-navy">{item.title}</h3><p className="mt-4 max-w-97.5 text-sm leading-7 text-ink-muted">{item.body}</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex text-xs font-semibold text-indigo-900">Try on WhatsApp →</a></div><div className={i % 2 ? "md:order-1" : ""}><MiniAppCard item={item} dark={i === 1 || i === 4} /></div></div></Reveal>)}
           </div>
         </div>
       </section>
 
       <section className="bg-white px-5 py-24">
-        <div className="mx-auto grid max-w-[1080px] gap-14 rounded-[28px] bg-indigo-900 p-8 text-white md:grid-cols-2 md:p-16">
-          <div><ShieldCheck className="size-6 text-cyan-400" /><p className="mt-12 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">Privacy and control</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em]">Powerful help,<br />under your control.</h2><p className="mt-5 max-w-[430px] text-sm leading-7 text-white/60">Amiva is designed to be useful without becoming invisible. You decide what connects and approve important actions.</p><Link href="/privacy-policy" className="mt-6 inline-flex text-xs font-semibold text-cyan-300">Read our privacy policy →</Link></div>
+        <Reveal><div className="mx-auto grid max-w-270 gap-14 rounded-[28px] bg-indigo-900 p-8 text-white md:grid-cols-2 md:p-16">
+          <div><ShieldCheck className="size-6 text-cyan-400" /><p className="mt-12 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">Privacy and control</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em]">Powerful help,<br />under your control.</h2><p className="mt-5 max-w-107.5 text-sm leading-7 text-white/60">Amiva is designed to be useful without becoming invisible. You decide what connects and approve important actions.</p><Link href="/privacy-policy" className="mt-6 inline-flex text-xs font-semibold text-cyan-300">Read our privacy policy →</Link></div>
           <div className="self-center divide-y divide-white/15">{["You approve important actions", "Your data is encrypted and yours to delete", "Everything Amiva does stays visible"].map(x => <p key={x} className="flex items-center gap-3 py-6 text-sm"><Check className="size-4 text-cyan-400" />{x}</p>)}</div>
-        </div>
+        </div></Reveal>
       </section>
 
       <section className="bg-[#fbfaff] px-5 py-28">
-        <div className="mx-auto max-w-[1080px]"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Amiva on the web</p><h2 className="mt-5 max-w-[720px] text-[clamp(42px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Everything from your chats, organised on the web.</h2><div className="mt-14"><DashboardPreview /></div></div>
+        <Reveal><div className="mx-auto max-w-270"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Amiva on the web</p><h2 className="mt-5 max-w-180 text-[clamp(42px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Everything from your chats, organised on the web.</h2><div className="mt-14"><DashboardPreview /></div></div></Reveal>
       </section>
 
       <section id="pricing" className="scroll-mt-20 bg-[#f1eef9] px-5 py-28">
-        <div className="mx-auto max-w-[1080px]"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Simple pricing</p><h2 className="mt-5 max-w-[650px] text-[clamp(42px,5vw,64px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Start free. Upgrade when you need more help.</h2><div className="mx-auto mt-14 grid max-w-[760px] gap-5 md:grid-cols-2">{[
+        <div className="mx-auto max-w-270"><Reveal><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Simple pricing</p><h2 className="mt-5 max-w-162.5 text-[clamp(42px,5vw,64px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Start free. Upgrade when you need more help.</h2></Reveal><div className="mx-auto mt-14 grid max-w-190 gap-5 md:grid-cols-2">{[
           { name: "Free", price: "₦0", per: null, desc: "Get organised with the essentials.", items: ["Reminders and tasks", "Basic memory", "WhatsApp conversation"] },
           { name: "Pro", price: "₦1,500", per: "/mo", desc: "More capacity for a fuller schedule.", items: ["Everything in Free", "Voice-note requests", "Priority support"], popular: true },
-        ].map(plan => <div key={plan.name} className={`relative flex min-h-[390px] flex-col rounded-[20px] border bg-white p-8 ${plan.popular ? "border-indigo-900 shadow-[0_25px_70px_rgba(32,24,91,0.12)]" : "border-line"}`}>{plan.popular && <span className="absolute right-6 top-6 rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-bold uppercase text-indigo-900">Most popular</span>}<p className="text-xs font-semibold text-violet-500">{plan.name}</p><h3 className="mt-8 text-5xl font-bold tracking-[-0.06em] text-navy">{plan.price}{plan.per && <span className="text-base font-medium text-ink-muted">{plan.per}</span>}</h3><p className="mt-3 text-xs text-ink-muted">{plan.desc}</p><ul className="mt-8 space-y-4 text-xs text-navy">{plan.items.map(x => <li key={x} className="flex gap-2"><Check className="size-4 text-violet-500" />{x}</li>)}</ul>{plan.popular ? <Link href="/register" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-indigo-900 text-xs font-semibold text-white">Get started</Link> : <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-[#f4f2f8] text-xs font-semibold text-indigo-900">Start on WhatsApp</a>}</div>)}</div><p className="mt-8 text-center text-[10px] text-ink-muted">Fair-use limits apply. Prices shown in NGN; KES and USD available at checkout.</p></div>
+        ].map((plan, i) => <Reveal key={plan.name} variant="scale" delay={i * 140} className="flex"><div className={`relative flex min-h-97.5 w-full flex-col rounded-[20px] border bg-white p-8 ${plan.popular ? "border-indigo-900 shadow-[0_25px_70px_rgba(32,24,91,0.12)]" : "border-line"}`}>{plan.popular && <span className="absolute right-6 top-6 rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-bold uppercase text-indigo-900">Most popular</span>}<p className="text-xs font-semibold text-violet-500">{plan.name}</p><h3 className="mt-8 text-5xl font-bold tracking-[-0.06em] text-navy">{plan.price}{plan.per && <span className="text-base font-medium text-ink-muted">{plan.per}</span>}</h3><p className="mt-3 text-xs text-ink-muted">{plan.desc}</p><ul className="mt-8 space-y-4 text-xs text-navy">{plan.items.map(x => <li key={x} className="flex gap-2"><Check className="size-4 text-violet-500" />{x}</li>)}</ul>{plan.popular ? <Link href="/register" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-indigo-900 text-xs font-semibold text-white">Get started</Link> : <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-[#f4f2f8] text-xs font-semibold text-indigo-900">Start on WhatsApp</a>}</div></Reveal>)}</div><p className="mt-8 text-center text-[10px] text-ink-muted">Fair-use limits apply. Prices shown in NGN; KES and USD available at checkout.</p></div>
       </section>
 
       <section id="faq" className="scroll-mt-20 bg-white px-5 py-28">
-        <div className="mx-auto grid max-w-[1080px] gap-16 rounded-[28px] bg-[#fbfaff] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Here when you need it</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Frequently asked questions.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Still have a question? We are happy to help.</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex rounded-full bg-indigo-900 px-5 py-3 text-xs font-semibold text-white">Chat with us on WhatsApp</a><p className="mt-4 text-xs text-ink-muted">Or email <a href="mailto:support@tryamiva.com" className="font-semibold text-indigo-900 hover:underline">support@tryamiva.com</a></p></div><FaqAccordion /></div>
+        <Reveal><div className="mx-auto grid max-w-270 gap-16 rounded-[28px] bg-[#fbfaff] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Here when you need it</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Frequently asked questions.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Still have a question? We are happy to help.</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex rounded-full bg-indigo-900 px-5 py-3 text-xs font-semibold text-white">Chat with us on WhatsApp</a><p className="mt-4 text-xs text-ink-muted">Or email <a href="mailto:support@tryamiva.com" className="font-semibold text-indigo-900 hover:underline">support@tryamiva.com</a></p></div><FaqAccordion /></div></Reveal>
       </section>
     </>
   );

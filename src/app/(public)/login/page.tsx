@@ -12,11 +12,13 @@ import { isProfileComplete, setAuthed } from "@/lib/session";
 import { login as loginAccount } from "@/lib/data/auth";
 import { ApiError } from "@/lib/api/client";
 import { startGoogleSignIn } from "@/lib/google";
+import { useRedirectAuthed } from "@/lib/use-redirect-authed";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const PHONE_RE = /^\+?\d{7,15}$/;
 
 export default function LoginPage() {
+  useRedirectAuthed();
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");

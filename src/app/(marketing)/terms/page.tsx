@@ -11,7 +11,7 @@ const sections: LegalSection[] = [
     id: "service",
     heading: "The service",
     body: [
-      "Amiva is an AI personal assistant available through WhatsApp and a web dashboard. It helps you create reminders, manage calendars and tasks, work with email, store notes and retrieve information through natural conversation.",
+      "Amiva is an AI personal assistant available through WhatsApp and a web dashboard. It helps you create reminders, manage calendars and tasks, store notes and retrieve information through natural conversation.",
       "By creating an account or messaging Amiva, you agree to these terms and to our Privacy Policy.",
     ],
   },
@@ -26,7 +26,7 @@ const sections: LegalSection[] = [
     id: "ai-assistant",
     heading: "AI assistant: important limitations",
     body: [
-      "Amiva uses artificial intelligence to interpret your requests. AI can make mistakes: always review the confirmation Amiva shows before approving consequential actions such as sending email or cancelling meetings.",
+      "Amiva uses artificial intelligence to interpret your requests. AI can make mistakes: always review the confirmation Amiva shows before approving consequential actions such as cancelling meetings or deleting saved information.",
       "Amiva does not provide medical, legal, or financial advice, and does not execute financial transactions.",
       "Where Amiva retrieves information for you, it cites its sources; if it cannot find something, it says so rather than guessing. Despite this, you should verify important information independently.",
     ],
@@ -84,7 +84,7 @@ const sections: LegalSection[] = [
   {
     id: "contact",
     heading: "Contact",
-    body: ["Questions about these terms: legal@amiva.app."],
+    body: ["Questions about these terms: support@tryamiva.com."],
   },
 ];
 
@@ -93,7 +93,16 @@ export default function TermsPage() {
     <LegalProse
       title="Terms of Service"
       effectiveDate="1 August 2026"
-      draft
+      draft={false}
+      summary={[
+        "Amiva is a personal assistant on WhatsApp and the web: reminders, tasks, calendar and a personal memory.",
+        "You need to be at least 16 and keep your account credentials to yourself. Your WhatsApp number identifies you, so don't share access to it.",
+        "Important actions (like cancelling calendar events) always ask for your confirmation first; you are responsible for what you approve.",
+        "Amiva is an organiser, not a professional adviser, so don't rely on it as your only safeguard for critical matters.",
+        "Free plan today; paid plans will have their prices and limits shown before you pay anything.",
+        "You can delete your account any time from Settings, data is removed after a 14-day grace period.",
+        "Questions? Message us on WhatsApp or email support@tryamiva.com.",
+      ]}
       sections={sections}
     />
   );

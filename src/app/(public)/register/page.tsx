@@ -18,6 +18,7 @@ import { ApiError } from "@/lib/api/client";
 import { startGoogleSignIn } from "@/lib/google";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
 import { cn } from "@/lib/cn";
+import { useRedirectAuthed } from "@/lib/use-redirect-authed";
 
 function strength(pw: string) {
   let s = 0;
@@ -31,6 +32,7 @@ function strength(pw: string) {
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export default function RegisterPage() {
+  useRedirectAuthed();
   const router = useRouter();
   const [form, setForm] = useState({
     name: "",
