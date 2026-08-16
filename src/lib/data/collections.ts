@@ -15,7 +15,6 @@ import {
   upsertInList,
   removeFromList,
   patchInList,
-  getList,
 } from "@/lib/query";
 import { settingsStore } from "@/lib/stores";
 import {
