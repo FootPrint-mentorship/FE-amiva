@@ -49,8 +49,11 @@ test("register → onboarding skip → today → create reminder → sign out", 
   // Timezone is always visible on absolute times (PRD: zero silent tz errors)
   await expect(page.getByText(/WAT/).first()).toBeVisible();
 
-  // Sign out returns to login
+  // Sign out asks for confirmation first, then returns to login
   await page.getByRole("button", { name: "Sign out" }).click();
+  const confirm = page.getByRole("dialog", { name: "Confirm sign out" });
+  await expect(confirm.getByText("Sign out of Amiva?")).toBeVisible();
+  await confirm.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
 

@@ -19,13 +19,12 @@ import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { fmtDay, type Memory } from "@/lib/mock";
-import { useStore } from "@/lib/store";
-import { memoriesStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
 import {
   createMemory,
   deleteMemoryForever,
   patchMemory,
+  useMemories,
 } from "@/lib/data/collections";
 
 const categories = [
@@ -50,7 +49,7 @@ const categoryTone = {
 } as const;
 
 export default function MemoriesPage() {
-  const items = useStore(memoriesStore);
+  const { items } = useMemories();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof categories)[number]>("all");
   const [favOnly, setFavOnly] = useState(false);

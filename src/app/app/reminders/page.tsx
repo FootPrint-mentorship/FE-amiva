@@ -16,8 +16,6 @@ import { Button } from "@/components/ui/button";
 import { ReminderModal } from "@/components/domain/reminder-modal";
 import { cn } from "@/lib/cn";
 import { fmtDay, fmtTime, user, type Reminder } from "@/lib/mock";
-import { useStore } from "@/lib/store";
-import { remindersStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
 import {
   completeReminder,
@@ -26,6 +24,7 @@ import {
   skipReminder,
   snoozeReminder,
   toggleReminderPause,
+  useReminders,
 } from "@/lib/data/collections";
 
 const tabs = ["Upcoming", "Recurring", "Snoozed", "Completed"] as const;
@@ -46,7 +45,7 @@ function matches(r: Reminder, tab: Tab) {
 
 export default function RemindersPage() {
   const [tab, setTab] = useState<Tab>("Upcoming");
-  const items = useStore(remindersStore);
+  const { items } = useReminders();
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Reminder | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);

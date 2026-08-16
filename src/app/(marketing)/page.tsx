@@ -183,8 +183,10 @@ export default function HomePage() {
             className="animate-rise mx-auto mt-5 max-w-135 text-[13px] leading-relaxed text-ink-soft sm:text-sm"
             style={{ animationDelay: "120ms" }}
           >
-            Create reminders, manage meetings, organise tasks and remember the
-            details that matter, in one calm conversation.
+            Amiva is a personal assistant that helps you create reminders, manage
+            your meetings and calendar, organises tasks and remembers the
+            details that matter, all in one calm WhatsApp conversation, with
+            a web dashboard for everything else.
           </p>
           <div className="animate-rise" style={{ animationDelay: "220ms" }}>
             <CtaPair className="mt-6 justify-center" />

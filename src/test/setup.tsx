@@ -4,11 +4,17 @@ import { cleanup } from "@testing-library/react";
 import React from "react";
 import { resetAllStores } from "@/lib/store";
 
-// Tests always run self-contained on the mock stores.
+// Tests always run self-contained on the mock stores. Must be set before
+// lib/api/client.ts loads — which is why query.ts is imported dynamically
+// below (a static import would hoist above this line).
 process.env.NEXT_PUBLIC_USE_MOCKS = "1";
 
 afterEach(cleanup);
-beforeEach(() => resetAllStores()); // shared stores must not leak between tests
+beforeEach(async () => {
+  resetAllStores(); // shared stores must not leak between tests
+  const { queryClient } = await import("@/lib/query");
+  queryClient.clear(); // …nor the query cache (mock seeds re-apply on mount)
+});
 
 // jsdom lacks scrollIntoView (used by the chat thread autoscroll).
 Element.prototype.scrollIntoView = vi.fn();
