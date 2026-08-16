@@ -69,10 +69,14 @@ describe("Landing page", () => {
       /Reminders that actually reach you/,
       /A calendar that manages itself/,
       /A memory that never forgets/,
-      /Your inbox, summarised/,
     ]) {
       expect(screen.getByText(feature)).toBeInTheDocument();
     }
+    // Email was removed from the product (13 Aug 2026) — the landing page
+    // must not advertise it.
+    expect(screen.queryByText(/Your inbox, summarised/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/summarise your email/)).not.toBeInTheDocument();
+    expect(screen.queryByAltText("Gmail")).not.toBeInTheDocument();
   });
 
   it("links the trust band to the privacy policy", () => {

@@ -20,7 +20,10 @@ const channels = [
   { id: "email", label: "Email" },
 ] as const;
 
-function parseRecurrence(rrule: string | null): { kind: Recurrence; byDays: string[] } {
+function parseRecurrence(rrule: string | null): {
+  kind: Recurrence;
+  byDays: string[];
+} {
   if (!rrule) return { kind: "None", byDays: ["MO"] };
   if (rrule.startsWith("FREQ=DAILY")) return { kind: "Daily", byDays: ["MO"] };
   if (rrule.startsWith("FREQ=WEEKLY")) {
@@ -55,20 +58,30 @@ export function ReminderModal({
   const initParts = initial ? toLocalParts(initial.due_at) : null;
   const settings = useStore(settingsStore);
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [date, setDate] = useState(initParts?.date ?? toLocalParts(today.toISOString()).date);
+  const [date, setDate] = useState(
+    initParts?.date ?? toLocalParts(today.toISOString()).date,
+  );
   const [time, setTime] = useState(initParts?.time ?? "09:00");
-  const [recurrence, setRecurrence] = useState<Recurrence>(init?.kind ?? "None");
+  const [recurrence, setRecurrence] = useState<Recurrence>(
+    init?.kind ?? "None",
+  );
   const [byDays, setByDays] = useState<string[]>(init?.byDays ?? ["MO"]);
   // Default only to channels the user has verified — nothing is ever
-  // dispatched to an unverified medium (spec §10.2).
+  // dispatched to an unverified medium (spec §10.2). WhatsApp counts as
+  // verified when it is linked (§11.5 as amended): binding runs through the
+  // user's own chat, and the backend delivers to the bound wa_id.
   const [chans, setChans] = useState<string[]>(
     initial?.channels ??
-      (settings.phoneVerified ? ["whatsapp"] : settings.emailVerified ? ["email"] : [])
+      (settings.integrations.whatsapp
+        ? ["whatsapp"]
+        : settings.emailVerified
+          ? ["email"]
+          : []),
   );
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [error, setError] = useState("");
   const channelVerified: Record<string, boolean> = {
-    whatsapp: settings.phoneVerified,
+    whatsapp: settings.integrations.whatsapp,
     email: settings.emailVerified,
   };
 
@@ -82,8 +95,17 @@ export function ReminderModal({
   const humanRecurrence = () => {
     if (recurrence === "None") return null;
     if (recurrence === "Daily") return "Every day";
-    if (recurrence === "Monthly") return `Monthly on day ${new Date(date).getDate()}`;
-    const names = { MO: "Mon", TU: "Tue", WE: "Wed", TH: "Thu", FR: "Fri", SA: "Sat", SU: "Sun" };
+    if (recurrence === "Monthly")
+      return `Monthly on day ${new Date(date).getDate()}`;
+    const names = {
+      MO: "Mon",
+      TU: "Tue",
+      WE: "Wed",
+      TH: "Thu",
+      FR: "Fri",
+      SA: "Sat",
+      SU: "Sun",
+    };
     return `Every ${byDays.map((d) => names[d as keyof typeof names]).join(", ")}`;
   };
 
@@ -98,7 +120,8 @@ export function ReminderModal({
     if (!title.trim()) return setError("Give the reminder a title.");
     if (recurrence === "Weekly" && byDays.length === 0)
       return setError("Pick at least one weekday.");
-    if (chans.length === 0) return setError("Pick at least one delivery channel.");
+    if (chans.length === 0)
+      return setError("Pick at least one delivery channel.");
     const dueAt = new Date(`${date}T${time}:00`);
     if (recurrence === "None" && dueAt.getTime() < Date.now())
       return setError("That time is in the past. Pick a future time.");
@@ -109,7 +132,9 @@ export function ReminderModal({
       due_at: dueAt.toISOString(),
       timezone: user.timezone,
       rrule: recurrenceUntouched ? initial!.rrule : buildRrule(),
-      recurrence_human: recurrenceUntouched ? initial!.recurrence_human : humanRecurrence(),
+      recurrence_human: recurrenceUntouched
+        ? initial!.recurrence_human
+        : humanRecurrence(),
       channels: chans as Reminder["channels"],
       status: initial?.status ?? "scheduled",
       snoozed_until: initial?.snoozed_until ?? null,
@@ -120,7 +145,11 @@ export function ReminderModal({
   };
 
   return (
-    <Modal label={initial ? "Edit reminder" : "New reminder"} onClose={onClose} panelClassName="w-full max-w-120">
+    <Modal
+      label={initial ? "Edit reminder" : "New reminder"}
+      onClose={onClose}
+      panelClassName="w-full max-w-120"
+    >
       <Card className="max-h-[90vh] overflow-y-auto p-6">
         <button
           aria-label="Close"
@@ -129,7 +158,9 @@ export function ReminderModal({
         >
           <X className="size-4" aria-hidden />
         </button>
-        <h2 className="text-lg font-semibold text-navy">{initial ? "Edit reminder" : "New reminder"}</h2>
+        <h2 className="text-lg font-semibold text-navy">
+          {initial ? "Edit reminder" : "New reminder"}
+        </h2>
 
         <div className="mt-5 space-y-4">
           <Field
@@ -145,16 +176,19 @@ export function ReminderModal({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] font-normal"
+                className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-3 text-[15px] font-normal"
               />
             </label>
             <label className="text-sm font-medium text-navy">
-              Time <span className="font-normal text-ink-muted">({user.tz_abbr})</span>
+              Time{" "}
+              <span className="font-normal text-ink-muted">
+                ({user.tz_abbr})
+              </span>
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] font-normal"
+                className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-3 text-[15px] font-normal"
               />
             </label>
           </div>
@@ -170,7 +204,9 @@ export function ReminderModal({
                   aria-pressed={recurrence === r}
                   className={cn(
                     "cursor-pointer rounded-[9px] px-3.5 py-1.5 text-sm font-medium transition-colors",
-                    recurrence === r ? "bg-white text-indigo-900 shadow-card" : "text-ink-muted hover:text-navy"
+                    recurrence === r
+                      ? "bg-white text-indigo-900 shadow-card"
+                      : "text-ink-muted hover:text-navy",
                   )}
                 >
                   {r}
@@ -186,11 +222,15 @@ export function ReminderModal({
                       key={d}
                       aria-pressed={on}
                       onClick={() =>
-                        setByDays((cur) => (on ? cur.filter((x) => x !== d) : [...cur, d]))
+                        setByDays((cur) =>
+                          on ? cur.filter((x) => x !== d) : [...cur, d],
+                        )
                       }
                       className={cn(
                         "size-9 cursor-pointer rounded-full text-xs font-semibold transition-colors",
-                        on ? "bg-indigo-900 text-white" : "border border-line bg-white text-ink-muted"
+                        on
+                          ? "bg-indigo-900 text-white"
+                          : "border border-line bg-white text-ink-muted",
                       )}
                     >
                       {weekdayLabels[i]}
@@ -200,7 +240,9 @@ export function ReminderModal({
               </div>
             )}
             {recurrence !== "None" && (
-              <p className="mt-2 text-xs text-ink-muted">{humanRecurrence()} at {time}</p>
+              <p className="mt-2 text-xs text-ink-muted">
+                {humanRecurrence()} at {time}
+              </p>
             )}
           </div>
 
@@ -216,17 +258,23 @@ export function ReminderModal({
                     key={c.id}
                     aria-pressed={on}
                     disabled={!verified}
-                    title={verified ? undefined : `Verify your ${c.id === "whatsapp" ? "phone" : "email"} to enable ${c.label}`}
+                    title={
+                      verified
+                        ? undefined
+                        : `Verify your ${c.id === "whatsapp" ? "phone" : "email"} to enable ${c.label}`
+                    }
                     onClick={() =>
-                      setChans((cur) => (on ? cur.filter((x) => x !== c.id) : [...cur, c.id]))
+                      setChans((cur) =>
+                        on ? cur.filter((x) => x !== c.id) : [...cur, c.id],
+                      )
                     }
                     className={cn(
                       "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
                       !verified
                         ? "cursor-not-allowed border-line bg-soft text-ink-muted/60"
                         : on
-                        ? "cursor-pointer border-indigo-900 bg-indigo-900 text-white"
-                        : "cursor-pointer border-line bg-white text-ink-muted hover:border-indigo-300"
+                          ? "cursor-pointer border-indigo-900 bg-indigo-900 text-white"
+                          : "cursor-pointer border-line bg-white text-ink-muted hover:border-indigo-300",
                     )}
                   >
                     {c.label}
@@ -245,12 +293,18 @@ export function ReminderModal({
           />
 
           {error && (
-            <p className="text-sm text-danger" role="alert">{error}</p>
+            <p className="text-sm text-danger" role="alert">
+              {error}
+            </p>
           )}
 
           <div className="flex justify-end gap-2 pt-1">
-            <Button variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button onClick={save}>{initial ? "Save changes" : "Create reminder"}</Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={save}>
+              {initial ? "Save changes" : "Create reminder"}
+            </Button>
           </div>
         </div>
       </Card>

@@ -22,6 +22,7 @@ import { OtpInput } from "@/components/ui/otp-input";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { WA_LINK } from "@/lib/site";
+import { sendAssistantMessage } from "@/lib/data/assistant";
 import { setAuthed } from "@/lib/session";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
@@ -30,12 +31,30 @@ import {
   verifyPhoneCode,
 } from "@/lib/data/settings";
 
-const steps = ["Welcome", "Preferences", "Verify phone", "Calendar", "First action"];
+const steps = [
+  "Welcome",
+  "Preferences",
+  "Verify phone",
+  "Calendar",
+  "First action",
+];
 
 const capabilities = [
-  { icon: AlarmClock, title: "Remind", body: "One-time and recurring reminders, delivered where you'll see them." },
-  { icon: ListChecks, title: "Organise", body: "Calendar, tasks and checklists managed from one conversation." },
-  { icon: Brain, title: "Remember", body: "A personal memory you control. Save once, find forever." },
+  {
+    icon: AlarmClock,
+    title: "Remind",
+    body: "One-time and recurring reminders, delivered where you'll see them.",
+  },
+  {
+    icon: ListChecks,
+    title: "Organise",
+    body: "Calendar, tasks and checklists managed from one conversation.",
+  },
+  {
+    icon: Brain,
+    title: "Remember",
+    body: "A personal memory you control. Save once, find forever.",
+  },
 ];
 
 const channelOptions = ["WhatsApp", "Email"] as const;
@@ -53,8 +72,28 @@ export default function OnboardingPage() {
     workEnd: "17:00",
   }));
   const [calendarConnected, setCalendarConnected] = useState(false);
-  const [tryText, setTryText] = useState("Remind me to call Mum tomorrow at 6 pm");
-  const [tried, setTried] = useState(false);
+  const [tryText, setTryText] = useState(
+    "Remind me to call Mum tomorrow at 6 pm",
+  );
+  const [trying, setTrying] = useState(false);
+  const [tryReply, setTryReply] = useState<string | null>(null);
+
+  // The first request goes to the real assistant — whatever the user typed,
+  // not a canned demo line (a user caught the old hardcoded reply).
+  const sendFirstRequest = () => {
+    const text = tryText.trim();
+    if (!text || trying) return;
+    setTrying(true);
+    setTryReply(null);
+    sendAssistantMessage(text)
+      .then((res) => setTryReply(res.reply))
+      .catch(() =>
+        setTryReply(
+          "I couldn't reach Amiva just now — you can try again, or skip ahead.",
+        ),
+      )
+      .finally(() => setTrying(false));
+  };
 
   // phone verification (skippable — OTP goes only to the channel being verified)
   const [phoneStage, setPhoneStage] = useState<"idle" | "sent">("idle");
@@ -74,7 +113,9 @@ export default function OnboardingPage() {
       .then(() => toast("Code sent to your WhatsApp number."))
       .catch(() => {
         setPhoneStage("idle");
-        toast("Couldn't send the code just now. Please try again.", { tone: "error" });
+        toast("Couldn't send the code just now. Please try again.", {
+          tone: "error",
+        });
       });
   };
 
@@ -110,7 +151,10 @@ export default function OnboardingPage() {
         </Link>
 
         {/* Progress dots (visited steps are clickable) */}
-        <div className="mt-8 flex items-center gap-2" aria-label={`Step ${step + 1} of ${steps.length}: ${steps[step]}`}>
+        <div
+          className="mt-8 flex items-center gap-2"
+          aria-label={`Step ${step + 1} of ${steps.length}: ${steps[step]}`}
+        >
           {steps.map((label, i) => (
             <button
               key={label}
@@ -119,7 +163,11 @@ export default function OnboardingPage() {
               onClick={() => setStep(i)}
               className={cn(
                 "h-2 rounded-full transition-all",
-                i === step ? "w-8 bg-indigo-900" : i < step ? "w-2 cursor-pointer bg-cyan-500" : "w-2 bg-line"
+                i === step
+                  ? "w-8 bg-indigo-900"
+                  : i < step
+                    ? "w-2 cursor-pointer bg-cyan-500"
+                    : "w-2 bg-line",
               )}
             />
           ))}
@@ -142,17 +190,26 @@ export default function OnboardingPage() {
               </h1>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 {capabilities.map((c) => (
-                  <div key={c.title} className="rounded-xl bg-soft p-4 text-left">
+                  <div
+                    key={c.title}
+                    className="rounded-xl bg-soft p-4 text-left"
+                  >
                     <c.icon className="size-5 text-violet-500" aria-hidden />
                     <p className="mt-2 font-semibold text-navy">{c.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-ink-muted">{c.body}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                      {c.body}
+                    </p>
                   </div>
                 ))}
               </div>
               <p className="mt-6 text-xs text-ink-muted">
-                Amiva only remembers what you allow, and asks before doing anything
-                important.{" "}
-                <Link href="/privacy-policy" target="_blank" className="text-indigo-900 hover:underline">
+                Amiva only remembers what you allow, and asks before doing
+                anything important.{" "}
+                <Link
+                  href="/privacy-policy"
+                  target="_blank"
+                  className="text-indigo-900 hover:underline"
+                >
                   How we handle your data
                 </Link>
               </p>
@@ -165,15 +222,21 @@ export default function OnboardingPage() {
           {/* 2 · Preferences */}
           {step === 1 && (
             <Card className="p-8">
-              <h1 className="text-2xl font-semibold tracking-tight text-navy">Your preferences</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-navy">
+                Your preferences
+              </h1>
               <div className="mt-6 space-y-5">
                 <Field
                   label="What should Amiva call you?"
                   value={prefs.preferredName}
-                  onChange={(e) => setPrefs({ ...prefs, preferredName: e.target.value })}
+                  onChange={(e) =>
+                    setPrefs({ ...prefs, preferredName: e.target.value })
+                  }
                 />
                 <div>
-                  <p className="mb-2 text-sm font-medium text-navy">Where should notifications go?</p>
+                  <p className="mb-2 text-sm font-medium text-navy">
+                    Where should notifications go?
+                  </p>
                   <div className="flex gap-2">
                     {channelOptions.map((c) => {
                       const on = prefs.channels.includes(c);
@@ -193,10 +256,15 @@ export default function OnboardingPage() {
                             "cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
                             on
                               ? "border-indigo-900 bg-indigo-900 text-white"
-                              : "border-line bg-white text-ink-muted hover:border-indigo-300"
+                              : "border-line bg-white text-ink-muted hover:border-indigo-300",
                           )}
                         >
-                          {on && <Check className="mr-1 inline size-3.5" aria-hidden />}
+                          {on && (
+                            <Check
+                              className="mr-1 inline size-3.5"
+                              aria-hidden
+                            />
+                          )}
                           {c}
                         </button>
                       );
@@ -204,7 +272,9 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 text-sm font-medium text-navy">Working days</p>
+                  <p className="mb-2 text-sm font-medium text-navy">
+                    Working days
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {days.map((d) => {
                       const on = prefs.workDays.includes(d);
@@ -222,7 +292,9 @@ export default function OnboardingPage() {
                           }
                           className={cn(
                             "size-9 cursor-pointer rounded-full text-xs font-semibold transition-colors",
-                            on ? "bg-indigo-900 text-white" : "border border-line bg-white text-ink-muted"
+                            on
+                              ? "bg-indigo-900 text-white"
+                              : "border border-line bg-white text-ink-muted",
                           )}
                         >
                           {d[0]}
@@ -237,8 +309,10 @@ export default function OnboardingPage() {
                     <input
                       type="time"
                       value={prefs.workStart}
-                      onChange={(e) => setPrefs({ ...prefs, workStart: e.target.value })}
-                      className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] font-normal"
+                      onChange={(e) =>
+                        setPrefs({ ...prefs, workStart: e.target.value })
+                      }
+                      className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-3 text-[15px] font-normal"
                     />
                   </label>
                   <label className="flex-1 text-sm font-medium text-navy">
@@ -246,8 +320,10 @@ export default function OnboardingPage() {
                     <input
                       type="time"
                       value={prefs.workEnd}
-                      onChange={(e) => setPrefs({ ...prefs, workEnd: e.target.value })}
-                      className="mt-1.5 h-11 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] font-normal"
+                      onChange={(e) =>
+                        setPrefs({ ...prefs, workEnd: e.target.value })
+                      }
+                      className="mt-1.5 h-11 w-full rounded-control border border-line bg-white px-3 text-[15px] font-normal"
                     />
                   </label>
                 </div>
@@ -257,7 +333,8 @@ export default function OnboardingPage() {
                   onClick={() => {
                     settingsStore.set((c) => ({
                       ...c,
-                      preferredName: prefs.preferredName.trim() || c.preferredName,
+                      preferredName:
+                        prefs.preferredName.trim() || c.preferredName,
                     }));
                     next();
                   }}
@@ -279,8 +356,9 @@ export default function OnboardingPage() {
               </h1>
               {settings.phoneVerified ? (
                 <>
-                  <p className="mt-5 flex items-center gap-2 rounded-[10px] bg-success/10 px-4 py-3 text-sm font-medium text-success">
-                    <Check className="size-4" aria-hidden /> Phone already verified
+                  <p className="mt-5 flex items-center gap-2 rounded-control bg-success/10 px-4 py-3 text-sm font-medium text-success">
+                    <Check className="size-4" aria-hidden /> Phone already
+                    verified
                   </p>
                   <Button className="mt-5 w-full" size="lg" onClick={next}>
                     Continue
@@ -289,26 +367,40 @@ export default function OnboardingPage() {
               ) : (
                 <>
                   <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                    Amiva delivers reminders on WhatsApp only after your number is
-                    verified. We&apos;ll send a one-time code there — nowhere else.
+                    Amiva delivers reminders on WhatsApp only after your number
+                    is verified. We&apos;ll send a one-time code there — nowhere
+                    else.
                   </p>
                   {phoneStage === "idle" ? (
-                    <Button className="mt-5 w-full" size="lg" onClick={sendPhoneCode}>
+                    <Button
+                      className="mt-5 w-full"
+                      size="lg"
+                      onClick={sendPhoneCode}
+                    >
                       Send code to WhatsApp
                     </Button>
                   ) : (
                     <div className="mt-5 rounded-xl border border-line bg-soft p-4">
-                      <p className="mb-2 text-xs text-ink-muted">Enter the 6-digit code.</p>
-                      <OtpInput value={phoneOtp} onChange={onPhoneOtp} label="Phone code" />
+                      <p className="mb-2 text-xs text-ink-muted">
+                        Enter the 6-digit code.
+                      </p>
+                      <OtpInput
+                        value={phoneOtp}
+                        onChange={onPhoneOtp}
+                        label="Phone code"
+                      />
                     </div>
                   )}
                   <div className="mt-3">
-                    <button onClick={next} className="cursor-pointer text-sm text-ink-muted hover:text-navy">
+                    <button
+                      onClick={next}
+                      className="cursor-pointer text-sm text-ink-muted hover:text-navy"
+                    >
                       Skip for now
                     </button>
                     <p className="mt-1.5 text-xs text-ink-muted">
-                      You can verify later in Settings. Until then, nothing is sent to
-                      this number.
+                      You can verify later in Settings. Until then, nothing is
+                      sent to this number.
                     </p>
                   </div>
                 </>
@@ -326,21 +418,29 @@ export default function OnboardingPage() {
                 Connect Google Calendar
               </h1>
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                Amiva can create events, spot conflicts and find free slots.
-                It only requests the calendar permissions it needs, and you can
+                Amiva can create events, spot conflicts and find free slots. It
+                only requests the calendar permissions it needs, and you can
                 disconnect any time.
               </p>
               {calendarConnected ? (
-                <p className="mt-5 flex items-center gap-2 rounded-[10px] bg-success/10 px-4 py-3 text-sm font-medium text-success">
-                  <Check className="size-4" aria-hidden /> Google Calendar connected
+                <p className="mt-5 flex items-center gap-2 rounded-control bg-success/10 px-4 py-3 text-sm font-medium text-success">
+                  <Check className="size-4" aria-hidden /> Google Calendar
+                  connected
                 </p>
               ) : (
-                <Button className="mt-5 w-full" size="lg" onClick={() => setCalendarConnected(true)}>
+                <Button
+                  className="mt-5 w-full"
+                  size="lg"
+                  onClick={() => setCalendarConnected(true)}
+                >
                   Connect Google Calendar
                 </Button>
               )}
               <div className="mt-3 flex justify-between">
-                <button onClick={next} className="cursor-pointer text-sm text-ink-muted hover:text-navy">
+                <button
+                  onClick={next}
+                  className="cursor-pointer text-sm text-ink-muted hover:text-navy"
+                >
                   Skip for now
                 </button>
                 {calendarConnected && (
@@ -362,24 +462,29 @@ export default function OnboardingPage() {
                 <input
                   value={tryText}
                   onChange={(e) => setTryText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendFirstRequest()}
                   aria-label="Try a request"
-                  className="h-11 flex-1 rounded-[10px] border border-line bg-white px-3.5 text-[15px] text-navy"
+                  className="h-11 flex-1 rounded-control border border-line bg-white px-3.5 text-[15px] text-navy"
                 />
-                <Button onClick={() => setTried(true)} aria-label="Send">
+                <Button
+                  onClick={sendFirstRequest}
+                  loading={trying}
+                  aria-label="Send"
+                >
                   <Send className="size-4" aria-hidden />
                 </Button>
               </div>
-              {tried && (
+              {tryReply && (
                 <div className="mt-4 rounded-xl border border-line bg-soft p-4">
-                  <p className="text-sm text-navy">
-                    ⏰ Done, {prefs.preferredName}. I&apos;ll remind you{" "}
-                    <strong>tomorrow at 6:00 PM (WAT)</strong>: &quot;Call Mum&quot;.
-                  </p>
+                  <p className="text-sm text-navy">{tryReply}</p>
                 </div>
               )}
               <div className="mt-6 rounded-xl bg-[#d9fdd3]/60 p-4">
                 <p className="flex items-center gap-2 text-sm font-medium text-navy">
-                  <MessageCircle className="size-4 text-[#075e54]" aria-hidden />
+                  <MessageCircle
+                    className="size-4 text-[#075e54]"
+                    aria-hidden
+                  />
                   Prefer WhatsApp? Say hello and Amiva will link your chat:
                 </p>
                 <a

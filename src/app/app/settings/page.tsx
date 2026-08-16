@@ -163,7 +163,8 @@ export default function SettingsPage() {
 
   const toggleCell = (row: string, ch: string) => {
     if (ch === "Push") return; // mobile app is Release 2
-    if (ch === "WhatsApp" && !settings.phoneVerified) return;
+    // §11.5 as amended: a linked WhatsApp IS the verified channel.
+    if (ch === "WhatsApp" && !settings.integrations.whatsapp) return;
     if (ch === "Email" && !settings.emailVerified) return;
     settingsStore.set((c) => ({
       ...c,
@@ -266,7 +267,11 @@ export default function SettingsPage() {
                 </span>
               ) : (
                 <>
-                  <span className="text-warning-ink">Not verified — WhatsApp delivery is paused.</span>
+                  <span className="text-warning-ink">
+                    {settings.integrations.whatsapp
+                      ? "Not verified."
+                      : "Not verified, link WhatsApp to get reminders there."}
+                  </span>
                   <button
                     onClick={startPhoneVerify}
                     className="cursor-pointer font-medium text-indigo-900 hover:underline"
@@ -382,7 +387,7 @@ export default function SettingsPage() {
                   {notifChannels.map((ch) => {
                     const on = matrix[row].includes(ch);
                     const unverified =
-                      (ch === "WhatsApp" && !settings.phoneVerified) ||
+                      (ch === "WhatsApp" && !settings.integrations.whatsapp) ||
                       (ch === "Email" && !settings.emailVerified);
                     const disabled = ch === "Push" || unverified;
                     return (
@@ -394,7 +399,9 @@ export default function SettingsPage() {
                             ch === "Push"
                               ? "Mobile app coming soon"
                               : unverified
-                              ? `Verify your ${ch === "WhatsApp" ? "phone" : "email"} to enable`
+                              ? ch === "WhatsApp"
+                                ? "Link WhatsApp to enable"
+                                : "Verify your email to enable"
                               : undefined
                           }
                           onClick={() => toggleCell(row, ch)}
@@ -696,7 +703,7 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-semibold text-navy">Delete your account?</h2>
                 <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                   You&apos;ll be signed out everywhere right away. Your data is kept for a
-                  14-day grace period — contact support within that window to undo — and
+                  14-day grace period — email support@tryamiva.com within that window to undo — and
                   is permanently deleted after it.
                 </p>
                 <div className="mt-5 flex justify-end gap-2">

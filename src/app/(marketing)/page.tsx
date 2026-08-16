@@ -1,290 +1,323 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   AlarmClock,
-  CalendarDays,
+  Bell,
   Brain,
-  Mail,
-  ListChecks,
-  ShieldCheck,
-  Trash2,
-  ScrollText,
-  MessageCircle,
-  Link2,
-  Sparkles,
+  CalendarDays,
   Check,
+  CheckCircle2,
+  Search,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { CtaPair } from "@/components/marketing/cta-pair";
-import { WhatsAppMockup } from "@/components/marketing/whatsapp-mockup";
 import { FaqAccordion } from "@/components/marketing/faq";
+import { IntegrationsChaos } from "@/components/marketing/integrations";
+import { Reveal } from "@/components/marketing/reveal";
 import { WA_LINK } from "@/lib/site";
 
-const steps = [
+const practical = [
   {
-    icon: MessageCircle,
-    title: "Say hello on WhatsApp",
-    body: "Message Amiva like you'd message a friend. No downloads, no setup wizard.",
-  },
-  {
-    icon: Link2,
-    title: "Connect your tools",
-    body: "Link Google Calendar securely. You choose exactly what Amiva can see.",
-  },
-  {
-    icon: Sparkles,
-    title: "Ask for anything",
-    body: "Say “remind me”, “schedule”, “remember” or “find”. Amiva handles the rest.",
-  },
-];
-
-const features = [
-  {
+    eyebrow: "Reminders",
+    title: "Reminders that actually reach you.",
+    body: "One-time and recurring reminders, delivered through the channel you choose.",
+    prompt: "Send Ada the proposal",
+    result: "Reminder set for 4:00 PM",
     icon: AlarmClock,
-    title: "Reminders that actually reach you",
-    body: "Set it in one sentence and get it on WhatsApp, email or both. One-time, daily, weekly or custom schedules, with snooze and reschedule right from the chat.",
-    example: "“Remind me to pay NEPA every last Friday of the month”",
   },
   {
+    eyebrow: "Calendar",
+    title: "A calendar that manages itself.",
+    body: "Find open times, spot conflicts and handle time zones in a single conversation.",
+    prompt: "Tuesday · 3:00 PM WAT",
+    result: "Meeting confirmed",
     icon: CalendarDays,
-    title: "A calendar that manages itself",
-    body: "Amiva creates, moves and cancels events, finds free slots that work for everyone, and handles time zones so nobody shows up an hour late.",
-    example: "“Move my 2pm with Tunde to Friday morning”",
   },
   {
+    eyebrow: "Tasks & lists",
+    title: "Turn conversations into things that get done.",
+    body: "Capture tasks, subtasks and useful checklists before they disappear from view.",
+    prompt: "7 of 8 complete",
+    result: "Launch checklist",
+    icon: CheckCircle2,
+  },
+  {
+    eyebrow: "Memory",
+    title: "A memory that never forgets.",
+    body: "Store useful details with permission and retrieve them later with a natural question.",
+    prompt: "What is Kemi's shoe size?",
+    result: "EU 39, saved 12 May",
     icon: Brain,
-    title: "A memory that never forgets",
-    body: "Tell Amiva once, whether it's account numbers, sizes, ideas or addresses, and find it forever with a plain question. You control everything it remembers.",
-    example: "“What's my landlord's account number?”",
   },
   {
-    icon: Mail,
-    title: "Your inbox, summarised",
-    body: "Amiva reads what you allow, tells you what actually needs attention, and drafts replies in your tone. Nothing is ever sent without your approval.",
-    example: "“Summarise my unread email”",
-  },
-  {
-    icon: ListChecks,
-    title: "Tasks and checklists from voice notes",
-    body: "Send a voice note on the go and Amiva turns it into organised tasks and checklists you can tick off from WhatsApp or the web.",
-    example: "“Add rice, beans and titus to my shopping list”",
+    eyebrow: "Intelligent search",
+    title: "Ask once. Search everything you authorised.",
+    body: "Find practical answers across reminders, calendar, tasks and memory without digging.",
+    prompt: "Budget review is next Thursday",
+    result: "Found across 3 sources",
+    icon: Search,
   },
 ];
 
-const trust = [
-  {
-    icon: ShieldCheck,
-    title: "You approve every important action",
-    body: "Sending email, cancelling meetings, deleting data: Amiva always asks first.",
-  },
-  {
-    icon: Trash2,
-    title: "Your data is yours",
-    body: "Encrypted, never used to train AI models, and completely deletable whenever you choose.",
-  },
-  {
-    icon: ScrollText,
-    title: "Nothing happens in the dark",
-    body: "Every action Amiva takes is recorded in an activity log you can review any time.",
-  },
+// Only what Amiva integrates with TODAY — logos join this list as
+// integrations actually ship (client decision, 16 Aug 2026).
+const toolLogos = [
+  { name: "WhatsApp", src: "/logos/whatsapp.svg" },
+  { name: "Google Calendar", src: "/logos/google-calendar.svg" },
 ];
+
+function MiniAppCard({ item, dark }: { item: (typeof practical)[number]; dark?: boolean }) {
+  const Icon = item.icon;
+  return (
+    <div
+      className={`relative flex min-h-52.5 flex-col justify-between overflow-hidden rounded-[18px] border p-7 shadow-[0_20px_55px_rgba(38,28,92,0.08)] ${dark
+          ? "border-indigo-800 bg-indigo-900 text-white"
+          : "border-[#e7e3f1] bg-[#f3f0fb] text-navy"
+        }`}
+    >
+      <div className="flex items-center justify-between">
+        <Icon className={`size-5 ${dark ? "text-cyan-400" : "text-violet-500"}`} aria-hidden />
+        <span className={`text-[9px] font-semibold ${dark ? "text-white/45" : "text-ink-muted"}`}>
+          Amiva
+        </span>
+      </div>
+      <div>
+        <p className="text-sm font-semibold">{item.prompt}</p>
+        <div className={`mt-5 h-1.5 rounded-full ${dark ? "bg-white/12" : "bg-white"}`}>
+          <div className="h-full w-2/3 rounded-full bg-cyan-400" />
+        </div>
+        <p className={`mt-3 text-[10px] ${dark ? "text-white/55" : "text-ink-muted"}`}>{item.result}</p>
+      </div>
+    </div>
+  );
+}
+
+function DashboardPreview() {
+  return (
+    <div className="overflow-hidden rounded-[18px] border border-[#ded9ec] bg-white shadow-[0_30px_90px_rgba(31,24,91,0.15)]">
+      <div className="flex h-8 items-center gap-1.5 border-b border-line bg-[#f7f6fa] px-3">
+        <i className="size-1.5 rounded-full bg-[#cbc8d7]" />
+        <i className="size-1.5 rounded-full bg-[#cbc8d7]" />
+        <i className="size-1.5 rounded-full bg-[#cbc8d7]" />
+      </div>
+      <div className="grid min-h-75 grid-cols-[74px_1fr] sm:min-h-90 sm:grid-cols-[150px_1fr]">
+        <aside className="bg-indigo-900 p-4 text-white sm:p-6">
+          <Image src="/brand/wordmark-white.svg" alt="Amiva" width={74} height={20} />
+          <div className="mt-10 space-y-5 text-[9px] text-white/60 sm:text-[11px]">
+            <p className="text-white">Today</p><p>Reminders</p><p>Calendar</p><p>Tasks</p><p>Memories</p>
+          </div>
+        </aside>
+        <main className="p-5 sm:p-9">
+          <div className="flex items-center justify-between">
+            <div><p className="text-[9px] text-ink-muted">Monday, 10 August</p><h3 className="mt-1 text-xl font-bold tracking-[-0.04em] text-navy sm:text-3xl">Good morning, Amani.</h3></div>
+            <span className="hidden rounded-full bg-indigo-900 px-4 py-2 text-[9px] font-semibold text-white sm:block">Talk to Amiva</span>
+          </div>
+          <div className="mt-7 rounded-[14px] bg-indigo-900 p-5 text-white">
+            <p className="text-[9px] text-cyan-300">Today at a glance</p>
+            <p className="mt-2 text-xs font-semibold sm:text-sm">Two meetings, three reminders and one item awaiting approval.</p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {["Next meeting", "Reminders due", "Tasks open"].map((x, i) => <div key={x} className="rounded-xl border border-line p-4"><p className="text-[9px] text-ink-muted">{x}</p><b className="mt-2 block text-sm text-navy">{i + 1}</b></div>)}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
 
 export default function HomePage() {
   return (
     <>
-      {/* 1 · Hero */}
-      <section className="bg-gradient-to-b from-soft to-white">
-        <div className="mx-auto grid w-full max-w-285 items-center gap-12 px-5 py-16 md:grid-cols-2 md:py-24">
-          <div>
-            <h1 className="text-[clamp(2.5rem,5vw,3.5rem)] font-bold leading-[1.08] tracking-tight text-navy">
-              Your personal chief of staff,{" "}
-              <span className="text-indigo-900">on WhatsApp.</span>
-            </h1>
-            <p className="mt-5 max-w-120 text-lg leading-relaxed text-ink-muted">
-              Reminders, calendar, email and memory, managed through one
-              natural conversation. Amiva remembers, plans and follows through,
-              so you don&apos;t have to.
-            </p>
-            <CtaPair className="mt-8" />
-            <p className="mt-4 text-sm text-ink-muted">
-              Free to start · No app to install
-            </p>
-          </div>
-          <WhatsAppMockup />
-        </div>
-      </section>
-
-      {/* 2 · How it works */}
-      <section className="border-t border-line bg-white">
-        <div className="mx-auto w-full max-w-285 px-5 py-20">
-          <h2 className="text-center text-3xl font-semibold tracking-tight text-navy">
-            Up and running in one minute
-          </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {steps.map((s, i) => (
-              <div
-                key={s.title}
-                className="rounded-2xl border border-line bg-soft p-6"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-full bg-indigo-900 text-sm font-semibold text-white">
-                    {i + 1}
-                  </span>
-                  <s.icon className="size-5 text-violet-500" aria-hidden />
-                </div>
-                <h3 className="mt-4 font-semibold text-navy">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                  {s.body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 3 · Feature tour */}
-      <section id="features" className="border-t border-line bg-white scroll-mt-16">
-        <div className="mx-auto w-full max-w-285 px-5 py-20">
-          <h2 className="text-center text-3xl font-semibold tracking-tight text-navy">
-            One conversation. Everything handled.
-          </h2>
-          <div className="mt-14 space-y-14">
-            {features.map((f, i) => (
-              <div
-                key={f.title}
-                className={`grid items-center gap-8 md:grid-cols-2 ${
-                  i % 2 === 1 ? "md:[&>*:first-child]:order-2" : ""
-                }`}
-              >
-                <div>
-                  <div className="flex size-11 items-center justify-center rounded-xl bg-indigo-50">
-                    <f.icon className="size-5 text-indigo-900" aria-hidden />
-                  </div>
-                  <h3 className="mt-4 text-xl font-semibold text-navy">
-                    {f.title}
-                  </h3>
-                  <p className="mt-3 max-w-110 leading-relaxed text-ink-muted">
-                    {f.body}
-                  </p>
-                  <a
-                    href={WA_LINK}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-block text-sm font-medium text-indigo-900 hover:underline"
-                  >
-                    Try it on WhatsApp →
-                  </a>
-                </div>
-                <div className="rounded-2xl border border-line bg-soft p-8">
-                  <p className="rounded-xl rounded-tr-sm bg-[#d9fdd3] px-4 py-3 text-[15px] text-[#111b21] shadow-sm md:ml-10">
-                    {f.example}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4 · Trust band */}
-      <section className="bg-indigo-900 text-white">
-        <div className="mx-auto grid w-full max-w-285 gap-10 px-5 py-16 md:grid-cols-3">
-          {trust.map((t) => (
-            <div key={t.title}>
-              <t.icon className="size-6 text-cyan-500" aria-hidden />
-              <h3 className="mt-3 font-semibold">{t.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-white/70">
-                {t.body}
-              </p>
-            </div>
-          ))}
-        </div>
-        <div className="pb-12 text-center">
-          <Link
-            href="/privacy-policy"
-            className="text-sm text-cyan-500 hover:underline"
+      {/* ── HERO SECTION ─────────────────────────── */}
+      <section className="hero-water-scene relative overflow-hidden pt-10 text-center sm:pt-12">
+        <div className="relative z-10 mx-auto max-w-212.5 px-5">
+          <h1 className="animate-rise mx-auto mt-2 max-w-175 text-[clamp(36px,5vw,64px)] font-bold leading-[1.04] tracking-[-0.06em] text-navy">
+            Your personal chief of staff,{" "}
+            <span className="mt-2 inline-block rounded-2xl bg-[#6653cd] px-4 py-1 text-white shadow-xs">
+              on WhatsApp.
+            </span>
+          </h1>
+          <p
+            className="animate-rise mx-auto mt-5 max-w-135 text-[13px] leading-relaxed text-[#73708a] sm:text-sm"
+            style={{ animationDelay: "120ms" }}
           >
-            Read our privacy policy →
-          </Link>
-        </div>
-      </section>
-
-      {/* 5 · Pricing teaser */}
-      <section id="pricing" className="bg-white scroll-mt-16">
-        <div className="mx-auto w-full max-w-285 px-5 py-20">
-          <h2 className="text-center text-3xl font-semibold tracking-tight text-navy">
-            Simple pricing, local currency
-          </h2>
-          <div className="mx-auto mt-12 grid max-w-190 gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-line bg-white p-7 shadow-card">
-              <p className="font-semibold text-navy">Free</p>
-              <p className="mt-1 text-3xl font-bold text-navy">₦0</p>
-              <p className="text-sm text-ink-muted">Get organised</p>
-              <ul className="mt-5 space-y-2.5 text-sm text-ink-muted">
-                {["WhatsApp + web dashboard", "Reminders & tasks", "Google Calendar", "Personal memory (starter)"].map((x) => (
-                  <li key={x} className="flex gap-2">
-                    <Check className="size-4 shrink-0 text-success" aria-hidden /> {x}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={WA_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 inline-flex h-10 w-full items-center justify-center rounded-[10px] border border-indigo-300 text-sm font-medium text-indigo-900 hover:bg-indigo-50"
-              >
-                Start on WhatsApp
-              </a>
-            </div>
-            <div className="relative rounded-2xl border-2 border-indigo-900 bg-white p-7 shadow-pop">
-              <span className="absolute -top-3 left-6 rounded-full bg-cyan-500 px-3 py-0.5 text-xs font-semibold text-navy">
-                Most popular
-              </span>
-              <p className="font-semibold text-navy">Pro</p>
-              <p className="mt-1 text-3xl font-bold text-navy">
-                ₦1,500<span className="text-base font-medium text-ink-muted">/mo</span>
-              </p>
-              <p className="text-sm text-ink-muted">Your full chief of staff</p>
-              <ul className="mt-5 space-y-2.5 text-sm text-ink-muted">
-                {["Everything in Free, unlimited*", "Email summaries & drafts", "Voice notes", "Priority support"].map((x) => (
-                  <li key={x} className="flex gap-2">
-                    <Check className="size-4 shrink-0 text-success" aria-hidden /> {x}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/register"
-                className="mt-6 inline-flex h-10 w-full items-center justify-center rounded-[10px] bg-indigo-900 text-sm font-medium text-white hover:bg-indigo-700"
-              >
-                Create account
-              </Link>
-            </div>
-          </div>
-          <p className="mt-6 text-center text-xs text-ink-muted">
-            * Fair-use limits apply. Prices shown in NGN; KES and USD available
-            at checkout.
+            Create reminders, manage meetings, organise tasks and remember the details that matter, in one calm conversation.
           </p>
+          <div className="animate-rise" style={{ animationDelay: "220ms" }}>
+            <CtaPair className="mt-6 justify-center" />
+          </div>
+        </div>
+
+        {/* Hero Visual: iPhone Mockup (iPhone Amiva_Hero.png) & Floating Cards */}
+        <div className="relative mx-auto mt-6 h-97.5 max-w-295 overflow-hidden sm:h-110 md:h-120">
+          {/* Subtle refracted-water U-shaped wash */}
+          <div className="hero-water-wash" aria-hidden />
+
+          {/* iPhone Image (iPhone Amiva_Hero.png) - cut/hidden behind next section */}
+          <Image
+            src="/brand/iPhone Amiva_Hero.png"
+            alt="Amiva conversation on an iPhone"
+            width={530}
+            height={1126}
+            priority
+            className="absolute -bottom-117.5 left-1/2 z-10 h-215 w-auto -translate-x-1/2 object-contain drop-shadow-[0_40px_70px_rgba(30,21,84,0.24)] sm:bottom-[-535px] sm:h-[975px] md:-bottom-145 md:h-265"
+          />
+
+          {/* LEFT FLOATING CARD */}
+          <div className="group/card absolute left-[2%] top-18 z-20 hidden w-62.5 items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:left-[5%] md:top-22 lg:left-[9%]">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc] transition-transform duration-300 group-hover/card:-rotate-6 group-hover/card:scale-110">
+              <AlarmClock className="size-5 text-[#7059db]" aria-hidden />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#86839b]">
+                  REMINDER
+                </span>
+                <span className="rounded-full bg-[#f3f0fb] px-2.5 py-0.5 text-[10px] font-semibold text-[#7059db]">
+                  ✓ Set
+                </span>
+              </div>
+              <h4 className="mt-0.5 text-xs font-bold text-navy truncate">Pay rent</h4>
+              <p className="text-[11px] text-[#73708a]">Friday, 9:00 AM</p>
+              <div className="mt-2.5 flex items-center gap-1.5 border-t border-[#f0edfa] pt-2 text-[10px] font-semibold text-[#7059db]">
+                <Bell className="size-3.5 transition-transform duration-300 group-hover/card:rotate-12" aria-hidden />
+                <span>WhatsApp alert ready</span>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT FLOATING CARD */}
+          <div className="group/card absolute right-[2%] top-35 z-20 hidden w-67 items-center gap-3 rounded-[20px] border border-[#e7e4f2] bg-white p-4 shadow-[0_20px_50px_rgba(30,22,86,0.14)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_65px_rgba(30,22,86,0.2)] sm:flex md:right-[5%] md:top-41 lg:right-[9%]">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f0ecfc] transition-transform duration-300 group-hover/card:rotate-6 group-hover/card:scale-110">
+              <CalendarDays className="size-5 text-[#7059db]" aria-hidden />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#86839b]">
+                  NEXT MEETING
+                </span>
+                <span className="rounded-full bg-[#f3f0fb] px-2.5 py-0.5 text-[10px] font-semibold text-[#7059db]">
+                  ✓ Synced
+                </span>
+              </div>
+              <h4 className="mt-0.5 text-xs font-bold text-navy truncate">Product planning</h4>
+              <p className="text-[11px] text-[#73708a]">Tuesday, 2:30 PM</p>
+              <div className="mt-2.5 flex items-center gap-2 border-t border-[#f0edfa] pt-2 text-[10px] text-[#73708a]">
+                {/* Initials, not stock photos: no third-party requests on the
+                    LCP path, and no implying these are real users. */}
+                <div className="flex -space-x-2">
+                  {[
+                    ["Kemi", "bg-violet-500"],
+                    ["Tunde", "bg-indigo-900"],
+                    ["Amina", "bg-cyan-500 text-navy"],
+                    ["David", "bg-indigo-400"],
+                  ].map(([name, tone]) => (
+                    <span
+                      key={name}
+                      title={name}
+                      className={`flex size-6 items-center justify-center rounded-full border-2 border-white text-[10px] font-semibold text-white shadow-sm transition-transform duration-200 hover:z-10 hover:-translate-y-1 hover:scale-125 ${tone}`}
+                    >
+                      {name[0]}
+                    </span>
+                  ))}
+                </div>
+                <span className="font-medium">4 attending</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* 6 · FAQ */}
-      <section id="faq" className="border-t border-line bg-soft scroll-mt-16">
-        <div className="mx-auto w-full max-w-285 px-5 py-20">
-          <h2 className="text-center text-3xl font-semibold tracking-tight text-navy">
-            Questions, answered
-          </h2>
-          <div className="mt-10">
-            <FaqAccordion />
+      {/* ── INTEGRATIONS STRIP (Works with the tools you already use) ─────────────────────────── */}
+      <section className="relative z-20 border-y border-line/60 bg-white px-5 py-7">
+        <div className="mx-auto flex max-w-270 flex-wrap items-center justify-between gap-5 text-[11px] text-ink-muted">
+          <b className="text-navy text-xs font-semibold">Works with the tools you already use</b>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-5">
+            {toolLogos.map((tool) => (
+              <span
+                key={tool.name}
+                className="flex size-10 items-center justify-center rounded-xl border border-line/70 bg-[#faf9fe] p-2 shadow-xs transition-transform hover:scale-105"
+                title={tool.name}
+              >
+                <Image
+                  src={tool.src}
+                  alt={tool.name}
+                  width={24}
+                  height={24}
+                  className="size-6 object-contain"
+                />
+              </span>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 7 · Final CTA */}
-      <section className="bg-navy">
-        <div className="mx-auto flex w-full max-w-285 flex-col items-center px-5 py-20 text-center">
-          <h2 className="max-w-140 text-3xl font-semibold tracking-tight text-white">
-            Start in the chat you already use.
-          </h2>
-          <CtaPair className="mt-8 justify-center" invert />
+      {/* ── FEATURES SECTION ─────────────────────────── */}
+      <section id="features" className="scroll-mt-20 bg-[#fbfaff] px-5 py-28">
+        <div className="mx-auto max-w-270">
+          <Reveal>
+            <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-end">
+              <h2 className="max-w-155 text-[clamp(42px,5vw,68px)] font-bold leading-[0.98] tracking-[-0.065em] text-navy">Less time managing tools.<br />More time moving forward.</h2>
+              <p className="max-w-90 text-sm leading-7 text-ink-muted">Your tools work better together. Amiva connects the details, keeps everything organised and asks before acting.</p>
+            </div>
+          </Reveal>
+          <div className="mt-14 grid gap-4 md:grid-cols-3">
+            {[
+              [CheckCircle2, "Say what you need", "Use natural conversation to create tasks, reminders or plans."],
+              [Sparkles, "Amiva organises it", "What you say becomes reminders, events and tasks in the right place."],
+              [ShieldCheck, "You stay in control", "Review important actions before anything changes or gets sent."],
+            ].map(([Icon, title, body], i) => {
+              const I = Icon as typeof Sparkles;
+              return <Reveal key={title as string} variant="scale" delay={i * 120}><div className={`min-h-[245px] rounded-[18px] border p-7 ${i === 2 ? "border-indigo-800 bg-indigo-900 text-white" : "border-[#e7e3f1] bg-[#f5f2fb] text-navy"}`}><I className={`size-5 ${i === 2 ? "text-cyan-400" : "text-violet-500"}`} /><h3 className="mt-20 text-lg font-bold">{title as string}</h3><p className={`mt-3 text-xs leading-6 ${i === 2 ? "text-white/60" : "text-ink-muted"}`}>{body as string}</p></div></Reveal>;
+            })}
+          </div>
         </div>
+      </section>
+
+      {/* ── FLOATING LOGOS SECTION (IntegrationsChaos) ─────────────────────────── */}
+      <IntegrationsChaos />
+
+      <section className="bg-white px-5 py-28">
+        <Reveal><div className="mx-auto grid max-w-270 items-center gap-14 rounded-[28px] bg-[#f1eef9] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">One continuous conversation</p><h2 className="mt-5 text-[clamp(38px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">The conversation continues, wherever you are.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Start on WhatsApp, then open the web when you need more space. Your context stays with you.</p><Link href="/register" className="mt-7 inline-flex rounded-full bg-white px-5 py-3 text-xs font-semibold text-indigo-900 shadow-card">Explore your dashboard</Link></div>
+          <DashboardPreview />
+        </div></Reveal>
+      </section>
+
+      <section className="bg-[#fbfaff] px-5 py-28">
+        <div className="mx-auto max-w-270">
+          <Reveal>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">What Amiva handles</p>
+            <h2 className="mt-5 text-[clamp(44px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Practical help for a full life.</h2>
+          </Reveal>
+          <div className="mt-16 divide-y divide-line">
+            {practical.map((item, i) => <Reveal key={item.title}><div className="grid items-center gap-8 py-14 md:grid-cols-[1fr_1fr] md:gap-20"><div className={i % 2 ? "md:order-2" : ""}><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-violet-500">{item.eyebrow}</p><h3 className="mt-4 max-w-107.5 text-[clamp(28px,3vw,42px)] font-bold leading-[1.03] tracking-[-0.05em] text-navy">{item.title}</h3><p className="mt-4 max-w-97.5 text-sm leading-7 text-ink-muted">{item.body}</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex text-xs font-semibold text-indigo-900">Try on WhatsApp →</a></div><div className={i % 2 ? "md:order-1" : ""}><MiniAppCard item={item} dark={i === 1 || i === 4} /></div></div></Reveal>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-5 py-24">
+        <Reveal><div className="mx-auto grid max-w-270 gap-14 rounded-[28px] bg-indigo-900 p-8 text-white md:grid-cols-2 md:p-16">
+          <div><ShieldCheck className="size-6 text-cyan-400" /><p className="mt-12 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">Privacy and control</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em]">Powerful help,<br />under your control.</h2><p className="mt-5 max-w-107.5 text-sm leading-7 text-white/60">Amiva is designed to be useful without becoming invisible. You decide what connects and approve important actions.</p><Link href="/privacy-policy" className="mt-6 inline-flex text-xs font-semibold text-cyan-300">Read our privacy policy →</Link></div>
+          <div className="self-center divide-y divide-white/15">{["You approve important actions", "Your data is encrypted and yours to delete", "Everything Amiva does stays visible"].map(x => <p key={x} className="flex items-center gap-3 py-6 text-sm"><Check className="size-4 text-cyan-400" />{x}</p>)}</div>
+        </div></Reveal>
+      </section>
+
+      <section className="bg-[#fbfaff] px-5 py-28">
+        <Reveal><div className="mx-auto max-w-270"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Amiva on the web</p><h2 className="mt-5 max-w-180 text-[clamp(42px,5vw,68px)] font-bold leading-[1] tracking-[-0.065em] text-navy">Everything from your chats, organised on the web.</h2><div className="mt-14"><DashboardPreview /></div></div></Reveal>
+      </section>
+
+      <section id="pricing" className="scroll-mt-20 bg-[#f1eef9] px-5 py-28">
+        <div className="mx-auto max-w-270"><Reveal><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Simple pricing</p><h2 className="mt-5 max-w-162.5 text-[clamp(42px,5vw,64px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Start free. Upgrade when you need more help.</h2></Reveal><div className="mx-auto mt-14 grid max-w-190 gap-5 md:grid-cols-2">{[
+          { name: "Free", price: "₦0", per: null, desc: "Get organised with the essentials.", items: ["Reminders and tasks", "Basic memory", "WhatsApp conversation"] },
+          { name: "Pro", price: "₦1,500", per: "/mo", desc: "More capacity for a fuller schedule.", items: ["Everything in Free", "Voice-note requests", "Priority support"], popular: true },
+        ].map((plan, i) => <Reveal key={plan.name} variant="scale" delay={i * 140} className="flex"><div className={`relative flex min-h-97.5 w-full flex-col rounded-[20px] border bg-white p-8 ${plan.popular ? "border-indigo-900 shadow-[0_25px_70px_rgba(32,24,91,0.12)]" : "border-line"}`}>{plan.popular && <span className="absolute right-6 top-6 rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-bold uppercase text-indigo-900">Most popular</span>}<p className="text-xs font-semibold text-violet-500">{plan.name}</p><h3 className="mt-8 text-5xl font-bold tracking-[-0.06em] text-navy">{plan.price}{plan.per && <span className="text-base font-medium text-ink-muted">{plan.per}</span>}</h3><p className="mt-3 text-xs text-ink-muted">{plan.desc}</p><ul className="mt-8 space-y-4 text-xs text-navy">{plan.items.map(x => <li key={x} className="flex gap-2"><Check className="size-4 text-violet-500" />{x}</li>)}</ul>{plan.popular ? <Link href="/register" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-indigo-900 text-xs font-semibold text-white">Get started</Link> : <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-[#f4f2f8] text-xs font-semibold text-indigo-900">Start on WhatsApp</a>}</div></Reveal>)}</div><p className="mt-8 text-center text-[10px] text-ink-muted">Fair-use limits apply. Prices shown in NGN; KES and USD available at checkout.</p></div>
+      </section>
+
+      <section id="faq" className="scroll-mt-20 bg-white px-5 py-28">
+        <Reveal><div className="mx-auto grid max-w-270 gap-16 rounded-[28px] bg-[#fbfaff] p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">Here when you need it</p><h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-[1] tracking-[-0.06em] text-navy">Frequently asked questions.</h2><p className="mt-5 text-sm leading-7 text-ink-muted">Still have a question? We are happy to help.</p><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex rounded-full bg-indigo-900 px-5 py-3 text-xs font-semibold text-white">Chat with us on WhatsApp</a><p className="mt-4 text-xs text-ink-muted">Or email <a href="mailto:support@tryamiva.com" className="font-semibold text-indigo-900 hover:underline">support@tryamiva.com</a></p></div><FaqAccordion /></div></Reveal>
       </section>
     </>
   );

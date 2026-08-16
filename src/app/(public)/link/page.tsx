@@ -24,8 +24,8 @@ function LinkContent() {
       <Card className="p-7 text-center">
         <h1 className="text-xl font-semibold text-navy">Link expired</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          This linking link has expired or was already used. Message Amiva
-          again on WhatsApp and she&apos;ll send you a fresh one.
+          This linking link has expired or was already used. Message Amiva again
+          on WhatsApp and she&apos;ll send you a fresh one.
         </p>
       </Card>
     );
@@ -46,21 +46,28 @@ function LinkContent() {
           Almost there
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          Sign in or create your Amiva account and the WhatsApp number
-          you just messaged from will be connected automatically.
+          Sign in or create your Amiva account and the WhatsApp number you just
+          messaged from will be connected automatically.
         </p>
         <div className="mt-5 grid gap-2">
           <Button size="lg" onClick={() => router.push("/login")}>
             Sign in
           </Button>
-          <Button size="lg" variant="secondary" onClick={() => router.push("/register")}>
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={() => router.push("/register")}
+          >
             Create an account
           </Button>
         </div>
         <div className="mt-4 flex items-start gap-2 rounded-control bg-soft p-3 text-xs text-ink-muted">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
-          Only continue if you just messaged Amiva yourself. You can unlink
-          the number any time in Settings.
+          <ShieldCheck
+            className="mt-0.5 size-4 shrink-0 text-success"
+            aria-hidden
+          />
+          Only continue if you just messaged Amiva yourself. You can unlink the
+          number any time in Settings.
         </div>
       </Card>
     );
@@ -86,7 +93,7 @@ function LinkContent() {
       setError(
         err instanceof ApiError && err.status === 422
           ? "This link has expired or was already used — message Amiva on WhatsApp for a fresh one."
-          : "Couldn't link right now. Please try again."
+          : "Couldn't link right now. Please try again.",
       );
     }
   };
@@ -101,11 +108,13 @@ function LinkContent() {
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-ink-muted">
         Connect the WhatsApp number you just messaged Amiva from to this
-        account? Everything you do in the chat will appear here, and vice
-        versa.
+        account? Everything you do in the chat will appear here, and vice versa.
       </p>
-      <div className="mt-4 flex items-start gap-2 rounded-[10px] bg-soft p-3 text-xs text-ink-muted">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
+      <div className="mt-4 flex items-start gap-2 rounded-control bg-soft p-3 text-xs text-ink-muted">
+        <ShieldCheck
+          className="mt-0.5 size-4 shrink-0 text-success"
+          aria-hidden
+        />
         Only link a number that belongs to you. You can unlink it any time in
         Settings.
       </div>
@@ -114,7 +123,12 @@ function LinkContent() {
           {error}
         </p>
       )}
-      <Button className="mt-5 w-full" size="lg" loading={linking} onClick={confirm}>
+      <Button
+        className="mt-5 w-full"
+        size="lg"
+        loading={linking}
+        onClick={confirm}
+      >
         Link WhatsApp
       </Button>
       <p className="mt-3 text-center text-xs text-ink-muted">

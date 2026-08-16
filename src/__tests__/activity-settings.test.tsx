@@ -46,17 +46,36 @@ describe("Settings page", () => {
   });
 
   it("unverified channels are disabled in the matrix until verified (no sends to unverified media)", async () => {
-    settingsStore.set((c) => ({ ...c, phoneVerified: false }));
+    // §11.5 as amended: WhatsApp gates on the LINK, not phone verification.
+    settingsStore.set((c) => ({
+      ...c,
+      phoneVerified: false,
+      integrations: { ...c.integrations, whatsapp: false },
+    }));
     await openTab("Notifications");
     const cell = screen.getByLabelText(/Reminders via WhatsApp/);
     expect(cell).toBeDisabled();
-    expect(cell).toHaveAttribute("title", expect.stringMatching(/Verify your phone/));
+    expect(cell).toHaveAttribute("title", expect.stringMatching(/Link WhatsApp/));
+  });
+
+  it("a linked WhatsApp is usable in the matrix even before phone verification", async () => {
+    settingsStore.set((c) => ({
+      ...c,
+      phoneVerified: false,
+      integrations: { ...c.integrations, whatsapp: true },
+    }));
+    await openTab("Notifications");
+    expect(screen.getByLabelText(/Reminders via WhatsApp/)).toBeEnabled();
   });
 
   it("an unverified phone can be verified from Profile via OTP", async () => {
-    settingsStore.set((c) => ({ ...c, phoneVerified: false }));
+    settingsStore.set((c) => ({
+      ...c,
+      phoneVerified: false,
+      integrations: { ...c.integrations, whatsapp: false },
+    }));
     render(<SettingsPage />);
-    expect(screen.getByText(/WhatsApp delivery is paused/)).toBeInTheDocument();
+    expect(screen.getByText(/link WhatsApp to get reminders there/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Verify now" }));
     const first = screen.getByLabelText("Phone code digit 1");
     await userEvent.click(first);

@@ -23,7 +23,7 @@ export default function CompleteProfilePage() {
   const router = useRouter();
   const [google] = useState(() => pendingGoogleProfile());
   const [preferredName, setPreferredName] = useState(
-    google?.name.split(" ")[0] ?? ""
+    google?.name.split(" ")[0] ?? "",
   );
   const [cc, setCc] = useState("+234");
   const [phone, setPhone] = useState("");
@@ -65,7 +65,7 @@ export default function CompleteProfilePage() {
       </p>
 
       {google && (
-        <p className="mt-4 flex items-center gap-2 rounded-[10px] bg-success/10 px-3.5 py-2.5 text-sm text-navy">
+        <p className="mt-4 flex items-center gap-2 rounded-control bg-success/10 px-3.5 py-2.5 text-sm text-navy">
           <CheckCircle2 className="size-4 shrink-0 text-success" aria-hidden />
           Signed in as <strong>{google.email}</strong> — email verified
         </p>
@@ -96,7 +96,12 @@ export default function CompleteProfilePage() {
             searchable
           />
         </div>
-        <Button className="w-full" size="lg" loading={submitting} onClick={finish}>
+        <Button
+          className="w-full"
+          size="lg"
+          loading={submitting}
+          onClick={finish}
+        >
           Finish setting up
         </Button>
       </div>

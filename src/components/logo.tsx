@@ -1,7 +1,13 @@
 import Image from "next/image";
 import { cn } from "@/lib/cn";
 
-/** Brand lockup: square app-icon mark + Inter wordmark. */
+/** Brand lockup: square app-icon mark + Inter wordmark.
+ *
+ * Note: /brand/logo-horizontal.svg is exported on a square 360×360 canvas
+ * (the lockup band is only ~88 units tall in the middle), so rendering it at
+ * a fixed height letterboxes badly — and CSS-inverting it for dark panels
+ * flattens the gradient mark into a white square. Until design ships a
+ * cropped horizontal export, mark + text is the faithful rendering. */
 export function Logo({
   variant = "dark",
   size = 32,

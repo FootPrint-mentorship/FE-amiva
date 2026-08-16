@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { WA_LINK } from "@/lib/site";
@@ -19,8 +21,14 @@ export function CtaPair({
         target="_blank"
         rel="noopener noreferrer"
         className={cn(
-          "inline-flex h-12 items-center gap-2 rounded-[10px] px-6 text-[15px] font-semibold transition-colors",
-          "bg-cyan-500 text-navy hover:bg-cyan-400"
+          "inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-[14px] font-semibold transition-all",
+          "hover:-translate-y-px active:scale-[0.98]",
+          // cn() is a plain join (no tailwind-merge): the two color sets must
+          // be mutually exclusive, or stylesheet order decides and the label
+          // renders white-on-white on the dark footer card.
+          invert
+            ? "bg-white text-indigo-900 border border-white hover:bg-white/90"
+            : "bg-indigo-900 text-white hover:bg-indigo-700"
         )}
       >
         <MessageCircle className="size-5" aria-hidden />
@@ -29,10 +37,10 @@ export function CtaPair({
       <Link
         href="/register"
         className={cn(
-          "inline-flex h-12 items-center rounded-[10px] px-6 text-[15px] font-medium transition-colors",
+          "inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-medium transition-all",
           invert
             ? "border border-white/40 text-white hover:bg-white/10"
-            : "border border-indigo-300 text-indigo-900 hover:bg-indigo-50"
+            : "border border-[#dfe0e8] bg-white text-ink hover:bg-soft"
         )}
       >
         Create free account
