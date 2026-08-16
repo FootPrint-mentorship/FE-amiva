@@ -479,10 +479,10 @@ export default function OnboardingPage() {
                   <p className="text-sm text-navy">{tryReply}</p>
                 </div>
               )}
-              <div className="mt-6 rounded-xl bg-[#d9fdd3]/60 p-4">
+              <div className="mt-6 rounded-xl bg-whatsapp-bubble/60 p-4">
                 <p className="flex items-center gap-2 text-sm font-medium text-navy">
                   <MessageCircle
-                    className="size-4 text-[#075e54]"
+                    className="size-4 text-whatsapp"
                     aria-hidden
                   />
                   Prefer WhatsApp? Say hello and Amiva will link your chat:
@@ -491,7 +491,7 @@ export default function OnboardingPage() {
                   href={WA_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-block text-sm font-semibold text-[#075e54] hover:underline"
+                  className="mt-2 inline-block text-sm font-semibold text-whatsapp hover:underline"
                 >
                   Open WhatsApp →
                 </a>

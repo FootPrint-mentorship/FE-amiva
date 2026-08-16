@@ -29,6 +29,7 @@ import { Field } from "@/components/ui/field";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { OtpInput } from "@/components/ui/otp-input";
+import { PhoneField } from "@/components/ui/phone-field";
 import { toast } from "@/components/ui/toast";
 import { ActivityLog } from "@/components/domain/activity-log";
 import { cn } from "@/lib/cn";
@@ -91,6 +92,18 @@ const featureMeta: { key: FeatureKey; label: string; body: string; icon: typeof 
   { key: "memories", label: "Memories", body: "Your personal, searchable memory.", icon: Brain },
 ];
 
+/** Placeholder shown where server truth (verified badges, connection
+ * status) hasn't arrived yet — asserting "Verified"/"Not verified" from
+ * store defaults flashes wrong information. */
+function Pulse({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={cn("inline-block h-3 animate-pulse rounded bg-line", className)}
+    />
+  );
+}
+
 function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; label: string }) {
   return (
     <button
@@ -121,12 +134,44 @@ export default function SettingsPage() {
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [verifyingPhone, setVerifyingPhone] = useState(false);
   const [phoneOtp, setPhoneOtp] = useState("");
+  // Change/add number (§11.2 as amended): collect the new number first, send
+  // its OTP, and only the verify step actually changes the account's number.
+  const [phoneStage, setPhoneStage] = useState<"code" | "enter">("code");
+  const [newCc, setNewCc] = useState("+234");
+  const [newPhone, setNewPhone] = useState("");
+  const [phoneErr, setPhoneErr] = useState("");
+  const [sendingPhone, setSendingPhone] = useState(false);
   const [sessions, setSessions] = useState<SessionRow[] | null>(null);
   const [counts, setCounts] = useState<DataCount[] | null>(null);
   const [exporting, setExporting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { matrix, quietHours } = settings;
+
+  // Google OAuth bounce-back (the API's callback redirects to
+  // /app/settings?connected=google[&error=…]) — open the Integrations tab,
+  // say what happened, and clean the URL so a refresh doesn't re-toast.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connected") !== "google") return;
+    // Deferred callback (not the effect body) so setState here doesn't
+    // cascade renders — same idiom as the app layout's session guard.
+    const t = setTimeout(() => {
+      setTab("integrations");
+      if (params.get("error")) {
+        toast("Google connection didn't complete — nothing was changed. Please try again.", {
+          tone: "error",
+        });
+      } else {
+        toast("Google Calendar connected.");
+        hydrateIntegrations().catch(() => {
+          /* the row falls back to the stored flag */
+        });
+      }
+      window.history.replaceState(null, "", "/app/settings");
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
 
   // Security/Privacy tabs read from the server on first open.
   useEffect(() => {
@@ -162,6 +207,7 @@ export default function SettingsPage() {
       .catch(saveFailed);
 
   const toggleCell = (row: string, ch: string) => {
+    if (!settings.hydrated) return; // channel availability unknown until /users/me
     if (ch === "Push") return; // mobile app is Release 2
     // §11.5 as amended: a linked WhatsApp IS the verified channel.
     if (ch === "WhatsApp" && !settings.integrations.whatsapp) return;
@@ -184,11 +230,40 @@ export default function SettingsPage() {
     }));
 
   const startPhoneVerify = () => {
+    setPhoneStage("code");
     setVerifyingPhone(true);
     sendPhoneCode().catch(() => {
       setVerifyingPhone(false);
       toast("Couldn't send the code just now. Please try again.", { tone: "error" });
     });
+  };
+
+  const startPhoneChange = () => {
+    setPhoneStage("enter");
+    setNewPhone("");
+    setPhoneErr("");
+    setPhoneOtp("");
+    setVerifyingPhone(true);
+  };
+
+  const sendNewNumberCode = () => {
+    const digits = newPhone.replace(/[\s()-]/g, "");
+    if (digits.length < 7) {
+      setPhoneErr("Enter the full number.");
+      return;
+    }
+    setPhoneErr("");
+    setSendingPhone(true);
+    sendPhoneCode(`${newCc}${digits.replace(/^0/, "")}`)
+      .then(() => setPhoneStage("code"))
+      .catch((err) =>
+        setPhoneErr(
+          err instanceof ApiError && err.code === "CONFLICT"
+            ? "An account with this phone number already exists."
+            : "Couldn't send the code just now. Please try again."
+        )
+      )
+      .finally(() => setSendingPhone(false));
   };
 
   const onPhoneOtp = (code: string) => {
@@ -249,7 +324,9 @@ export default function SettingsPage() {
           <div>
             <Field label="Email" value={settings.email} disabled onChange={() => {}} />
             <p className="mt-1 flex items-center gap-1.5 text-xs">
-              {settings.emailVerified ? (
+              {!settings.hydrated ? (
+                <Pulse className="w-16" />
+              ) : settings.emailVerified ? (
                 <span className="flex items-center gap-1 font-medium text-success">
                   <BadgeCheck className="size-3.5" aria-hidden /> Verified
                 </span>
@@ -261,7 +338,9 @@ export default function SettingsPage() {
           <div>
             <Field label="Phone" value={settings.phone} disabled onChange={() => {}} />
             <p className="mt-1 flex items-center gap-2 text-xs">
-              {settings.phoneVerified ? (
+              {!settings.hydrated ? (
+                <Pulse className="w-24" />
+              ) : settings.phoneVerified ? (
                 <span className="flex items-center gap-1 font-medium text-success">
                   <BadgeCheck className="size-3.5" aria-hidden /> Verified
                 </span>
@@ -272,13 +351,23 @@ export default function SettingsPage() {
                       ? "Not verified."
                       : "Not verified, link WhatsApp to get reminders there."}
                   </span>
-                  <button
-                    onClick={startPhoneVerify}
-                    className="cursor-pointer font-medium text-indigo-900 hover:underline"
-                  >
-                    Verify now
-                  </button>
+                  {settings.phone && (
+                    <button
+                      onClick={startPhoneVerify}
+                      className="cursor-pointer font-medium text-indigo-900 hover:underline"
+                    >
+                      Verify now
+                    </button>
+                  )}
                 </>
+              )}
+              {settings.hydrated && (
+                <button
+                  onClick={startPhoneChange}
+                  className="cursor-pointer font-medium text-indigo-900 hover:underline"
+                >
+                  {settings.phone ? "Change number" : "Add a number"}
+                </button>
               )}
             </p>
           </div>
@@ -387,9 +476,10 @@ export default function SettingsPage() {
                   {notifChannels.map((ch) => {
                     const on = matrix[row].includes(ch);
                     const unverified =
-                      (ch === "WhatsApp" && !settings.integrations.whatsapp) ||
-                      (ch === "Email" && !settings.emailVerified);
-                    const disabled = ch === "Push" || unverified;
+                      settings.hydrated &&
+                      ((ch === "WhatsApp" && !settings.integrations.whatsapp) ||
+                        (ch === "Email" && !settings.emailVerified));
+                    const disabled = ch === "Push" || unverified || !settings.hydrated;
                     return (
                       <td key={ch} className="py-3 text-center">
                         <button
@@ -463,7 +553,7 @@ export default function SettingsPage() {
                 key: "calendar" as const,
                 icon: CalendarDays,
                 name: "Google Calendar",
-                detail: "ada@gmail.com · 2 calendars selected",
+                detail: USE_MOCKS ? "ada@gmail.com · 2 calendars selected" : "Connected",
                 offDetail: "Events, conflict checks and agenda summaries",
                 disconnectLabel: "Disconnect",
               },
@@ -504,11 +594,17 @@ export default function SettingsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 font-semibold text-navy">
                     {i.name}
-                    {on && <Chip tone="success">Connected</Chip>}
+                    {settings.hydrated && on && <Chip tone="success">Connected</Chip>}
                   </p>
-                  <p className="text-sm text-ink-muted">{on ? detail : i.offDetail}</p>
+                  {!settings.hydrated ? (
+                    <Pulse className="mt-1 w-40" />
+                  ) : (
+                    <p className="text-sm text-ink-muted">{on ? detail : i.offDetail}</p>
+                  )}
                 </div>
-                {on ? (
+                {!settings.hydrated ? (
+                  <Pulse className="h-8 w-20 rounded-control" />
+                ) : on ? (
                   <Button variant="ghost" size="sm" onClick={() => setDisconnecting(i.key)}>
                     {i.disconnectLabel}
                   </Button>
@@ -740,13 +836,42 @@ export default function SettingsPage() {
       {verifyingPhone && (
         <Modal label="Verify phone" onClose={() => setVerifyingPhone(false)} panelClassName="w-full max-w-110">
           <Card className="p-6">
-            <h2 className="text-lg font-semibold text-navy">Verify your phone</h2>
-            <p className="mt-2 text-sm text-ink-muted">
-              We sent a 6-digit code to your WhatsApp number — nowhere else.
-            </p>
-            <div className="mt-4">
-              <OtpInput value={phoneOtp} onChange={onPhoneOtp} label="Phone code" />
-            </div>
+            <h2 className="text-lg font-semibold text-navy">
+              {phoneStage === "enter"
+                ? settings.phone
+                  ? "Change your number"
+                  : "Add your number"
+                : "Verify your phone"}
+            </h2>
+            {phoneStage === "enter" ? (
+              <>
+                <p className="mt-2 text-sm text-ink-muted">
+                  We&apos;ll send a 6-digit code to the new number on WhatsApp.
+                  Your current number stays until the new one is verified.
+                </p>
+                <div className="mt-4">
+                  <PhoneField
+                    cc={newCc}
+                    phone={newPhone}
+                    onCcChange={setNewCc}
+                    onPhoneChange={setNewPhone}
+                    error={phoneErr}
+                  />
+                </div>
+                <Button className="mt-4 w-full" loading={sendingPhone} onClick={sendNewNumberCode}>
+                  Send code
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-sm text-ink-muted">
+                  We sent a 6-digit code to your WhatsApp number — nowhere else.
+                </p>
+                <div className="mt-4">
+                  <OtpInput value={phoneOtp} onChange={onPhoneOtp} label="Phone code" />
+                </div>
+              </>
+            )}
             <Button
               variant="ghost"
               size="sm"

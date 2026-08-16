@@ -2,6 +2,7 @@
 
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
+import { RequiredMark } from "@/components/ui/field";
 
 export const countryCodes = [
   { value: "+234", label: "Nigeria", hint: "+234" },
@@ -26,6 +27,7 @@ export const countryCodes = [
 
 /** Country-code Select + digits-only number input (item: numeric only). */
 export function PhoneField({
+  required,
   label = "WhatsApp phone number",
   cc,
   phone,
@@ -34,6 +36,7 @@ export function PhoneField({
   hint,
   error,
 }: {
+  required?: boolean;
   label?: string;
   cc: string;
   phone: string;
@@ -44,7 +47,7 @@ export function PhoneField({
 }) {
   return (
     <div>
-      <p className="mb-1.5 text-sm font-medium text-navy">{label}</p>
+      <p className="mb-1.5 text-sm font-medium text-navy">{label}{required && <RequiredMark />}</p>
       <div className="flex gap-2">
         <Select
           label="Country code"

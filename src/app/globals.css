@@ -34,6 +34,23 @@
   --color-scrim: #131628;
   --color-warning-ink: #9a6a1d;
 
+  /* Marketing palette (16 Aug 2026): consolidated from ~30 near-duplicate
+     arbitrary hexes on the landing page — each token absorbs values that
+     differed by 1–3 RGB points (imperceptible). Marketing pages are
+     light-only, so .theme-dark does not remap these. */
+  --color-surface: #fbfaff;        /* page + near-white card backgrounds */
+  --color-lavender-50: #f3f0fb;    /* tinted section/card fills */
+  --color-lavender-100: #ecebf1;   /* footer band */
+  --color-lavender-200: #d9d6e9;   /* subtext on dark indigo */
+  --color-line-soft: #e7e3f1;      /* lilac card borders */
+  --color-ink-soft: #73708a;       /* muted purple-grey text */
+  --color-mist-300: #cbc8d7;       /* faint decorative dots */
+  --color-mist-400: #aaa5bf;       /* decorative arcs */
+  --color-iris-500: #7059db;       /* bright accent purple */
+  --color-iris-600: #6653cd;       /* hero highlight purple */
+  --color-whatsapp: #075e54;       /* WhatsApp brand green (their palette) */
+  --color-whatsapp-bubble: #d9fdd3;
+
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 16px;
