@@ -1334,11 +1334,12 @@ export interface components {
         };
         /**
          * CompleteProfileRequest
-         * @description §11.1 — after Google sign-up: phone required, the rest optional.
+         * @description §11.1 as amended 16 Aug 2026 — after Google sign-up: everything
+         *     optional; phone is only needed if the user wants WhatsApp features.
          */
         CompleteProfileRequest: {
             /** Phone */
-            phone: string;
+            phone?: string | null;
             /** Preferred Name */
             preferred_name?: string | null;
             /** Timezone */
@@ -2196,8 +2197,12 @@ export interface components {
             id: string;
             /** Email */
             email: string;
+            /** Email Verified */
+            email_verified: boolean;
             /** Phone */
             phone: string | null;
+            /** Phone Verified */
+            phone_verified: boolean;
             /** Name */
             name: string;
             /** Preferred Name */

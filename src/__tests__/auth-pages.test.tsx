@@ -49,7 +49,7 @@ describe("Login", () => {
 
   it("Google sign-in routes to complete-profile when the profile is incomplete", async () => {
     render(<LoginPage />);
-    await userEvent.click(screen.getByRole("button", { name: /Continue with Google/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Sign in with Google/ }));
     expect(nav.push).toHaveBeenCalledWith("/complete-profile");
   });
 
@@ -102,13 +102,13 @@ describe("Register", () => {
 
   it("Google sign-up hands off to complete-profile", async () => {
     render(<RegisterPage />);
-    await userEvent.click(screen.getByRole("button", { name: /Continue with Google/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Sign up with Google/ }));
     expect(nav.push).toHaveBeenCalledWith("/complete-profile");
   });
 });
 
 describe("Complete profile (after Google)", () => {
-  it("requires a phone number before finishing", async () => {
+  it("finishes without a phone number (phone is optional, §11.1 amended)", async () => {
     window.sessionStorage.setItem(
       "amiva_google_pending",
       JSON.stringify({ name: "Ada Obi", email: "ada.obi@gmail.com" })
@@ -117,11 +117,6 @@ describe("Complete profile (after Google)", () => {
     expect(screen.getByText(/ada.obi@gmail.com/)).toBeInTheDocument();
     expect(screen.getByText(/email verified/i)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Finish setting up" }));
-    expect(screen.getByText(/phone number is required/i)).toBeInTheDocument();
-    expect(nav.push).not.toHaveBeenCalled();
-
-    await userEvent.type(screen.getByLabelText("Phone number"), "8012345678");
     await userEvent.click(screen.getByRole("button", { name: "Finish setting up" }));
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/onboarding"), WAIT);
   });

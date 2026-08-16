@@ -164,6 +164,7 @@ export function ReminderModal({
 
         <div className="mt-5 space-y-4">
           <Field
+            required
             label="Remind me to…"
             placeholder="Pay NEPA bill"
             value={title}

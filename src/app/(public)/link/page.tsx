@@ -39,8 +39,8 @@ function LinkContent() {
     stashPendingLink(token);
     return (
       <Card className="p-7">
-        <span className="flex size-12 items-center justify-center rounded-[14px] bg-[#d9fdd3]">
-          <MessageCircle className="size-6 text-[#075e54]" aria-hidden />
+        <span className="flex size-12 items-center justify-center rounded-[14px] bg-whatsapp-bubble">
+          <MessageCircle className="size-6 text-whatsapp" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
           Almost there
@@ -100,8 +100,8 @@ function LinkContent() {
 
   return (
     <Card className="p-7">
-      <span className="flex size-12 items-center justify-center rounded-[14px] bg-[#d9fdd3]">
-        <MessageCircle className="size-6 text-[#075e54]" aria-hidden />
+      <span className="flex size-12 items-center justify-center rounded-[14px] bg-whatsapp-bubble">
+        <MessageCircle className="size-6 text-whatsapp" aria-hidden />
       </span>
       <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
         Link your WhatsApp

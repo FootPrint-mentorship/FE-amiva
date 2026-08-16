@@ -9,15 +9,16 @@ import { Field } from "@/components/ui/field";
 import { PhoneField } from "@/components/ui/phone-field";
 import { Select } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
-import { setAuthed, setProfileComplete } from "@/lib/session";
+import { setProfileComplete } from "@/lib/session";
 import { pendingGoogleProfile, clearGoogleProfile } from "@/lib/google";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
-import { settingsStore } from "@/lib/stores";
+import { completeProfile } from "@/lib/data/auth";
+import { ApiError, USE_MOCKS } from "@/lib/api/client";
 
 /**
  * Post-Google-sign-in step: Google supplies name + verified email; this
- * screen collects what it can't — phone (required for WhatsApp), preferred
- * name and timezone.
+ * screen collects what it can't — preferred name, timezone, and (optional,
+ * §11.1 as amended 16 Aug 2026) a phone for WhatsApp features.
  */
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -32,27 +33,32 @@ export default function CompleteProfilePage() {
   const [submitting, setSubmitting] = useState(false);
 
   const finish = () => {
-    if (phone.length < 7) {
-      setError("A phone number is required — Amiva lives on WhatsApp.");
+    const digits = phone.replace(/[\s()-]/g, "");
+    if (digits && digits.length < 7) {
+      setError("That number looks too short. Add the full number, or leave it empty for now.");
       return;
     }
     setError("");
     setSubmitting(true);
-    setTimeout(() => {
-      settingsStore.set((c) => ({
-        ...c,
-        fullName: google?.name ?? c.fullName,
-        preferredName: preferredName.trim() || c.preferredName,
-        timezone,
-        emailVerified: true, // Google emails arrive verified
-        phoneVerified: false, // verified during onboarding (skippable)
-      }));
-      clearGoogleProfile();
-      setProfileComplete(true);
-      setAuthed(true);
-      toast("Welcome to Amiva.");
-      router.push("/onboarding");
-    }, 600);
+    completeProfile({
+      phone: digits ? `${cc}${digits.replace(/^0/, "")}` : null,
+      preferredName: preferredName.trim() || null,
+      timezone,
+    })
+      .then(() => {
+        clearGoogleProfile();
+        if (USE_MOCKS) setProfileComplete(true);
+        toast("Welcome to Amiva.");
+        router.push("/onboarding");
+      })
+      .catch((err) => {
+        setSubmitting(false);
+        setError(
+          err instanceof ApiError && err.code === "CONFLICT"
+            ? "An account with this phone number already exists."
+            : "That didn't go through. Please try again."
+        );
+      });
   };
 
   return (
@@ -77,7 +83,7 @@ export default function CompleteProfilePage() {
           phone={phone}
           onCcChange={setCc}
           onPhoneChange={setPhone}
-          hint="Required — the number you use for WhatsApp."
+          hint="Optional — the number you use for WhatsApp. You can add it any time in Settings."
           error={error}
         />
         <Field

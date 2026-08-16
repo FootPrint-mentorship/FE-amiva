@@ -3,6 +3,7 @@
 import { useId, useState, InputHTMLAttributes } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { RequiredMark } from "@/components/ui/field";
 
 /** Password input with a show/hide toggle (item: all password inputs get one). */
 export function PasswordField({
@@ -10,6 +11,7 @@ export function PasswordField({
   hint,
   error,
   className,
+  required,
   ...input
 }: InputHTMLAttributes<HTMLInputElement> & {
   label: string;
@@ -20,12 +22,12 @@ export function PasswordField({
   const [visible, setVisible] = useState(false);
   return (
     <div className={className}>
-      <label
-        htmlFor={id}
-        className="mb-1.5 block text-sm font-medium text-navy"
-      >
-        {label}
-      </label>
+      <div className="mb-1.5 flex items-baseline">
+        <label htmlFor={id} className="text-sm font-medium text-navy">
+          {label}
+        </label>
+        {required && <RequiredMark />}
+      </div>
       <div className="relative">
         <input
           id={id}
