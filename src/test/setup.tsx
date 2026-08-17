@@ -3,17 +3,24 @@ import { vi, beforeEach, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 import React from "react";
 import { resetAllStores } from "@/lib/store";
+import { settingsStore } from "@/lib/stores";
+import { makeAdaSettings } from "./fixtures";
+import { reset as resetFakeApi } from "./fake-api";
 
-// Tests always run self-contained on the mock stores. Must be set before
-// lib/api/client.ts loads — which is why query.ts is imported dynamically
-// below (a static import would hoist above this line).
-process.env.NEXT_PUBLIC_USE_MOCKS = "1";
+// Tests run self-contained against the in-memory fake of the api() boundary
+// (the mock mode inside the runtime was retired 17 Aug 2026).
+vi.mock("@/lib/api/client", () => import("./fake-api"));
 
 afterEach(cleanup);
 beforeEach(async () => {
+  resetFakeApi(); // pristine fixture database + live session
   resetAllStores(); // shared stores must not leak between tests
+  // Pages render without the app layout, whose loadMe() would fill the
+  // settings store from /users/me — seed it with the same Ada profile the
+  // fake's auth endpoints answer with.
+  settingsStore.set(() => makeAdaSettings());
   const { queryClient } = await import("@/lib/query");
-  queryClient.clear(); // …nor the query cache (mock seeds re-apply on mount)
+  queryClient.clear(); // …nor the query cache (collections refetch per test)
 });
 
 // jsdom lacks scrollIntoView (used by the chat thread autoscroll).

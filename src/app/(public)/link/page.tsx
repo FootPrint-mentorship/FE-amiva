@@ -7,8 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { MessageCircle, ShieldCheck } from "lucide-react";
-import { USE_MOCKS, ApiError } from "@/lib/api/client";
-import { setAuthed } from "@/lib/session";
+import { ApiError } from "@/lib/api/client";
 import { sessionActive } from "@/lib/data/auth";
 import { stashPendingLink, verifyWhatsAppLink } from "@/lib/data/linking";
 
@@ -31,11 +30,11 @@ function LinkContent() {
     );
   }
 
-  const authed = USE_MOCKS ? false : sessionActive();
+  const authed = sessionActive();
 
   // Not signed in: the token waits in localStorage; the link completes
   // automatically the moment they sign in or finish creating an account.
-  if (!authed && !USE_MOCKS) {
+  if (!authed) {
     stashPendingLink(token);
     return (
       <Card className="p-7">
@@ -76,14 +75,6 @@ function LinkContent() {
   const confirm = async () => {
     setLinking(true);
     setError("");
-    if (USE_MOCKS) {
-      // Self-contained demo keeps the old happy path.
-      setTimeout(() => {
-        setAuthed(true);
-        router.push("/app/today");
-      }, 800);
-      return;
-    }
     try {
       await verifyWhatsAppLink(token);
       toast("WhatsApp linked — anything you tell Amiva shows up here too.");

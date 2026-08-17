@@ -18,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
-import { fmtDay, type Memory } from "@/lib/mock";
+import { fmtDay } from "@/lib/format";
+import type { Memory } from "@/lib/types";
 import { toast } from "@/components/ui/toast";
 import {
   createMemory,

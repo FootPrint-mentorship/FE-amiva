@@ -1,11 +1,10 @@
 /**
- * Settings persistence. Real mode: PATCH /users/me (profile),
+ * Settings persistence. PATCH /users/me (profile),
  * PATCH /users/me/features (partial flag merge), GET/PUT
  * /users/me/preferences/notifications, and the /auth/phone/* verify flow.
- * Mock mode: the stores already hold the state; calls resolve immediately.
  */
 
-import { api, USE_MOCKS } from "@/lib/api/client";
+import { api } from "@/lib/api/client";
 import { settingsStore, type FeatureKey } from "@/lib/stores";
 
 /* Display labels (UI) ↔ API keys (contract). */
@@ -35,7 +34,6 @@ type ApiPrefs = {
 };
 
 export async function saveProfile(): Promise<void> {
-  if (USE_MOCKS) return;
   const s = settingsStore.get();
   await api("/users/me", {
     method: "PATCH",
@@ -49,12 +47,10 @@ export async function saveProfile(): Promise<void> {
 
 /** Persist one feature flag (partial merge server-side). */
 export async function saveFeature(key: FeatureKey, on: boolean): Promise<void> {
-  if (USE_MOCKS) return;
   await api("/users/me/features", { method: "PATCH", body: { [key]: on } });
 }
 
 export async function hydrateNotificationPrefs(): Promise<void> {
-  if (USE_MOCKS) return;
   const prefs = await api<ApiPrefs>("/users/me/preferences/notifications");
   settingsStore.set((c) => ({
     ...c,
@@ -69,7 +65,6 @@ export async function hydrateNotificationPrefs(): Promise<void> {
 }
 
 export async function saveNotificationPrefs(): Promise<void> {
-  if (USE_MOCKS) return;
   const s = settingsStore.get();
   await api("/users/me/preferences/notifications", {
     method: "PUT",
@@ -96,7 +91,6 @@ export async function saveNotificationPrefs(): Promise<void> {
  * stays PENDING server-side until the OTP (sent to that new number) is
  * verified. Verification is the only way the number ever changes. */
 export async function sendPhoneCode(phone?: string): Promise<void> {
-  if (USE_MOCKS) return;
   await api("/auth/phone/send-code", {
     method: "POST",
     body: phone ? { phone } : {},
@@ -104,10 +98,6 @@ export async function sendPhoneCode(phone?: string): Promise<void> {
 }
 
 export async function verifyPhoneCode(code: string): Promise<void> {
-  if (USE_MOCKS) {
-    settingsStore.set((c) => ({ ...c, phoneVerified: true }));
-    return;
-  }
   // The server answers with the canonical user — the (possibly new) number
   // and its verified status come from there, not from local guesses.
   const user = await api<{ phone: string | null; phone_verified: boolean }>(

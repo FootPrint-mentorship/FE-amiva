@@ -1,12 +1,12 @@
 import { defineConfig } from "@playwright/test";
 
 /**
- * Real-browser smoke layer (the jsdom suite lives in src/__tests__).
+ * Real-browser e2e layer (the jsdom suite lives in src/__tests__).
  *
- * Runs the app in self-contained mock mode on its own port so it never
- * clashes with a dev server or needs the backend. The optional
- * real-backend spec (e2e/real-backend.spec.ts) is skipped unless
- * E2E_REAL=1 and the BE-amiva stack is up on :8000.
+ * Mock mode was retired (17 Aug 2026), so e2e ALWAYS runs against the real
+ * BE-amiva stack: `docker compose up -d app worker` in ../BE-amiva first.
+ * The suite builds and serves a production bundle on :3100 pointed at the
+ * local API (NEXT_PUBLIC_* is baked at build time, hence env on the build).
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -18,12 +18,14 @@ export default defineConfig({
   },
   webServer: {
     // A second `next dev` in the same dir is refused (Next 16 lock), so the
-    // smoke layer runs the production build. NEXT_PUBLIC_* is baked at build
-    // time, so the env must be set on the build, not just the server.
+    // e2e layer runs the production build.
     command: "npm run build && npx next start --port 3100",
     url: "http://localhost:3100",
     reuseExistingServer: !process.env.CI,
-    env: { NEXT_PUBLIC_USE_MOCKS: "1" },
+    env: {
+      NEXT_PUBLIC_API_BASE_URL:
+        process.env.E2E_API_BASE_URL ?? "http://localhost:8000/api/v1",
+    },
     timeout: 300_000,
   },
 });

@@ -7,7 +7,8 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
-import { user, type Reminder } from "@/lib/mock";
+import type { Reminder } from "@/lib/types";
+import { timezoneAbbr } from "@/lib/timezones";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
 
@@ -130,7 +131,7 @@ export function ReminderModal({
       title: title.trim(),
       notes: notes.trim() || null,
       due_at: dueAt.toISOString(),
-      timezone: user.timezone,
+      timezone: settings.timezone,
       rrule: recurrenceUntouched ? initial!.rrule : buildRrule(),
       recurrence_human: recurrenceUntouched
         ? initial!.recurrence_human
@@ -183,7 +184,7 @@ export function ReminderModal({
             <label className="text-sm font-medium text-navy">
               Time{" "}
               <span className="font-normal text-ink-muted">
-                ({user.tz_abbr})
+                ({timezoneAbbr(settings.timezone)})
               </span>
               <input
                 type="time"

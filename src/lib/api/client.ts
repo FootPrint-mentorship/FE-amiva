@@ -1,16 +1,13 @@
 /**
- * API client for the Amiva backend (BE-amiva).
- *
- * Mode switch (review requirement): set NEXT_PUBLIC_USE_MOCKS=1 to run the
- * whole app self-contained on the in-memory mock stores — no backend needed.
- * Otherwise calls go to NEXT_PUBLIC_API_BASE_URL (default: local backend).
+ * API client for the Amiva backend (BE-amiva). Calls go to
+ * NEXT_PUBLIC_API_BASE_URL (default: local backend). The mock mode that
+ * used to live behind NEXT_PUBLIC_USE_MOCKS was retired 17 Aug 2026 — the
+ * real API is the only data source; tests fake this module's boundary.
  *
  * Tokens: access token in memory, refresh token in localStorage. On a 401
  * the client refreshes once and retries; if the refresh fails the session
  * is cleared and the guard bounces to /login.
  */
-
-export const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "1";
 
 const BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";

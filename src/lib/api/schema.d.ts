@@ -211,6 +211,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/password/set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Password
+         * @description First password for a Google-only account (409 if one already exists).
+         */
+        post: operations["set_password_api_v1_auth_password_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/sessions": {
         parameters: {
             query?: never;
@@ -642,7 +662,10 @@ export interface paths {
         /**
          * Google Callback
          * @description [public] — Google redirects the browser here; we finish server-side and
-         *     bounce to the dashboard either way.
+         *     bounce back to where the flow started (Settings tab or the onboarding
+         *     wizard). ?connected=google makes the destination open the right view and
+         *     toast the outcome; tabs are component state, so deeper paths 404 (seen
+         *     live 16 Aug 2026).
          */
         get: operations["google_callback_api_v1_integrations_google_callback_get"];
         put?: never;
@@ -1279,6 +1302,12 @@ export interface components {
         AuthorizeRequest: {
             /** Scopes */
             scopes: "calendar"[];
+            /**
+             * Return To
+             * @default /app/settings
+             * @enum {string}
+             */
+            return_to: "/app/settings" | "/onboarding";
         };
         /** AuthorizeResponse */
         AuthorizeResponse: {
@@ -2026,6 +2055,15 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * SetPasswordRequest
+         * @description First password for a passwordless (Google-only) account — §11.4
+         *     amendment 17 Aug 2026. Authenticated, so no email round-trip needed.
+         */
+        SetPasswordRequest: {
+            /** Password */
+            password: string;
+        };
         /** Slot */
         Slot: {
             /**
@@ -2215,6 +2253,8 @@ export interface components {
             whatsapp_linked: boolean;
             /** Profile Complete */
             profile_complete: boolean;
+            /** Has Password */
+            has_password: boolean;
             working_hours: components["schemas"]["WorkingHours"];
             /** Features */
             features: {
@@ -2635,6 +2675,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_password_api_v1_auth_password_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPasswordRequest"];
             };
         };
         responses: {

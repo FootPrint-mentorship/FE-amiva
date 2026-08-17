@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { PasswordField } from "@/components/ui/password-field";
 import { GoogleButton, OrDivider } from "@/components/ui/google-button";
-import { isProfileComplete, setAuthed } from "@/lib/session";
+import { toast } from "@/components/ui/toast";
 import { login as loginAccount } from "@/lib/data/auth";
 import { ApiError } from "@/lib/api/client";
 import { startGoogleSignIn } from "@/lib/google";
@@ -50,13 +50,10 @@ export default function LoginPage() {
   };
 
   const google = () => {
-    if (startGoogleSignIn()) return; // real flow: browser is off to Google
-    // Mock flow: continue locally with the stashed profile.
-    if (isProfileComplete()) {
-      setAuthed(true);
-      router.push("/app/today");
-    } else {
-      router.push("/complete-profile");
+    try {
+      startGoogleSignIn(); // browser is off to Google
+    } catch {
+      toast("Google sign-in isn't configured on this server.", { tone: "error" });
     }
   };
 

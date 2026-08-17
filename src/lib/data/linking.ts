@@ -9,7 +9,7 @@
  * in or register.
  */
 
-import { api, USE_MOCKS } from "@/lib/api/client";
+import { api } from "@/lib/api/client";
 import { settingsStore } from "@/lib/stores";
 
 const PENDING_KEY = "amiva_pending_wa_link";
@@ -40,9 +40,7 @@ export function clearPendingLink(): void {
 
 /** Bind the token's WhatsApp number to the signed-in account. */
 export async function verifyWhatsAppLink(token: string): Promise<void> {
-  if (!USE_MOCKS) {
-    await api("/link/whatsapp/verify", { method: "POST", body: { token } });
-  }
+  await api("/link/whatsapp/verify", { method: "POST", body: { token } });
   settingsStore.set((c) => ({
     ...c,
     integrations: { ...c.integrations, whatsapp: true },

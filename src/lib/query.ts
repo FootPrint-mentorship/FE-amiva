@@ -1,26 +1,20 @@
 import { QueryClient, useQuery } from "@tanstack/react-query";
-import { ApiError, USE_MOCKS } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/client";
 
 /**
  * TanStack Query is the server cache (it replaced the custom stores from
  * lib/store.ts for anything the backend owns). One module-level client,
  * passed to useQuery explicitly, so hooks work in the app AND in tests
- * without provider plumbing.
- *
- * Mock mode (NEXT_PUBLIC_USE_MOCKS=1): every collection query seeds its
- * cache from mock.ts via initialData and never refetches (staleTime
- * Infinity) — mutations edit the cache directly, exactly like the old
- * stores. Real mode: queries fetch from the API, refetch on focus, and
- * mutations write the server's response back into the cache.
+ * without provider plumbing. Queries fetch from the API, refetch on focus,
+ * and mutations write the server's response back into the cache. (Mock mode
+ * retired 17 Aug 2026 — tests fake the api() boundary instead.)
  */
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Mock data never goes stale; real data refreshes in the background.
-      staleTime: USE_MOCKS ? Infinity : 30_000,
-      // Mock edits must survive the whole session (the old stores did).
-      gcTime: USE_MOCKS ? Infinity : 5 * 60_000,
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
       retry: (failureCount, error) => {
         // 4xx won't heal by retrying (401 already refresh-retries in api()).
         if (error instanceof ApiError && error.status < 500) return false;
@@ -51,22 +45,13 @@ type Key = readonly unknown[];
  */
 export function useCollection<T>(
   key: Key,
-  fetchReal: () => Promise<T[]>,
-  mockSeed: () => T[]
+  fetch: () => Promise<T[]>
 ): { items: T[]; loading: boolean } {
   const { data, isPending } = useQuery(
-    {
-      queryKey: key,
-      queryFn: USE_MOCKS
-        ? // A mock "refetch" must return what's in the cache (the user's
-          // edits), never re-seed — the seed applies only via initialData.
-          async () => queryClient.getQueryData<T[]>(key) ?? mockSeed()
-        : fetchReal,
-      ...(USE_MOCKS ? { initialData: mockSeed } : {}),
-    },
+    { queryKey: key, queryFn: fetch },
     queryClient
   );
-  return { items: data ?? [], loading: !USE_MOCKS && isPending };
+  return { items: data ?? [], loading: isPending };
 }
 
 /* ------------------- cache edit helpers (list caches) ------------------- */

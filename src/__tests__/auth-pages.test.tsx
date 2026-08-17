@@ -6,6 +6,7 @@ import RegisterPage from "@/app/(public)/register/page";
 import ForgotPasswordPage from "@/app/(public)/forgot-password/page";
 import LinkPage from "@/app/(public)/link/page";
 import CompleteProfilePage from "@/app/(public)/complete-profile/page";
+import { Toaster } from "@/components/ui/toast";
 import { nav } from "@/test/setup";
 
 const WAIT = { timeout: 3000 }; // mock submits resolve in 600–800ms
@@ -47,10 +48,20 @@ describe("Login", () => {
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/app/today"), WAIT);
   });
 
-  it("Google sign-in routes to complete-profile when the profile is incomplete", async () => {
-    render(<LoginPage />);
+  it("Google sign-in surfaces an honest error when OAuth isn't configured (no fake sign-in)", async () => {
+    // Real mode hands the browser to Google; without NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    // it must refuse honestly instead of pretending to sign in.
+    render(
+      <>
+        <LoginPage />
+        <Toaster />
+      </>
+    );
     await userEvent.click(screen.getByRole("button", { name: /Sign in with Google/ }));
-    expect(nav.push).toHaveBeenCalledWith("/complete-profile");
+    expect(
+      await screen.findByText(/Google sign-in isn't configured/)
+    ).toBeInTheDocument();
+    expect(nav.push).not.toHaveBeenCalled();
   });
 
   it("password field has a working show/hide toggle", async () => {
@@ -100,10 +111,18 @@ describe("Register", () => {
     expect(phone).toHaveValue("8012345678");
   });
 
-  it("Google sign-up hands off to complete-profile", async () => {
-    render(<RegisterPage />);
+  it("Google sign-up surfaces an honest error when OAuth isn't configured (no fake sign-up)", async () => {
+    render(
+      <>
+        <RegisterPage />
+        <Toaster />
+      </>
+    );
     await userEvent.click(screen.getByRole("button", { name: /Sign up with Google/ }));
-    expect(nav.push).toHaveBeenCalledWith("/complete-profile");
+    expect(
+      await screen.findByText(/Google sign-in isn't configured/)
+    ).toBeInTheDocument();
+    expect(nav.push).not.toHaveBeenCalled();
   });
 });
 

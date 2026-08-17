@@ -12,9 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
-import { chatSeed, fmtDay, fmtTime, type ChatMessage } from "@/lib/mock";
+import { fmtDay, fmtTime } from "@/lib/format";
+import type { ChatMessage } from "@/lib/types";
 import { toast } from "@/components/ui/toast";
-import { USE_MOCKS } from "@/lib/api/client";
 import {
   loadChatHistory,
   resolveConfirmationRemote,
@@ -63,19 +63,15 @@ function actionResource(actions: ActionTaken[]): ChatMessage["resource"] {
 
 export default function ChatPage() {
   const { items: confirmations } = useConfirmations();
-  const [messages, setMessages] = useState<ChatMessage[]>(
-    USE_MOCKS ? chatSeed : [],
-  );
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  // Real mode: the thread lives on the server (shared with WhatsApp).
+  // The thread lives on the server (shared with WhatsApp).
   useEffect(() => {
     loadChatHistory()
-      .then((history) => {
-        if (history) setMessages(history);
-      })
+      .then(setMessages)
       .catch(() => {
         /* empty thread is an honest starting point; sending still works */
       });
