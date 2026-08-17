@@ -54,9 +54,11 @@ import {
   listSessions,
   revokeSession,
   requestPasswordReset,
+  setPassword,
   signOut as endSession,
   type SessionRow,
 } from "@/lib/data/auth";
+import { PasswordField } from "@/components/ui/password-field";
 import { deleteAccount, privacyOverview, runExport, saveBlob, type DataCount } from "@/lib/data/privacy";
 import { ApiError } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
@@ -129,6 +131,7 @@ function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; la
 export default function SettingsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("profile");
+  const [newPassword, setNewPassword] = useState("");
   const settings = useStore(settingsStore);
   const { items: integrationRows } = useIntegrations();
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
@@ -663,11 +666,37 @@ export default function SettingsPage() {
             <p className="font-semibold text-navy">Password</p>
             {settings.hydrated && !settings.hasPassword ? (
               // §11.4: Google-only accounts have no password — the reset
-              // endpoint silently skips them, so never offer a dead button.
-              <p className="mt-1 text-sm text-ink-muted">
-                You sign in with Google, so there&apos;s no Amiva password to
-                change.
-              </p>
+              // flow skips them, so offer to SET one (authenticated, no
+              // email round-trip) instead of a dead "change" button.
+              <>
+                <p className="mt-1 text-sm text-ink-muted">
+                  You sign in with Google. Set a password to also log in with
+                  your email.
+                </p>
+                <div className="mt-3 flex max-w-90 items-end gap-2">
+                  <PasswordField
+                    label="New password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={newPassword.length < 8}
+                    onClick={() =>
+                      setPassword(newPassword)
+                        .then(() => {
+                          setNewPassword("");
+                          toast("Password set — you can now log in with email too.");
+                        })
+                        .catch(saveFailed)
+                    }
+                  >
+                    Set password
+                  </Button>
+                </div>
+              </>
             ) : (
               <>
                 <p className="mt-1 text-sm text-ink-muted">

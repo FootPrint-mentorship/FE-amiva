@@ -46,6 +46,13 @@ function absorbUser(u: ApiUser) {
   }));
 }
 
+/** First password for a Google-only account (§11.4 amendment) — after this,
+ * email+password login and the reset flow both work. */
+export async function setPassword(password: string): Promise<void> {
+  await api("/auth/password/set", { method: "POST", body: { password } });
+  settingsStore.set((c) => ({ ...c, hasPassword: true }));
+}
+
 export function sessionActive(): boolean {
   return hasSession();
 }

@@ -253,6 +253,7 @@ export async function api<T>(
     }
     if (route === "POST /auth/password/forgot") return {};
     if (route === "POST /auth/password/reset") return {};
+    if (route === "POST /auth/password/set") return { set: true };
     if (route === "POST /auth/phone/send-code") {
       pendingPhone = typeof body.phone === "string" ? body.phone : null;
       return {};

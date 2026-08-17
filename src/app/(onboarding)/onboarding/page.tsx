@@ -24,6 +24,7 @@ import { cn } from "@/lib/cn";
 import { WA_LINK } from "@/lib/site";
 import { sendAssistantMessage } from "@/lib/data/assistant";
 import { connectGoogle } from "@/lib/data/integrations";
+import { api } from "@/lib/api/client";
 import { setAuthed } from "@/lib/session";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
@@ -60,6 +61,29 @@ const capabilities = [
 
 const channelOptions = ["WhatsApp", "Email"] as const;
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** PATCH the wizard's preferences to /users/me (working_hours drives the
+ * assistant's availability math — ISO weekday numbers, Mon=1). */
+function savePreferences(prefs: {
+  preferredName: string;
+  workDays: string[];
+  workStart: string;
+  workEnd: string;
+}): Promise<unknown> {
+  return api("/users/me", {
+    method: "PATCH",
+    body: {
+      ...(prefs.preferredName.trim()
+        ? { preferred_name: prefs.preferredName.trim() }
+        : {}),
+      working_hours: {
+        start: prefs.workStart,
+        end: prefs.workEnd,
+        days: prefs.workDays.map((d) => days.indexOf(d) + 1),
+      },
+    },
+  });
+}
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -371,6 +395,14 @@ export default function OnboardingPage() {
                       preferredName:
                         prefs.preferredName.trim() || c.preferredName,
                     }));
+                    // Persist name + working hours server-side (availability
+                    // math uses them) — best-effort, the wizard moves on.
+                    savePreferences(prefs).catch(() =>
+                      toast(
+                        "Couldn't save your preferences just now, you can adjust them later in Settings.",
+                        { tone: "error" }
+                      )
+                    );
                     next();
                   }}
                 >
