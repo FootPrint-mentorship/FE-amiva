@@ -40,6 +40,7 @@ const sections: LegalSection[] = [
     body: [
       "Amiva's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including its Limited Use requirements.",
       "Specifically: Google user data is used only to provide user-facing features you request; it is not transferred to third parties except as necessary to provide those features, to comply with law, or as part of a merger or acquisition with prior notice; it is not used for advertising; and humans do not read it except with your explicit consent, for security purposes, to comply with law, or when the data is aggregated and anonymised.",
+      "Google user data — whether raw, aggregated, anonymised or derived — is never used to create, train or improve any machine-learning or artificial-intelligence models, whether ours or anyone else's. When fulfilling a request involves an AI service provider, the relevant data is processed transiently through that provider's API solely to produce the response or action you asked for, under terms that prohibit the provider from using it to train their models.",
     ],
   },
   {
@@ -76,7 +77,7 @@ const sections: LegalSection[] = [
     id: "processors",
     heading: "Service providers",
     body: [
-      "We use a small number of infrastructure providers (cloud hosting, AI inference, speech-to-text, email delivery, payments) as processors, bound by data processing agreements. A current list is available on request.",
+      "We use a small number of infrastructure providers (cloud hosting, AI inference, speech-to-text, email delivery, payments) as processors, bound by data processing agreements that prohibit them from using your data for their own purposes, including training their models. A current list is available on request.",
     ],
   },
   {
