@@ -10,6 +10,7 @@ import {
   Users,
   X,
   CalendarDays,
+  Repeat,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,26 @@ import { fmtTime, fmtDay } from "@/lib/format";
 import type { CalendarEvent } from "@/lib/types";
 import { timezoneAbbr } from "@/lib/timezones";
 import { newId } from "@/lib/id";
+import {
+  buildEventRrule,
+  defaultRecurrence,
+  describeRecurrence,
+  parseEventRrule,
+  WEEKDAY_CODES,
+  type CustomUnit,
+  type RecurrenceDraft,
+  type RepeatKind,
+} from "@/lib/recurrence";
+
+const repeatOptions: { value: RepeatKind; label: string }[] = [
+  { value: "none", label: "Does not repeat" },
+  { value: "daily", label: "Every day" },
+  { value: "weekly", label: "Every week" },
+  { value: "monthly", label: "Every month" },
+  { value: "yearly", label: "Every year" },
+  { value: "custom", label: "Custom…" },
+];
+const weekdayLabels = ["M", "T", "W", "T", "F", "S", "S"];
 
 const views = ["Day", "Week", "Agenda"] as const;
 type View = (typeof views)[number];
@@ -118,6 +139,17 @@ export default function CalendarPage() {
     attendees: "",
   }));
   const [draftError, setDraftError] = useState("");
+  const [rec, setRec] = useState<RecurrenceDraft>(defaultRecurrence);
+  // Editing keeps the original rule verbatim unless the user touches the
+  // controls (the builder can't reproduce every RFC 5545 shape) — mirrors
+  // the reminder modal. Instances never edit recurrence (it lives on the
+  // series master), so their controls are replaced by a hint.
+  const [initialRrule, setInitialRrule] = useState<string | null>(null);
+  const [initialRec, setInitialRec] = useState<RecurrenceDraft | null>(null);
+  const editingEvent = editingId
+    ? (items.find((e) => e.id === editingId) ?? null)
+    : null;
+  const editingInstance = !!editingEvent?.recurring_event_id;
 
   const startEdit = (e: CalendarEvent) => {
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -132,6 +164,10 @@ export default function CalendarPage() {
       meet: !!e.conference_url,
       attendees: e.attendees.map((a) => a.email).join(", "),
     });
+    const parsed = parseEventRrule(e.rrule ?? null);
+    setRec(parsed);
+    setInitialRec(parsed);
+    setInitialRrule(e.rrule ?? null);
     setEditingId(e.id);
     setOpenEvent(null);
     setCreating(true);
@@ -141,6 +177,20 @@ export default function CalendarPage() {
     if (!draft.title.trim()) return setDraftError("Give the event a title.");
     if (draft.end <= draft.start)
       return setDraftError("End time must be after start time.");
+    if (!editingInstance) {
+      if (
+        (rec.kind === "weekly" ||
+          (rec.kind === "custom" && rec.unit === "week")) &&
+        rec.byDays.length === 0
+      )
+        return setDraftError("Pick at least one weekday for the repeat.");
+      if (rec.kind !== "none" && rec.ends === "on") {
+        if (!rec.untilDate)
+          return setDraftError("Pick the date the repeat ends on.");
+        if (rec.untilDate < draft.date)
+          return setDraftError("The repeat can't end before the event starts.");
+      }
+    }
     const startAt = new Date(`${draft.date}T${draft.start}:00`);
     const endAt = new Date(`${draft.date}T${draft.end}:00`);
     const clash = items.find(
@@ -155,6 +205,8 @@ export default function CalendarPage() {
         `Heads up: this overlaps “${clash.title}”. Click again to book anyway.`,
       );
     }
+    const recUntouched =
+      initialRec !== null && JSON.stringify(rec) === JSON.stringify(initialRec);
     const built: CalendarEvent = {
       id: editingId ?? newId("evt"),
       title: draft.title.trim(),
@@ -173,12 +225,17 @@ export default function CalendarPage() {
           response_status: "needsAction",
         })),
       status: "confirmed",
+      rrule: recUntouched ? initialRrule : buildEventRrule(rec, draft.date),
+      recurring_event_id: editingEvent?.recurring_event_id ?? null,
     };
     saveEvent(built, !editingId).catch(fail);
     setCreating(false);
     setEditingId(null);
     setDraftError("");
     setDraft({ ...draft, title: "", location: "", attendees: "" });
+    setRec(defaultRecurrence());
+    setInitialRec(null);
+    setInitialRrule(null);
   };
 
   const daysShown = useMemo(() => {
@@ -236,10 +293,15 @@ export default function CalendarPage() {
       tone: "error",
     });
 
-  const cancelEvent = (id: string) => {
-    cancelEventApi(id)
+  const cancelEvent = (ev: CalendarEvent, scope: "occurrence" | "series") => {
+    cancelEventApi(ev, scope)
       .then(() =>
-        toast("Event cancelled. Attendees were notified.", { tone: "info" }),
+        toast(
+          scope === "series"
+            ? "Series cancelled. Attendees were notified."
+            : "Event cancelled. Attendees were notified.",
+          { tone: "info" },
+        ),
       )
       .catch(fail);
     setCancelling(false);
@@ -305,7 +367,15 @@ export default function CalendarPage() {
             Google Calendar · all times in {settings.timezone} ({tzAbbr})
           </p>
         </div>
-        <Button onClick={() => setCreating(true)}>
+        <Button
+          onClick={() => {
+            setEditingId(null);
+            setRec(defaultRecurrence());
+            setInitialRec(null);
+            setInitialRrule(null);
+            setCreating(true);
+          }}
+        >
           <Plus className="size-4" aria-hidden />
           New event
         </Button>
@@ -423,6 +493,190 @@ export default function CalendarPage() {
                 />
                 Add Google Meet link
               </label>
+
+              {/* Recurrence — lives on the series master, so an expanded
+                  occurrence shows a hint instead of the controls. */}
+              {editingInstance ? (
+                <p className="flex items-center gap-2 rounded-xl bg-indigo-50 px-3.5 py-2.5 text-xs text-ink-muted">
+                  <Repeat
+                    className="size-3.5 shrink-0 text-violet-500"
+                    aria-hidden
+                  />
+                  Part of a repeating series — changes here apply to this
+                  occurrence only.
+                </p>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-navy">
+                    Repeat
+                    <select
+                      value={rec.kind}
+                      onChange={(e) =>
+                        setRec({ ...rec, kind: e.target.value as RepeatKind })
+                      }
+                      className="mt-1.5 h-11 w-full cursor-pointer rounded-control border border-line bg-white px-3 text-[15px] font-normal text-navy"
+                    >
+                      {repeatOptions.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {rec.kind === "custom" && (
+                    <div className="mt-2.5 flex items-center gap-2 text-sm text-navy">
+                      Every
+                      <input
+                        type="number"
+                        min={1}
+                        max={99}
+                        value={rec.interval}
+                        onChange={(e) =>
+                          setRec({
+                            ...rec,
+                            interval: Math.max(
+                              1,
+                              Math.min(99, Number(e.target.value) || 1),
+                            ),
+                          })
+                        }
+                        aria-label="Repeat interval"
+                        className="h-10 w-16 rounded-control border border-line bg-white px-2.5 text-center text-sm font-normal"
+                      />
+                      <select
+                        value={rec.unit}
+                        onChange={(e) =>
+                          setRec({
+                            ...rec,
+                            unit: e.target.value as CustomUnit,
+                          })
+                        }
+                        aria-label="Repeat unit"
+                        className="h-10 cursor-pointer rounded-control border border-line bg-white px-2.5 text-sm font-normal"
+                      >
+                        {(["day", "week", "month", "year"] as const).map(
+                          (u) => (
+                            <option key={u} value={u}>
+                              {rec.interval > 1 ? `${u}s` : u}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </div>
+                  )}
+
+                  {(rec.kind === "weekly" ||
+                    (rec.kind === "custom" && rec.unit === "week")) && (
+                    <div className="mt-2.5 flex gap-1.5">
+                      {WEEKDAY_CODES.map((d, i) => {
+                        const on = rec.byDays.includes(d);
+                        return (
+                          <button
+                            key={d}
+                            type="button"
+                            aria-pressed={on}
+                            aria-label={d}
+                            onClick={() =>
+                              setRec({
+                                ...rec,
+                                byDays: on
+                                  ? rec.byDays.filter((x) => x !== d)
+                                  : [...rec.byDays, d],
+                              })
+                            }
+                            className={cn(
+                              "size-9 cursor-pointer rounded-full text-xs font-semibold transition-colors",
+                              on
+                                ? "bg-indigo-900 text-white"
+                                : "border border-line bg-white text-ink-muted",
+                            )}
+                          >
+                            {weekdayLabels[i]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {rec.kind !== "none" && (
+                    <div className="mt-3">
+                      <p className="mb-1.5 text-sm font-medium text-navy">
+                        Ends
+                      </p>
+                      <div className="space-y-1.5 text-sm text-navy">
+                        <label className="flex cursor-pointer items-center gap-2.5">
+                          <input
+                            type="radio"
+                            name="rec-ends"
+                            checked={rec.ends === "never"}
+                            onChange={() => setRec({ ...rec, ends: "never" })}
+                            className="size-4 cursor-pointer accent-indigo-900"
+                          />
+                          Never
+                        </label>
+                        <label className="flex cursor-pointer items-center gap-2.5">
+                          <input
+                            type="radio"
+                            name="rec-ends"
+                            checked={rec.ends === "on"}
+                            onChange={() => setRec({ ...rec, ends: "on" })}
+                            className="size-4 cursor-pointer accent-indigo-900"
+                          />
+                          On
+                          <input
+                            type="date"
+                            value={rec.untilDate}
+                            min={draft.date}
+                            disabled={rec.ends !== "on"}
+                            onChange={(e) =>
+                              setRec({ ...rec, untilDate: e.target.value })
+                            }
+                            aria-label="Repeat end date"
+                            className="h-10 rounded-control border border-line bg-white px-2.5 text-sm font-normal disabled:opacity-50"
+                          />
+                        </label>
+                        <label className="flex cursor-pointer items-center gap-2.5">
+                          <input
+                            type="radio"
+                            name="rec-ends"
+                            checked={rec.ends === "after"}
+                            onChange={() => setRec({ ...rec, ends: "after" })}
+                            className="size-4 cursor-pointer accent-indigo-900"
+                          />
+                          After
+                          <input
+                            type="number"
+                            min={1}
+                            max={730}
+                            value={rec.count}
+                            disabled={rec.ends !== "after"}
+                            onChange={(e) =>
+                              setRec({
+                                ...rec,
+                                count: Math.max(
+                                  1,
+                                  Math.min(730, Number(e.target.value) || 1),
+                                ),
+                              })
+                            }
+                            aria-label="Number of occurrences"
+                            className="h-10 w-20 rounded-control border border-line bg-white px-2.5 text-center text-sm font-normal disabled:opacity-50"
+                          />
+                          occurrences
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {rec.kind !== "none" && (
+                    <p className="mt-2 text-xs text-ink-muted">
+                      {describeRecurrence(rec, draft.date)}, starting{" "}
+                      {draft.date} at {draft.start}
+                    </p>
+                  )}
+                </div>
+              )}
               {draftError && (
                 <p
                   className={cn(
@@ -734,6 +988,12 @@ export default function CalendarPage() {
                   {openEvent.location}
                 </p>
               )}
+              {(openEvent.rrule || openEvent.recurring_event_id) && (
+                <p className="flex items-center gap-2">
+                  <Repeat className="size-4 text-violet-500" aria-hidden />
+                  {openEvent.recurrence_human ?? "Repeats"}
+                </p>
+              )}
               {openEvent.attendees.length > 0 && (
                 <div className="flex items-start gap-2">
                   <Users
@@ -768,14 +1028,33 @@ export default function CalendarPage() {
                     ? "Attendees will be notified of the cancellation."
                     : "This event will be removed from your calendar."}
                 </p>
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => cancelEvent(openEvent.id)}
-                  >
-                    Yes, cancel event
-                  </Button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {openEvent.recurring_event_id || openEvent.rrule ? (
+                    <>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => cancelEvent(openEvent, "occurrence")}
+                      >
+                        This occurrence
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => cancelEvent(openEvent, "series")}
+                      >
+                        Whole series
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => cancelEvent(openEvent, "occurrence")}
+                    >
+                      Yes, cancel event
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"

@@ -269,6 +269,9 @@ export async function saveEvent(e: CalendarEvent, isNew: boolean): Promise<void>
     location: e.location,
     attendees: e.attendees.map((a) => a.email),
     conference: !!e.conference_url,
+    // Recurrence lives on the series master — PATCHing an instance with an
+    // rrule is a 422, so omit it there (the UI hides the controls anyway).
+    ...(e.recurring_event_id ? {} : { rrule: e.rrule ?? null }),
   };
   const saved = isNew
     ? await api<CalendarEvent>("/calendar/events", { method: "POST", body })
@@ -276,10 +279,18 @@ export async function saveEvent(e: CalendarEvent, isNew: boolean): Promise<void>
   upsertEvent(saved);
 }
 
-export async function cancelEvent(id: string): Promise<void> {
-  await api(`/calendar/events/${id}`, {
+export async function cancelEvent(
+  e: CalendarEvent,
+  scope: "occurrence" | "series" = "occurrence",
+): Promise<void> {
+  await api(`/calendar/events/${e.id}`, {
     method: "DELETE",
-    body: { notify_attendees: true },
+    body: { notify_attendees: true, scope },
   });
-  patchInList<CalendarEvent>(qk.events, id, { status: "cancelled" });
+  patchInList<CalendarEvent>(qk.events, e.id, { status: "cancelled" });
+  if (scope === "series") {
+    // The backend cancelled every occurrence — refetch rather than chase
+    // sibling instance rows through the cache one by one.
+    await queryClient.invalidateQueries({ queryKey: qk.events });
+  }
 }

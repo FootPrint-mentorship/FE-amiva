@@ -1466,6 +1466,12 @@ export interface components {
              * @default true
              */
             notify_attendees: boolean;
+            /**
+             * Scope
+             * @default occurrence
+             * @enum {string}
+             */
+            scope: "occurrence" | "series";
         };
         /** EventCreate */
         EventCreate: {
@@ -1496,6 +1502,8 @@ export interface components {
             conference: boolean;
             /** Calendar Id */
             calendar_id?: string | null;
+            /** Rrule */
+            rrule?: string | null;
         };
         /** EventOut */
         EventOut: {
@@ -1527,6 +1535,12 @@ export interface components {
             status: string;
             /** Html Link */
             html_link: string | null;
+            /** Rrule */
+            rrule?: string | null;
+            /** Recurrence Human */
+            recurrence_human?: string | null;
+            /** Recurring Event Id */
+            recurring_event_id?: string | null;
         };
         /** EventUpdate */
         EventUpdate: {
@@ -1544,6 +1558,14 @@ export interface components {
             location?: string | null;
             /** Description */
             description?: string | null;
+            /** Rrule */
+            rrule?: string | null;
+            /**
+             * Scope
+             * @default occurrence
+             * @enum {string}
+             */
+            scope: "occurrence" | "series";
         };
         /** ExportJobResponse */
         ExportJobResponse: {
