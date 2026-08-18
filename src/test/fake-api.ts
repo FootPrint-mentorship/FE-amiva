@@ -455,6 +455,9 @@ export async function api<T>(
         conference_url: body.conference ? "https://meet.google.com/fake" : null,
         attendees: attendeesFromBody(body.attendees),
         status: "confirmed",
+        rrule: typeof body.rrule === "string" ? body.rrule : null,
+        recurrence_human: typeof body.rrule === "string" ? "Recurring" : null,
+        recurring_event_id: null,
       };
       db.weekEvents.push(created);
       return created;

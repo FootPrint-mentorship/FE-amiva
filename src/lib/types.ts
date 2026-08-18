@@ -30,6 +30,11 @@ export type CalendarEvent = {
   conference_url: string | null;
   attendees: { email: string; name: string; response_status: string }[];
   status: "confirmed" | "tentative" | "cancelled";
+  // Recurrence (§5.4 amendment): a series master carries the rrule +
+  // server-humanized label; Google-expanded instances carry the master's id.
+  rrule?: string | null;
+  recurrence_human?: string | null;
+  recurring_event_id?: string | null;
 };
 
 export type Task = {
