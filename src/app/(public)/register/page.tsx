@@ -81,6 +81,9 @@ export default function RegisterPage() {
     try {
       await verifyEmailCode(form.email, code);
       setEmailStage("verified");
+      // Clear any earlier "code is invalid" error — it otherwise sits right
+      // above the green "Email verified" line and contradicts it.
+      setErrors(({ email: _email, ...rest }) => rest);
       toast("Email verified.");
     } catch (err) {
       setEmailOtp("");

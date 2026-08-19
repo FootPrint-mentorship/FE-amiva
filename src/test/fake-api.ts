@@ -92,6 +92,7 @@ type Body = Record<string, unknown>;
 const asBody = (body: unknown): Body => (body ?? {}) as Body;
 
 const sixDigits = (code: unknown) => typeof code === "string" && /^\d{6}$/.test(code);
+export const WRONG_CODE = "111111";
 
 /** Advance a recurring reminder's next fire (POST /reminders/{id}/skip). */
 function advance(isoStr: string, rrule: string | null): string {
@@ -215,6 +216,11 @@ export async function api<T>(
     if (route === "POST /auth/email/send-code") return {};
     if (route === "POST /auth/email/verify") {
       if (!sixDigits(body.code)) throw new ApiError("VALIDATION_ERROR", "Invalid code", 422);
+      // The real backend rejects a code that doesn't match; 111111 is this
+      // fake's stand-in wrong code so that path stays testable.
+      if (body.code === WRONG_CODE) {
+        throw new ApiError("VALIDATION_ERROR", "Code is invalid or has expired", 422);
+      }
       return {};
     }
     if (route === "POST /auth/register") {
