@@ -104,6 +104,23 @@ describe("Register", () => {
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/onboarding"), WAIT);
   });
 
+  it("a successful verify clears the earlier wrong-code error", async () => {
+    // Found in prod QA 19 Aug: "Code is invalid or has expired" stayed on
+    // screen directly above the green "Email verified" line.
+    render(<><RegisterPage /><Toaster /></>);
+    await userEvent.type(screen.getByLabelText(/Email/), "qa@example.com");
+    await userEvent.click(screen.getByRole("button", { name: "Send code" }));
+    const first = await screen.findByLabelText("Email code digit 1", undefined, WAIT);
+    await userEvent.click(first);
+    await userEvent.paste("111111");
+    expect(await screen.findByText("Code is invalid or has expired")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText("Email code digit 1"));
+    await userEvent.paste("482913");
+    expect(await screen.findByText("Email verified")).toBeInTheDocument();
+    expect(screen.queryByText("Code is invalid or has expired")).not.toBeInTheDocument();
+  });
+
   it("phone input strips non-numeric characters", async () => {
     render(<RegisterPage />);
     const phone = screen.getByLabelText("Phone number");
