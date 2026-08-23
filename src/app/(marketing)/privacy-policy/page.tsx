@@ -4,6 +4,7 @@ import { LegalProse, type LegalSection } from "@/components/marketing/legal-pros
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "How Amiva collects, uses, protects and deletes your data.",
+  alternates: { canonical: "/privacy-policy" },
 };
 
 const sections: LegalSection[] = [

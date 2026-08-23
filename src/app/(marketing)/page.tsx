@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { CtaPair } from "@/components/marketing/cta-pair";
 import { FaqAccordion } from "@/components/marketing/faq";
+import { faqs } from "@/components/marketing/faq-data";
 import { IntegrationsChaos } from "@/components/marketing/integrations";
 import { Reveal } from "@/components/marketing/reveal";
 import { WA_LINK } from "@/lib/site";
@@ -112,15 +113,21 @@ function MiniAppCard({
 }
 
 function DashboardPreview() {
+  // Decorative illustration of the product: hidden from assistive tech (no
+  // interactive children), and stripped of landmark/heading semantics so it
+  // can't distort the real page outline (it renders twice).
   return (
-    <div className="overflow-hidden rounded-[18px] border border-line-soft bg-white shadow-[0_30px_90px_rgba(31,24,91,0.15)]">
+    <div
+      aria-hidden="true"
+      className="overflow-hidden rounded-[18px] border border-line-soft bg-white shadow-[0_30px_90px_rgba(31,24,91,0.15)]"
+    >
       <div className="flex h-8 items-center gap-1.5 border-b border-line bg-surface px-3">
         <i className="size-1.5 rounded-full bg-mist-300" />
         <i className="size-1.5 rounded-full bg-mist-300" />
         <i className="size-1.5 rounded-full bg-mist-300" />
       </div>
       <div className="grid min-h-75 grid-cols-[74px_1fr] sm:min-h-90 sm:grid-cols-[150px_1fr]">
-        <aside className="bg-indigo-900 p-4 text-white sm:p-6">
+        <div className="bg-indigo-900 p-4 text-white sm:p-6">
           <Image
             src="/brand/wordmark-white.svg"
             alt="Amiva"
@@ -134,14 +141,14 @@ function DashboardPreview() {
             <p>Tasks</p>
             <p>Memories</p>
           </div>
-        </aside>
-        <main className="p-5 sm:p-9">
+        </div>
+        <div className="p-5 sm:p-9">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[9px] text-ink-muted">Monday, 10 August</p>
-              <h3 className="mt-1 text-xl font-bold tracking-[-0.04em] text-navy sm:text-3xl">
+              <p className="mt-1 text-xl font-bold tracking-[-0.04em] text-navy sm:text-3xl">
                 Good morning, Amani.
-              </h3>
+              </p>
             </div>
             <span className="hidden rounded-full bg-indigo-900 px-4 py-2 text-[9px] font-semibold text-white sm:block">
               Talk to Amiva
@@ -161,7 +168,7 @@ function DashboardPreview() {
               </div>
             ))}
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
@@ -186,6 +193,21 @@ export default function HomePage() {
               "Amiva is a personal assistant that helps you create reminders, manage your meetings and calendar, organise tasks and remember the details that matter, all in one WhatsApp conversation with a web dashboard.",
             offers: { "@type": "Offer", price: "0" },
             publisher: { "@type": "Organization", name: "Amiva", url: "https://tryamiva.com" },
+          }),
+        }}
+      />
+      {/* FAQPage structured data — same source as the visible accordion. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
           }),
         }}
       />
@@ -224,6 +246,7 @@ export default function HomePage() {
             width={530}
             height={1126}
             priority
+            sizes="(max-width: 640px) 420px, 500px"
             className="absolute -bottom-117.5 left-1/2 z-10 h-215 w-auto -translate-x-1/2 object-contain drop-shadow-[0_40px_70px_rgba(30,21,84,0.24)] sm:-bottom-133.75 sm:h-243.75 md:-bottom-145 md:h-265"
           />
 
@@ -241,9 +264,9 @@ export default function HomePage() {
                   ✓ Set
                 </span>
               </div>
-              <h4 className="mt-0.5 text-xs font-bold text-navy truncate">
+              <p className="mt-0.5 text-xs font-bold text-navy truncate">
                 Pay rent
-              </h4>
+              </p>
               <p className="text-[11px] text-ink-soft">Friday, 9:00 AM</p>
               <div className="mt-2.5 flex items-center gap-1.5 border-t border-lavender-50 pt-2 text-[10px] font-semibold text-iris-500">
                 <Bell
@@ -269,9 +292,9 @@ export default function HomePage() {
                   ✓ Synced
                 </span>
               </div>
-              <h4 className="mt-0.5 text-xs font-bold text-navy truncate">
+              <p className="mt-0.5 text-xs font-bold text-navy truncate">
                 Product planning
-              </h4>
+              </p>
               <p className="text-[11px] text-ink-soft">Tuesday, 2:30 PM</p>
               <div className="mt-2.5 flex items-center gap-2 border-t border-lavender-50 pt-2 text-[10px] text-ink-soft">
                 {/* Initials, not stock photos: no third-party requests on the

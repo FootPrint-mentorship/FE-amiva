@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   },
   description:
     "Reminders, calendar, email and memory, managed through one natural conversation on WhatsApp, with a web dashboard for everything else.",
+  alternates: { canonical: "/" },
   openGraph: {
     siteName: "Amiva",
     title: "Amiva | Your personal chief of staff, on WhatsApp",
@@ -27,6 +28,11 @@ export const metadata: Metadata = {
       "Reminders, calendar, email and memory, managed through one natural conversation on WhatsApp, with a web dashboard for everything else.",
     url: "https://tryamiva.com",
     type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Amiva — your personal chief of staff, on WhatsApp" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og.png"],
   },
 };
 

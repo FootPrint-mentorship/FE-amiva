@@ -29,7 +29,7 @@
   --color-danger: #d9534f;
 
   --color-ink: #131628;
-  --color-ink-muted: #6b6f80;
+  --color-ink-muted: #646880; /* 4.87:1 on lavender-50, 5.48:1 on white (was #6b6f80 = 4.43 on lavender — Lighthouse contrast fail) */
   --color-line: #e3e5f0;
   --color-scrim: #131628;
   --color-warning-ink: #9a6a1d;
