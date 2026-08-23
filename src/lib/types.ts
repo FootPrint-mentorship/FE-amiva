@@ -9,7 +9,7 @@ export type Reminder = {
   id: string;
   title: string;
   notes: string | null;
-  due_at: string; // ISO UTC
+  due_at: string | null; // ISO UTC; null for recurring (rrule) reminders
   timezone: string;
   rrule: string | null;
   recurrence_human: string | null;
@@ -46,6 +46,8 @@ export type Task = {
   project: string | null;
   category: string | null;
   subtasks: { id: string; title: string; completed: boolean }[];
+  source?: "whatsapp" | "web" | "system";
+  created_at?: string;
 };
 
 export const taskCategories = [
