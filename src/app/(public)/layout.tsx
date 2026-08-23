@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { BrandPanel } from "@/components/brand-panel";
+
+// Auth funnel pages carry no search value and shouldn't appear in results.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function PublicLayout({
   children,

@@ -1,30 +1,13 @@
-"use client";
-
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { WA_LINK } from "@/lib/site";
-import { MessageCircle, Menu, X } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Year } from "@/components/year";
 import { CtaPair } from "@/components/marketing/cta-pair";
-import { useState, useSyncExternalStore } from "react";
-import { sessionActive } from "@/lib/data/auth";
+import { MarketingHeader } from "@/components/marketing/header";
 
-// Session state lives in localStorage (an external system), so it's read
-// via useSyncExternalStore: the server snapshot renders the signed-out
-// header (no hydration mismatch), the client snapshot reads the real
-// session, and cross-tab sign-ins/outs re-render via the storage event.
-function subscribeToSession(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-}
-
-// Contact goes straight to the WhatsApp chat — the product IS the chat.
-const nav = [
-  { href: "/#features", label: "Features" },
-  { href: "/#pricing", label: "Pricing" },
-  { href: "/#faq", label: "Questions" },
-  { href: WA_LINK, label: "Contact", external: true },
-];
+// Server layout (split 24 Aug 2026): only the header is a client island —
+// the footer and shell are static HTML, so marketing pages hydrate less JS.
 
 const footerProduct = [
   { href: "/#features", label: "Features" },
@@ -42,148 +25,19 @@ export default function MarketingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const authed = useSyncExternalStore(subscribeToSession, sessionActive, () => false);
-
   return (
     <div className="flex min-h-screen flex-col bg-surface">
-      {/* ── Header ─────────────────────────── */}
-      <header
-        className="sticky top-0 z-40 border-b border-line/80 bg-surface/90 backdrop-blur-[18px]"
-        style={{ height: 80 }}
+      {/* Keyboard users skip the repeated header on every page. */}
+      <a
+        href="#content"
+        className="sr-only z-50 rounded-lg bg-indigo-900 px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
       >
-        <div className="mx-auto flex h-full w-full max-w-310 items-center justify-between px-7">
-          {/* Logo */}
-          <Link href="/" aria-label="Amiva home">
-            <Logo size={32} />
-          </Link>
-
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-8 text-sm text-[#4f5060] md:flex">
-            {nav.map((n) =>
-              n.external ? (
-                <a
-                  key={n.label}
-                  href={n.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-indigo-900"
-                >
-                  {n.label}
-                </a>
-              ) : (
-                <Link
-                  key={n.label}
-                  href={n.href}
-                  className="hover:text-indigo-900"
-                >
-                  {n.label}
-                </Link>
-              ),
-            )}
-          </nav>
-
-          {/* Desktop actions */}
-          <div className="hidden items-center gap-5.5 text-sm md:flex">
-            {authed ? (
-              <Link
-                href="/app/today"
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-indigo-900 px-5 text-sm font-semibold text-white transition-all hover:bg-indigo-700 hover:-translate-y-px"
-              >
-                <span>Open app</span>
-                <span aria-hidden>→</span>
-              </Link>
-            ) : (
-              <>
-                <Link href="/login" className="text-ink hover:text-indigo-900">
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-indigo-900 px-5 text-sm font-semibold text-white transition-all hover:bg-indigo-700 hover:-translate-y-px"
-                >
-                  <span>Get started</span>
-                  <span aria-hidden>→</span>
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            className="flex size-9 items-center justify-center rounded-lg text-navy md:hidden"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? (
-              <X className="size-5" />
-            ) : (
-              <Menu className="size-5" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile nav drawer */}
-        {mobileOpen && (
-          <div className="absolute left-0 right-0 top-full border-b border-line bg-white px-5 py-6 shadow-[0_20px_30px_rgba(32,24,91,0.08)] md:hidden">
-            <nav className="flex flex-col gap-4">
-              {nav.map((n) =>
-                n.external ? (
-                  <a
-                    key={n.label}
-                    href={n.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[15px] font-medium text-navy"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {n.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={n.label}
-                    href={n.href}
-                    className="text-[15px] font-medium text-navy"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {n.label}
-                  </Link>
-                ),
-              )}
-            </nav>
-            <div className="mt-5 flex gap-3">
-              {authed ? (
-                <Link
-                  href="/app/today"
-                  className="flex-1 inline-flex h-11 items-center justify-center gap-1 rounded-full bg-indigo-900 text-sm font-semibold text-white"
-                >
-                  <span>Open app</span>
-                  <span aria-hidden>→</span>
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="flex-1 inline-flex h-11 items-center justify-center rounded-full border border-line text-sm font-medium text-navy"
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="flex-1 inline-flex h-11 items-center justify-center gap-1 rounded-full bg-indigo-900 text-sm font-semibold text-white"
-                  >
-                    <span>Get started</span>
-                    <span aria-hidden>→</span>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </header>
+        Skip to content
+      </a>
+      <MarketingHeader />
 
       {/* ── Main content ───────────────────── */}
-      <main className="flex-1">{children}</main>
+      <main id="content" className="flex-1">{children}</main>
 
       {/* ── Footer ─────────────────────────── */}
       <footer className="bg-lavender-100 px-[max(22px,calc(50vw-620px))] pb-10.5 pt-9 text-navy">
