@@ -57,7 +57,7 @@ export function makeReminders(): Reminder[] {
       id: "rem_01",
       title: "Pay NEPA bill",
       notes: null,
-      due_at: iso(10, 0),
+      due_at: null, // recurring: the rrule drives it (real-API contract)
       timezone: "Africa/Lagos",
       rrule: "FREQ=MONTHLY;BYDAY=-1FR",
       recurrence_human: "Every last Friday of the month",
@@ -85,7 +85,7 @@ export function makeReminders(): Reminder[] {
       id: "rem_03",
       title: "Send weekly report",
       notes: null,
-      due_at: iso(16, 30, 1),
+      due_at: null, // recurring: the rrule drives it (real-API contract)
       timezone: "Africa/Lagos",
       rrule: "FREQ=WEEKLY;BYDAY=FR",
       recurrence_human: "Every Friday",
@@ -113,7 +113,7 @@ export function makeReminders(): Reminder[] {
       id: "rem_05",
       title: "Standup prep",
       notes: null,
-      due_at: iso(9, 0, -1),
+      due_at: null, // recurring: the rrule drives it (real-API contract)
       timezone: "Africa/Lagos",
       rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
       recurrence_human: "Every weekday",

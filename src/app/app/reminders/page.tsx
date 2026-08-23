@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { ReminderModal } from "@/components/domain/reminder-modal";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
 import { fmtDay, fmtTime } from "@/lib/format";
 import type { Reminder } from "@/lib/types";
@@ -55,6 +56,14 @@ export default function RemindersPage() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Reminder | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  // Deleting is destructive — it must confirm first (PRD golden rule; the
+  // one-click delete shipped silently and was flagged in prod QA, 23 Aug).
+  const [confirmDelete, setConfirmDelete] = useState<Reminder | null>(null);
+  // Rows near the bottom of the viewport must open their menu UPWARD, or the
+  // last items (Pause, Delete) land below the fold and can't be clicked —
+  // found in prod QA, 23 Aug 2026 ("issue when deleting").
+  const [menuFlipsUp, setMenuFlipsUp] = useState(false);
+  const MENU_EST_HEIGHT = 240; // 6 items ≈ 230px, padded
 
   const fail = (err: unknown) =>
     toast(err instanceof Error ? err.message : "That didn't go through. Try again.", {
@@ -67,10 +76,12 @@ export default function RemindersPage() {
   const togglePause = (r: Reminder) =>
     toggleReminderPause(r.id, r.status !== "paused").catch(fail);
 
-  const remove = (id: string) =>
+  const remove = (id: string) => {
+    setConfirmDelete(null);
     deleteReminder(id)
       .then(() => toast("Reminder deleted.", { tone: "info" }))
       .catch(fail);
+  };
 
   const snooze = (id: string, until: Date, label: string) =>
     snoozeReminder(id, until)
@@ -89,10 +100,16 @@ export default function RemindersPage() {
 
   const visible = useMemo(() => items.filter((r) => matches(r, tab)), [items, tab]);
 
+  // Recurring reminders have NO due_at (the rrule drives them) — group and
+  // display by whichever timestamp applies, or the list renders the Unix
+  // epoch ("Thu 1 Jan, 1:00 am") — found in prod QA, 19 Aug 2026.
+  const whenOf = (r: Reminder) => r.due_at ?? r.next_fire_at ?? r.snoozed_until;
+
   const groups = useMemo(() => {
     const map = new Map<string, Reminder[]>();
     for (const r of visible) {
-      const key = fmtDay(r.due_at);
+      const at = whenOf(r);
+      const key = at ? fmtDay(at) : "Recurring";
       map.set(key, [...(map.get(key) ?? []), r]);
     }
     return [...map.entries()];
@@ -126,6 +143,32 @@ export default function RemindersPage() {
           onClose={() => setEditing(null)}
           onCreate={(r) => upsert(r, false)}
         />
+      )}
+      {confirmDelete && (
+        <Modal
+          label="Delete reminder"
+          onClose={() => setConfirmDelete(null)}
+          panelClassName="w-full max-w-100"
+        >
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold text-navy">
+              Delete “{confirmDelete.title}”?
+            </h2>
+            <p className="mt-2 text-sm text-ink-muted">
+              {confirmDelete.rrule
+                ? "This is a recurring reminder — it will never fire again."
+                : "It won't fire again."}
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmDelete(null)}>
+                Keep it
+              </Button>
+              <Button variant="danger" onClick={() => remove(confirmDelete.id)}>
+                Delete reminder
+              </Button>
+            </div>
+          </Card>
+        </Modal>
       )}
 
       {/* Tabs */}
@@ -177,7 +220,7 @@ export default function RemindersPage() {
                 >
                   <div className="w-19 shrink-0 text-right">
                     <p className="text-sm font-semibold tabular-nums text-navy">
-                      {fmtTime(r.due_at)}
+                      {whenOf(r) ? fmtTime(whenOf(r)!) : "—"}
                     </p>
                     <p className="text-[11px] text-ink-muted">{tzAbbr}</p>
                   </div>
@@ -225,7 +268,13 @@ export default function RemindersPage() {
                       <button
                         aria-label="More options"
                         aria-expanded={menuFor === r.id}
-                        onClick={() => setMenuFor(menuFor === r.id ? null : r.id)}
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setMenuFlipsUp(
+                            rect.bottom + MENU_EST_HEIGHT > window.innerHeight,
+                          );
+                          setMenuFor(menuFor === r.id ? null : r.id);
+                        }}
                         className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50"
                       >
                         <MoreHorizontal className="size-4" aria-hidden />
@@ -238,7 +287,10 @@ export default function RemindersPage() {
                           />
                           <div
                             role="menu"
-                            className="absolute right-0 top-9 z-40 w-52 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-pop"
+                            className={cn(
+                              "absolute right-0 z-40 w-52 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-pop",
+                              menuFlipsUp ? "bottom-9" : "top-9",
+                            )}
                           >
                             <button
                               role="menuitem"
@@ -289,7 +341,7 @@ export default function RemindersPage() {
                             <button
                               role="menuitem"
                               className="block w-full cursor-pointer px-3.5 py-2 text-left text-sm text-danger hover:bg-danger/5"
-                              onClick={() => { setMenuFor(null); remove(r.id); }}
+                              onClick={() => { setMenuFor(null); setConfirmDelete(r); }}
                             >
                               Delete
                             </button>

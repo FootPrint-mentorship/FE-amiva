@@ -471,7 +471,13 @@ export default function TasksPage() {
                   Source
                 </h3>
                 <p className="text-sm text-navy">
-                  Created via WhatsApp · today
+                  Created via{" "}
+                  {open.source === "whatsapp"
+                    ? "WhatsApp"
+                    : open.source === "system"
+                      ? "Amiva"
+                      : "the web app"}
+                  {open.created_at ? ` · ${fmtDay(open.created_at)}` : ""}
                 </p>
               </section>
             </div>

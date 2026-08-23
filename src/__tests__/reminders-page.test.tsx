@@ -15,6 +15,15 @@ describe("Reminders page", () => {
     expect(screen.queryByText("Standup prep")).not.toBeInTheDocument();
   });
 
+  it("recurring reminders (due_at null) show their NEXT fire time, never the epoch", async () => {
+    // Prod QA 19 Aug 2026: rows rendered "Thu 1 Jan, 1:00 am" because the list
+    // formatted due_at, which the real API leaves null for recurring reminders.
+    render(<RemindersPage />);
+    expect(await screen.findByText("Pay NEPA bill")).toBeInTheDocument();
+    expect(screen.queryByText(/1 Jan/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/1970/)).not.toBeInTheDocument();
+  });
+
   it("tabs filter by status", async () => {
     render(<RemindersPage />);
     await userEvent.click(screen.getByRole("tab", { name: "Snoozed" }));
@@ -51,8 +60,20 @@ describe("Reminders page", () => {
     expect(screen.getByText("Paused")).toBeInTheDocument();
     expect(screen.getByText("Pay NEPA bill")).toBeInTheDocument();
 
+    // Delete is destructive: it must confirm first (prod QA finding, 23 Aug).
     await userEvent.click(screen.getAllByRole("button", { name: "More options" })[0]);
     await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(screen.getByText(/Delete “Pay NEPA bill”\?/)).toBeInTheDocument();
+    expect(screen.getByText("Pay NEPA bill")).toBeInTheDocument(); // untouched
+
+    // "Keep it" backs out…
+    await userEvent.click(screen.getByRole("button", { name: "Keep it" }));
+    expect(screen.getByText("Pay NEPA bill")).toBeInTheDocument();
+
+    // …and confirming actually deletes.
+    await userEvent.click(screen.getAllByRole("button", { name: "More options" })[0]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(screen.getByRole("button", { name: "Delete reminder" }));
     expect(screen.queryByText("Pay NEPA bill")).not.toBeInTheDocument();
   });
 

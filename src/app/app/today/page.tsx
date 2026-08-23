@@ -272,7 +272,7 @@ export default function TodayPage() {
                       {r.title}
                     </p>
                     <p className="text-xs tabular-nums text-ink-muted">
-                      {fmtTime(r.due_at)} {timezoneAbbr(settings.timezone)}
+                      {fmtTime(r.due_at ?? r.next_fire_at ?? "")} {timezoneAbbr(settings.timezone)}
                       {r.recurrence_human ? ` · ${r.recurrence_human}` : ""}
                     </p>
                   </div>

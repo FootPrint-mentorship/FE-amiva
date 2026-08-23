@@ -56,7 +56,7 @@ export function ReminderModal({
 }) {
   const today = new Date();
   const init = initial ? parseRecurrence(initial.rrule) : null;
-  const initParts = initial ? toLocalParts(initial.due_at) : null;
+  const initParts = initial ? toLocalParts(initial.due_at ?? initial.next_fire_at ?? new Date().toISOString()) : null;
   const settings = useStore(settingsStore);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [date, setDate] = useState(
