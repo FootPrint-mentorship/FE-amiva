@@ -235,8 +235,8 @@ export default function RemindersPage() {
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
                       {r.recurrence_human && (
-                        <Chip tone="violet">
-                          <Repeat className="size-3" aria-hidden />
+                        <Chip tone="violet" wrap>
+                          <Repeat className="size-3 shrink-0" aria-hidden />
                           {r.recurrence_human}
                         </Chip>
                       )}

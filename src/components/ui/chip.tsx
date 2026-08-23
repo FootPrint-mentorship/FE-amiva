@@ -15,13 +15,18 @@ const tones: Record<Tone, string> = {
 
 export function Chip({
   tone = "neutral",
+  wrap = false,
   className,
   ...rest
-}: HTMLAttributes<HTMLSpanElement> & { tone?: Tone }) {
+}: HTMLAttributes<HTMLSpanElement> & { tone?: Tone; wrap?: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap",
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+        // Long human text (e.g. a recurrence description) must wrap instead of
+        // widening the page on small screens — cn() has no tailwind-merge, so
+        // the variant lives here rather than in a caller's className override.
+        wrap ? "min-w-0 max-w-full whitespace-normal" : "whitespace-nowrap",
         tones[tone],
         className
       )}

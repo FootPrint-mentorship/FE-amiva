@@ -110,3 +110,14 @@ describe("Select (custom dropdown)", () => {
     expect(screen.getByRole("combobox", { name: "Timezone" })).toHaveTextContent("Europe/London");
   });
 });
+
+describe("Chip wrap variant (NFR-04: long recurrence text must not widen the page)", () => {
+  it("defaults to nowrap; wrap swaps to whitespace-normal", () => {
+    const { rerender } = render(<Chip>Every day</Chip>);
+    expect(screen.getByText("Every day").className).toContain("whitespace-nowrap");
+    rerender(<Chip wrap>Every Monday, Tuesday, Wednesday, Thursday and Friday at 8:30 AM</Chip>);
+    const chip = screen.getByText(/Every Monday/);
+    expect(chip.className).toContain("whitespace-normal");
+    expect(chip.className).not.toContain("whitespace-nowrap");
+  });
+});

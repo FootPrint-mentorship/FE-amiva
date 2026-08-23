@@ -19,13 +19,28 @@ function LinkContent() {
   const [error, setError] = useState("");
 
   if (!token) {
+    // No token: either a stale/used deep link, or someone navigated here
+    // hoping to connect. Offer the web-initiated flow instead of a dead end
+    // (the Settings page runs it via ?connect=whatsapp).
     return (
       <Card className="p-7 text-center">
-        <h1 className="text-xl font-semibold text-navy">Link expired</h1>
+        <h1 className="text-xl font-semibold text-navy">
+          {sessionActive() ? "Connect your WhatsApp" : "Link expired"}
+        </h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          This linking link has expired or was already used. Message Amiva again
-          on WhatsApp and she&apos;ll send you a fresh one.
+          {sessionActive()
+            ? "Start the connection from your settings — Amiva prefills a WhatsApp message, and sending it links your number."
+            : "This linking link has expired or was already used. Message Amiva again on WhatsApp and she'll send you a fresh one."}
         </p>
+        {sessionActive() && (
+          <Button
+            size="lg"
+            className="mt-5 w-full"
+            onClick={() => router.push("/app/settings?connect=whatsapp")}
+          >
+            Connect WhatsApp
+          </Button>
+        )}
       </Card>
     );
   }

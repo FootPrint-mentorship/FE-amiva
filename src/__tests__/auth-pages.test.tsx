@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { clearTokens } from "@/lib/api/client";
 import userEvent from "@testing-library/user-event";
 import LoginPage from "@/app/(public)/login/page";
 import RegisterPage from "@/app/(public)/register/page";
@@ -170,10 +171,19 @@ describe("Forgot password", () => {
 });
 
 describe("WhatsApp link landing", () => {
-  it("shows the expired state without a token", () => {
+  it("signed out without a token: shows the expired state", () => {
     nav.search = "";
+    clearTokens();
     render(<LinkPage />);
     expect(screen.getByText("Link expired")).toBeInTheDocument();
+  });
+
+  it("signed in without a token: offers the web connect flow instead of a dead end", async () => {
+    nav.search = "";
+    render(<LinkPage />);
+    expect(screen.getByText("Connect your WhatsApp")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Connect WhatsApp" }));
+    expect(nav.push).toHaveBeenCalledWith("/app/settings?connect=whatsapp");
   });
 
   it("with a token, asks for explicit confirmation then routes to the app", async () => {

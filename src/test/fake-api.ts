@@ -582,6 +582,18 @@ export async function api<T>(
       db.user.whatsapp_linked = true;
       return {};
     }
+    if (route === "POST /link/whatsapp/code") {
+      const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      return {
+        code: "LNK0TESTCD",
+        wa_deep_link: "https://wa.me/2349058155331?text=LNK0TESTCD",
+        expires_at: expires,
+      };
+    }
+    if (route === "DELETE /link/whatsapp") {
+      db.user.whatsapp_linked = false;
+      return undefined;
+    }
 
     /* ------------------------------- activity ------------------------------ */
     if (route === "GET /activity") return page(db.audit);

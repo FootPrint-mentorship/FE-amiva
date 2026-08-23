@@ -38,6 +38,34 @@ export function clearPendingLink(): void {
   }
 }
 
+/**
+ * Web-initiated linking (backend spec §3.2): the server mints a short
+ * single-use code plus a wa.me deep link with the code prefilled. The user
+ * sends that message to Amiva on WhatsApp; the bot binds the JID it arrives
+ * from. The browser then just polls /users/me until whatsapp_linked flips —
+ * a verified phone is NOT required (§11.5: a bound wa_id IS the verified
+ * WhatsApp channel).
+ */
+export type LinkCode = {
+  code: string;
+  wa_deep_link: string;
+  expires_at: string;
+};
+
+export async function createLinkCode(): Promise<LinkCode> {
+  return api<LinkCode>("/link/whatsapp/code", { method: "POST" });
+}
+
+/** Server-side unlink (DELETE /link/whatsapp) — the bot stops recognising
+ * the number immediately. The store only flips after the server confirms. */
+export async function unlinkWhatsApp(): Promise<void> {
+  await api("/link/whatsapp", { method: "DELETE" });
+  settingsStore.set((c) => ({
+    ...c,
+    integrations: { ...c.integrations, whatsapp: false },
+  }));
+}
+
 /** Bind the token's WhatsApp number to the signed-in account. */
 export async function verifyWhatsAppLink(token: string): Promise<void> {
   await api("/link/whatsapp/verify", { method: "POST", body: { token } });

@@ -105,18 +105,18 @@ export default function MemoriesPage() {
     setConfirmDelete(false);
   };
 
-  const exportAll = () => {
-    const blob = new Blob([JSON.stringify(items, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "amiva-memories.json";
-    a.click();
-    URL.revokeObjectURL(url);
-    toast("Memories exported as JSON.");
-  };
+  // Server-side export (GET /memories/export): the client cache holds only
+  // the first page (50), so serializing `items` silently truncated large
+  // accounts — found in the 24 Aug endpoint-coverage audit.
+  const exportAll = () =>
+    apiBlob("/memories/export")
+      .then((blob) => {
+        saveBlob(blob, "amiva-memories.json");
+        toast("Memories exported as JSON.");
+      })
+      .catch(() =>
+        toast("Export didn't go through — please try again.", { tone: "error" })
+      );
 
   return (
     <div className="space-y-5">
