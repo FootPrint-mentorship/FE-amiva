@@ -27,6 +27,8 @@ import {
   patchMemory,
   useMemories,
 } from "@/lib/data/collections";
+import { apiBlob } from "@/lib/api/client";
+import { saveBlob } from "@/lib/data/privacy";
 
 const categories = [
   "all",

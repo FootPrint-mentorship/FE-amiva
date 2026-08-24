@@ -699,8 +699,12 @@ export default function SettingsPage() {
                       Open WhatsApp
                     </a>
                     <p className="mt-3 text-xs text-ink-muted">
+                      {/* The bot's parser requires the LINK prefix (inbound
+                          LINK_CODE_RE) — the bare code would silently fail. */}
                       On another device? Send{" "}
-                      <span className="font-mono font-semibold text-navy">{waLink.code}</span>{" "}
+                      <span className="font-mono font-semibold text-navy">
+                        LINK {waLink.code}
+                      </span>{" "}
                       to Amiva on WhatsApp instead.
                     </p>
                     <p

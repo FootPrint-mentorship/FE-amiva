@@ -111,13 +111,16 @@ describe("Select (custom dropdown)", () => {
   });
 });
 
-describe("Chip wrap variant (NFR-04: long recurrence text must not widen the page)", () => {
-  it("defaults to nowrap; wrap swaps to whitespace-normal", () => {
-    const { rerender } = render(<Chip>Every day</Chip>);
-    expect(screen.getByText("Every day").className).toContain("whitespace-nowrap");
-    rerender(<Chip wrap>Every Monday, Tuesday, Wednesday, Thursday and Friday at 8:30 AM</Chip>);
-    const chip = screen.getByText(/Every Monday/);
-    expect(chip.className).toContain("whitespace-normal");
-    expect(chip.className).not.toContain("whitespace-nowrap");
+describe("Chip stays a contained pill (NFR-04: long recurrence text must not widen the page)", () => {
+  it("accepts width constraints via className without losing the pill base", () => {
+    render(
+      <Chip className="min-w-0 max-w-full" title="Every Monday at 8">
+        <span className="min-w-0 truncate">Every Monday at 8</span>
+      </Chip>
+    );
+    const chip = screen.getByTitle("Every Monday at 8");
+    expect(chip.className).toContain("max-w-full");
+    expect(chip.className).toContain("whitespace-nowrap");
+    expect(screen.getByText("Every Monday at 8").className).toContain("truncate");
   });
 });

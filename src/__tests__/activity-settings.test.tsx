@@ -135,7 +135,9 @@ describe("WhatsApp linking (web-initiated, spec §3.2)", () => {
       "https://wa.me/2349058155331?text=LNK0TESTCD"
     );
     expect(open).toHaveAttribute("target", "_blank");
-    expect(within(dialog).getByText("LNK0TESTCD")).toBeInTheDocument();
+    // The bot's parser only accepts "LINK <code>" — the fallback copy must
+    // include the prefix, never the bare code.
+    expect(within(dialog).getByText(/LINK LNK0TESTCD/)).toBeInTheDocument();
     expect(within(dialog).getByText(/Waiting for your message/)).toBeInTheDocument();
   });
 
