@@ -235,9 +235,16 @@ export default function RemindersPage() {
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
                       {r.recurrence_human && (
-                        <Chip tone="violet">
-                          <Repeat className="size-3" aria-hidden />
-                          {r.recurrence_human}
+                        // min-w-0/max-w-full + truncating text keep the pill
+                        // inside a narrow row (375px overflowed the page,
+                        // NFR-04 24 Aug); full text sits in title + edit modal.
+                        <Chip
+                          tone="violet"
+                          className="min-w-0 max-w-full"
+                          title={r.recurrence_human}
+                        >
+                          <Repeat className="size-3 shrink-0" aria-hidden />
+                          <span className="min-w-0 truncate">{r.recurrence_human}</span>
                         </Chip>
                       )}
                       {r.status === "snoozed" && (

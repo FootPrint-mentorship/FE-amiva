@@ -52,12 +52,14 @@ import {
 } from "@/lib/data/integrations";
 import {
   listSessions,
+  loadMe,
   revokeSession,
   requestPasswordReset,
   setPassword,
   signOut as endSession,
   type SessionRow,
 } from "@/lib/data/auth";
+import { createLinkCode, unlinkWhatsApp, type LinkCode } from "@/lib/data/linking";
 import { PasswordField } from "@/components/ui/password-field";
 import { deleteAccount, privacyOverview, runExport, saveBlob, type DataCount } from "@/lib/data/privacy";
 import { ApiError } from "@/lib/api/client";
@@ -149,7 +151,44 @@ export default function SettingsPage() {
   const [exporting, setExporting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // Web-initiated WhatsApp linking: a minted code + wa.me deep link, shown in
+  // a modal that polls until the bot binds the sender's number (§3.2/§11.5).
+  const [waLink, setWaLink] = useState<LinkCode | null>(null);
+  const [waExpired, setWaExpired] = useState(false);
   const { matrix, quietHours } = settings;
+
+  const startWhatsAppConnect = () => {
+    setWaExpired(false);
+    createLinkCode()
+      .then(setWaLink)
+      .catch(() =>
+        toast("Couldn't start linking just now. Please try again.", { tone: "error" })
+      );
+  };
+
+  // While the connect modal waits, poll /users/me until whatsapp_linked flips
+  // (or the code expires). State changes happen in the interval callback, not
+  // the effect body (react-hooks/set-state-in-effect).
+  useEffect(() => {
+    if (!waLink || waExpired) return;
+    const id = window.setInterval(() => {
+      if (new Date(waLink.expires_at).getTime() < Date.now()) {
+        setWaExpired(true);
+        return;
+      }
+      loadMe()
+        .then(() => {
+          if (settingsStore.get().integrations.whatsapp) {
+            setWaLink(null);
+            toast("WhatsApp linked — anything you tell Amiva shows up here too.");
+          }
+        })
+        .catch(() => {
+          /* transient — the next tick retries */
+        });
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [waLink, waExpired]);
 
   // Google OAuth bounce-back (the API's callback redirects to
   // /app/settings?connected=google[&error=…]) — open the Integrations tab,
@@ -171,6 +210,20 @@ export default function SettingsPage() {
           /* the row falls back to the stored flag */
         });
       }
+      window.history.replaceState(null, "", "/app/settings");
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  // /app/settings?connect=whatsapp (e.g. from /link without a token) — open
+  // the Integrations tab and start the wa.me linking flow. Same deferred
+  // idiom as the Google bounce above.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connect") !== "whatsapp") return;
+    const t = setTimeout(() => {
+      setTab("integrations");
+      startWhatsAppConnect();
       window.history.replaceState(null, "", "/app/settings");
     }, 0);
     return () => clearTimeout(t);
@@ -225,12 +278,6 @@ export default function SettingsPage() {
       },
     }));
   };
-
-  const setIntegration = (key: "whatsapp" | "calendar", on: boolean) =>
-    settingsStore.set((c) => ({
-      ...c,
-      integrations: { ...c.integrations, [key]: on },
-    }));
 
   const startPhoneVerify = () => {
     setPhoneStage("code");
@@ -572,7 +619,7 @@ export default function SettingsPage() {
             const detail = row ? `${row.account_email} · connected` : i.detail;
             const connect = () => {
               if (i.key === "whatsapp") {
-                router.push("/link"); // linking happens in WhatsApp itself
+                startWhatsAppConnect(); // wa.me deep link + poll, no dead end
                 return;
               }
               connectGoogle(i.key).catch((err) =>
@@ -618,6 +665,65 @@ export default function SettingsPage() {
             Disconnecting revokes Amiva&apos;s access immediately. Features that depend on the integration stop working until you reconnect.
           </p>
 
+          {waLink && (
+            <Modal label="Connect WhatsApp" onClose={() => setWaLink(null)} panelClassName="w-full max-w-110">
+              <Card className="p-6">
+                <h2 className="text-lg font-semibold text-navy">Connect WhatsApp</h2>
+                {waExpired ? (
+                  <>
+                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+                      That code expired before Amiva heard from you. Get a fresh
+                      one and try again — it only takes a moment.
+                    </p>
+                    <div className="mt-5 flex justify-end gap-2">
+                      <Button variant="ghost" onClick={() => setWaLink(null)}>
+                        Not now
+                      </Button>
+                      <Button onClick={startWhatsAppConnect}>Get a new code</Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+                      Open WhatsApp and send the message we&apos;ve prefilled.
+                      Amiva links the number you send it from — no code to copy,
+                      nothing else to do.
+                    </p>
+                    <a
+                      href={waLink.wa_deep_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-control bg-indigo-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-violet-500"
+                    >
+                      <MessageCircle className="size-4" aria-hidden />
+                      Open WhatsApp
+                    </a>
+                    <p className="mt-3 text-xs text-ink-muted">
+                      {/* The bot's parser requires the LINK prefix (inbound
+                          LINK_CODE_RE) — the bare code would silently fail. */}
+                      On another device? Send{" "}
+                      <span className="font-mono font-semibold text-navy">
+                        LINK {waLink.code}
+                      </span>{" "}
+                      to Amiva on WhatsApp instead.
+                    </p>
+                    <p
+                      className="mt-4 flex items-center gap-2 text-sm text-ink-muted"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <span
+                        className="size-3 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent"
+                        aria-hidden
+                      />
+                      Waiting for your message — this updates by itself.
+                    </p>
+                  </>
+                )}
+              </Card>
+            </Modal>
+          )}
+
           {disconnecting && (
             <Modal label="Confirm disconnect" onClose={() => setDisconnecting(null)} panelClassName="w-full max-w-110">
               <Card className="p-6">
@@ -639,8 +745,13 @@ export default function SettingsPage() {
                       const key = disconnecting as "whatsapp" | "calendar";
                       setDisconnecting(null);
                       if (key === "whatsapp") {
-                        setIntegration("whatsapp", false);
-                        toast("Disconnected. Access was revoked.", { tone: "info" });
+                        // Real server-side unlink — flipping only the local
+                        // flag left the bot linked (found 24 Aug 2026).
+                        unlinkWhatsApp()
+                          .then(() => toast("Unlinked. Amiva no longer replies on WhatsApp.", { tone: "info" }))
+                          .catch(() =>
+                            toast("That didn't go through — the link was not changed.", { tone: "error" })
+                          );
                         return;
                       }
                       revokeIntegration(key)

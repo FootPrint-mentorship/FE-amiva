@@ -110,3 +110,17 @@ describe("Select (custom dropdown)", () => {
     expect(screen.getByRole("combobox", { name: "Timezone" })).toHaveTextContent("Europe/London");
   });
 });
+
+describe("Chip stays a contained pill (NFR-04: long recurrence text must not widen the page)", () => {
+  it("accepts width constraints via className without losing the pill base", () => {
+    render(
+      <Chip className="min-w-0 max-w-full" title="Every Monday at 8">
+        <span className="min-w-0 truncate">Every Monday at 8</span>
+      </Chip>
+    );
+    const chip = screen.getByTitle("Every Monday at 8");
+    expect(chip.className).toContain("max-w-full");
+    expect(chip.className).toContain("whitespace-nowrap");
+    expect(screen.getByText("Every Monday at 8").className).toContain("truncate");
+  });
+});
