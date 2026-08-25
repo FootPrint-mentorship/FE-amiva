@@ -62,6 +62,24 @@ export default function GlobalError({
           >
             Reload
           </button>
+          {/* When the app has crashed, reaching a human is the fallback that
+              always works — a mailto carrying the error digest so support can
+              tie the report to the Sentry event. */}
+          <p style={{ fontSize: "13px", lineHeight: 1.6, color: "#646880", marginTop: "20px" }}>
+            Still stuck?{" "}
+            <a
+              href={`mailto:support@tryamiva.com?subject=${encodeURIComponent(
+                "Amiva error report"
+              )}&body=${encodeURIComponent(
+                `Something went wrong while I was using Amiva.\n\nReference: ${
+                  error.digest ?? "n/a"
+                }`
+              )}`}
+              style={{ color: "#20185B", fontWeight: 600 }}
+            >
+              Email support
+            </a>
+          </p>
         </div>
       </body>
     </html>

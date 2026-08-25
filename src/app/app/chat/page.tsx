@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 import { fmtDay, fmtTime } from "@/lib/format";
+import { RichText } from "@/lib/rich-text";
 import type { ChatMessage } from "@/lib/types";
 import { toast } from "@/components/ui/toast";
 import {
@@ -159,7 +160,7 @@ export default function ChatPage() {
                     : "rounded-tl-sm border border-line bg-white text-navy",
                 )}
               >
-                {m.text}
+                <RichText text={m.text} />
                 <span
                   className={cn(
                     "mt-1 block text-right text-[10px]",
@@ -206,7 +207,7 @@ export default function ChatPage() {
                         />
                         <div>
                           <p className="text-sm text-navy">
-                            {m.confirmation.summary}
+                            <RichText text={m.confirmation.summary} />
                           </p>
                           <Chip
                             tone={

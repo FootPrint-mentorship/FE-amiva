@@ -19,9 +19,11 @@ import {
   LogOut,
   ShieldCheck,
   Globe,
+  LifeBuoy,
 } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/cn";
+import { SUPPORT_EMAIL } from "@/lib/site";
 import { fmtDay, fmtTime } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { settingsStore, type FeatureKey } from "@/lib/stores";
@@ -234,6 +236,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Globe className="size-4.5" aria-hidden />
             About Amiva
           </Link>
+          {/* A stuck user needs support without leaving the app — a mailto
+              pre-filled with the account email so we can find them faster. */}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+              "Amiva support request"
+            )}&body=${encodeURIComponent(
+              `\n\n—\nAccount: ${settings.email || "(signed-in user)"}`
+            )}`}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-indigo-50 hover:text-navy"
+          >
+            <LifeBuoy className="size-4.5" aria-hidden />
+            Help &amp; support
+          </a>
           <div className="mt-1 flex items-center gap-3 rounded-lg px-3 py-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-violet-500 text-sm font-semibold text-white">
               {settings.preferredName[0]}

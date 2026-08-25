@@ -261,7 +261,15 @@ export async function api<T>(
     if (route === "POST /auth/password/reset") return {};
     if (route === "POST /auth/password/set") return { set: true };
     if (route === "POST /auth/phone/send-code") {
-      pendingPhone = typeof body.phone === "string" ? body.phone : null;
+      const provided = typeof body.phone === "string" ? body.phone : null;
+      // Honest to the contract: with no number in the body AND none on the
+      // account, the real API 422s (this gap hid the onboarding dead-end bug).
+      if (!provided && !db.user.phone) {
+        throw new ApiError("VALIDATION_ERROR", "No phone number on file", 422, {
+          field: "phone",
+        });
+      }
+      pendingPhone = provided;
       return {};
     }
     if (route === "POST /auth/phone/verify") {

@@ -33,6 +33,7 @@ import {
   useTasks,
 } from "@/lib/data/collections";
 import { cn } from "@/lib/cn";
+import { RichText } from "@/lib/rich-text";
 
 const priorityTone = {
   urgent: "danger",
@@ -120,7 +121,7 @@ export default function TodayPage() {
               <span className="font-semibold">
                 1 action needs your approval:
               </span>{" "}
-              {confirmations[0].summary}
+              <RichText text={confirmations[0].summary} />
             </p>
             <div className="flex gap-2">
               <Button

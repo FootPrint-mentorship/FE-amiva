@@ -19,12 +19,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { OtpInput } from "@/components/ui/otp-input";
+import { PhoneField } from "@/components/ui/phone-field";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { WA_LINK } from "@/lib/site";
 import { sendAssistantMessage } from "@/lib/data/assistant";
 import { connectGoogle } from "@/lib/data/integrations";
-import { api } from "@/lib/api/client";
+import { api, ApiError } from "@/lib/api/client";
 import { setAuthed } from "@/lib/session";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
@@ -157,6 +158,14 @@ export default function OnboardingPage() {
   // phone verification (skippable — OTP goes only to the channel being verified)
   const [phoneStage, setPhoneStage] = useState<"idle" | "sent">("idle");
   const [phoneOtp, setPhoneOtp] = useState("");
+  // A number the account already carries (registered with one) can be verified
+  // as-is; otherwise the user must enter one here — without this the step sent
+  // an empty send-code and 422'd with only a misleading "try again" toast.
+  const [newCc, setNewCc] = useState("+234");
+  const [newPhone, setNewPhone] = useState("");
+  const [phoneErr, setPhoneErr] = useState("");
+  const [sendingPhone, setSendingPhone] = useState(false);
+  const hasNumberOnFile = Boolean(settings.phone);
 
   const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
@@ -167,6 +176,8 @@ export default function OnboardingPage() {
   };
 
   const sendPhoneCode = () => {
+    // Verify a number already on the account; the field path uses its own
+    // handler so the two never send an empty body.
     setPhoneStage("sent");
     sendPhoneCodeApi()
       .then(() => toast("Code sent to your WhatsApp number."))
@@ -176,6 +187,26 @@ export default function OnboardingPage() {
           tone: "error",
         });
       });
+  };
+
+  const sendCodeToNewNumber = () => {
+    const digits = newPhone.replace(/[\s()-]/g, "");
+    if (digits.length < 7) {
+      setPhoneErr("Enter the full number.");
+      return;
+    }
+    setPhoneErr("");
+    setSendingPhone(true);
+    sendPhoneCodeApi(`${newCc}${digits.replace(/^0/, "")}`)
+      .then(() => setPhoneStage("sent"))
+      .catch((err) =>
+        setPhoneErr(
+          err instanceof ApiError && err.code === "CONFLICT"
+            ? "An account with this number already exists."
+            : "Couldn't send the code just now. Please try again."
+        )
+      )
+      .finally(() => setSendingPhone(false));
   };
 
   const onPhoneOtp = (code: string) => {
@@ -438,15 +469,7 @@ export default function OnboardingPage() {
                     is verified. We&apos;ll send a one-time code there — nowhere
                     else.
                   </p>
-                  {phoneStage === "idle" ? (
-                    <Button
-                      className="mt-5 w-full"
-                      size="lg"
-                      onClick={sendPhoneCode}
-                    >
-                      Send code to WhatsApp
-                    </Button>
-                  ) : (
+                  {phoneStage === "sent" ? (
                     <div className="mt-5 rounded-xl border border-line bg-soft p-4">
                       <p className="mb-2 text-xs text-ink-muted">
                         Enter the 6-digit code.
@@ -456,6 +479,37 @@ export default function OnboardingPage() {
                         onChange={onPhoneOtp}
                         label="Phone code"
                       />
+                    </div>
+                  ) : hasNumberOnFile ? (
+                    <Button
+                      className="mt-5 w-full"
+                      size="lg"
+                      onClick={sendPhoneCode}
+                    >
+                      Send code to WhatsApp
+                    </Button>
+                  ) : (
+                    // No number on file (phone is optional at signup) — collect
+                    // one here instead of firing an empty send-code that 422s.
+                    <div className="mt-5">
+                      <PhoneField
+                        cc={newCc}
+                        phone={newPhone}
+                        onCcChange={setNewCc}
+                        onPhoneChange={(v) => {
+                          setNewPhone(v);
+                          if (phoneErr) setPhoneErr("");
+                        }}
+                        error={phoneErr || undefined}
+                      />
+                      <Button
+                        className="mt-4 w-full"
+                        size="lg"
+                        onClick={sendCodeToNewNumber}
+                        loading={sendingPhone}
+                      >
+                        Send code to WhatsApp
+                      </Button>
                     </div>
                   )}
                   <div className="mt-3">
