@@ -491,6 +491,104 @@ export default function HomePage() {
         </Reveal>
       </section>
 
+      <section id="pricing" className="hidden scroll-mt-20 bg-lavender-50 px-5 py-28">
+        <div className="mx-auto max-w-270">
+          <Reveal>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">
+              Simple pricing
+            </p>
+            <h2 className="mt-5 max-w-162.5 text-[clamp(42px,5vw,64px)] font-bold leading-none tracking-[-0.06em] text-navy">
+              Start free. Upgrade when you need more help.
+            </h2>
+          </Reveal>
+          <div className="mx-auto mt-14 grid max-w-190 gap-5 md:grid-cols-2">
+            {[
+              {
+                name: "Free",
+                price: "₦0",
+                per: null,
+                desc: "Get organised with the essentials.",
+                items: [
+                  "Reminders and tasks",
+                  "Basic memory",
+                  "WhatsApp conversation",
+                ],
+              },
+              {
+                name: "Pro",
+                price: "₦1,500",
+                per: "/mo",
+                desc: "More capacity for a fuller schedule.",
+                items: [
+                  "Everything in Free",
+                  "Voice-note requests",
+                  "Priority support",
+                ],
+                popular: true,
+              },
+            ].map((plan, i) => (
+              <Reveal
+                key={plan.name}
+                variant="scale"
+                delay={i * 140}
+                className="flex"
+              >
+                <div
+                  className={`relative flex min-h-97.5 w-full flex-col rounded-[20px] border bg-white p-8 ${plan.popular ? "border-indigo-900 shadow-[0_25px_70px_rgba(32,24,91,0.12)]" : "border-line"}`}
+                >
+                  {plan.popular && (
+                    <span className="absolute right-6 top-6 rounded-full bg-indigo-50 px-3 py-1 text-[9px] font-bold uppercase text-indigo-900">
+                      Most popular
+                    </span>
+                  )}
+                  <p className="text-xs font-semibold text-violet-500">
+                    {plan.name}
+                  </p>
+                  <h3 className="mt-8 text-5xl font-bold tracking-[-0.06em] text-navy">
+                    {plan.price}
+                    {plan.per && (
+                      <span className="text-base font-medium text-ink-muted">
+                        {plan.per}
+                      </span>
+                    )}
+                  </h3>
+                  <p className="mt-3 text-xs text-ink-muted">{plan.desc}</p>
+                  <ul className="mt-8 space-y-4 text-xs text-navy">
+                    {plan.items.map((x) => (
+                      <li key={x} className="flex gap-2">
+                        <Check className="size-4 text-violet-500" />
+                        {x}
+                      </li>
+                    ))}
+                  </ul>
+                  {plan.popular ? (
+                    <Link
+                      href="/register"
+                      className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-indigo-900 text-xs font-semibold text-white"
+                    >
+                      Get started
+                    </Link>
+                  ) : (
+                    <a
+                      href={WA_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-lavender-50 text-xs font-semibold text-indigo-900"
+                    >
+                      Start on WhatsApp
+                    </a>
+                  )}
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <p className="mt-8 text-center text-[10px] text-ink-muted">
+            Fair-use limits apply. Prices shown in NGN; KES and USD available at
+            checkout.
+          </p>
+        </div>
+      </section>
+
       <section id="faq" className="scroll-mt-20 bg-white px-5 py-28">
         <Reveal>
           <div className="mx-auto grid max-w-270 gap-16 rounded-[28px] bg-surface p-7 md:grid-cols-[0.75fr_1.25fr] md:p-16">

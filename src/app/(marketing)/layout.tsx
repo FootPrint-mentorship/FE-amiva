@@ -21,12 +21,14 @@ function subscribeToSession(onChange: () => void) {
 // Contact goes straight to the WhatsApp chat — the product IS the chat.
 const nav = [
   { href: "/#features", label: "Features" },
+  { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "Questions" },
   { href: WA_LINK, label: "Contact", external: true },
 ];
 
 const footerProduct = [
   { href: "/#features", label: "Features" },
+  { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
 ];
 
