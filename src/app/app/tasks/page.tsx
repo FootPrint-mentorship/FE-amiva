@@ -7,17 +7,19 @@ import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
-import { fmtDay, taskCategories, type Task } from "@/lib/mock";
+import { fmtDay } from "@/lib/format";
+import { taskCategories, type Task } from "@/lib/types";
 import { Select } from "@/components/ui/select";
-import { useStore } from "@/lib/store";
-import { tasksStore } from "@/lib/stores";
 import { toast } from "@/components/ui/toast";
+import { ApiError } from "@/lib/api/client";
 import {
   addSubtasks,
   createTask,
   patchTask as patchTaskApi,
   setTaskStatus,
+  suggestSubtaskIdeas,
   toggleSubtask as toggleSubtaskApi,
+  useTasks,
 } from "@/lib/data/collections";
 
 const tabs = ["Today", "Upcoming", "Overdue", "Completed"] as const;
@@ -53,10 +55,11 @@ function matches(t: Task, tab: Tab) {
 export default function TasksPage() {
   const [tab, setTab] = useState<Tab>("Today");
   const [category, setCategory] = useState<string>("all");
-  const items = useStore(tasksStore);
+  const { items } = useTasks();
   const [suggesting, setSuggesting] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [quickTitle, setQuickTitle] = useState("");
+  const [subtaskTitle, setSubtaskTitle] = useState("");
 
   const visible = useMemo(
     () =>
@@ -96,21 +99,34 @@ export default function TasksPage() {
   const patch = (id: string, changes: Partial<Task>) =>
     patchTaskApi(id, changes).catch(fail);
 
-  const suggestSubtasks = (t: Task) => {
+  const suggestSubtasks = async (t: Task) => {
     setSuggesting(true);
-    const ideas = [
-      `Outline what “${t.title.toLowerCase()}” needs`,
-      "Draft the first version",
-      "Review and send",
-    ].filter((title) => !t.subtasks.some((s) => s.title === title));
-    addSubtasks(t, ideas)
-      .then(() =>
-        toast(
-          `Added ${ideas.length} suggested subtasks. Edit or delete freely.`,
-        ),
-      )
-      .catch(fail)
-      .finally(() => setSuggesting(false));
+    try {
+      const ideas = await suggestSubtaskIdeas(t);
+      if (ideas.length === 0) {
+        toast("No new suggestions for this one — it looks well covered.");
+        return;
+      }
+      await addSubtasks(t, ideas);
+      toast(`Added ${ideas.length} suggested subtasks. Edit or delete freely.`);
+    } catch (err) {
+      // No LLM configured server-side → PROVIDER_ERROR. Stay honest but
+      // point at the path that always works.
+      if (err instanceof ApiError && err.code === "PROVIDER_ERROR")
+        toast("AI suggestions aren't available right now — you can add subtasks below.", {
+          tone: "info",
+        });
+      else fail(err);
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  const addSubtask = (t: Task) => {
+    const title = subtaskTitle.trim();
+    if (!title) return;
+    setSubtaskTitle("");
+    addSubtasks(t, [title]).catch(fail);
   };
 
   const toggleSubtask = (taskId: string, subId: string) => {
@@ -231,7 +247,10 @@ export default function TasksPage() {
               <Card
                 key={t.id}
                 className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:border-indigo-300"
-                onClick={() => setOpenId(t.id)}
+                onClick={() => {
+                  setOpenId(t.id);
+                  setSubtaskTitle(""); // a draft never carries across tasks
+                }}
               >
                 <button
                   aria-label={`Complete ${t.title}`}
@@ -323,9 +342,12 @@ export default function TasksPage() {
               <section className="grid grid-cols-2 gap-3">
                 <label className="text-sm font-medium text-navy">
                   Due date
+                  {/* Uncontrolled (keyed per task): a slow PATCH response must
+                      never yank the field back while the user is typing. */}
                   <input
                     type="date"
-                    value={open.due_date ?? ""}
+                    key={open.id}
+                    defaultValue={open.due_date ?? ""}
                     onChange={(e) =>
                       patch(open.id, { due_date: e.target.value || null })
                     }
@@ -349,12 +371,20 @@ export default function TasksPage() {
                 </div>
                 <label className="col-span-2 text-sm font-medium text-navy">
                   Project
+                  {/* Draft locally, save once on blur/Enter — saving every
+                      keystroke raced the server echo and garbled typing. */}
                   <input
-                    value={open.project ?? ""}
+                    key={open.id}
+                    defaultValue={open.project ?? ""}
                     placeholder="None"
-                    onChange={(e) =>
-                      patch(open.id, { project: e.target.value || null })
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && e.currentTarget.blur()
                     }
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (open.project ?? ""))
+                        patch(open.id, { project: v || null });
+                    }}
                     className="mt-1.5 h-10 w-full rounded-control border border-line bg-white px-2.5 text-sm font-normal text-navy placeholder:text-ink-muted"
                   />
                 </label>
@@ -417,6 +447,14 @@ export default function TasksPage() {
                     ))}
                   </ul>
                 )}
+                <input
+                  value={subtaskTitle}
+                  onChange={(e) => setSubtaskTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addSubtask(open)}
+                  placeholder="Add a subtask…"
+                  aria-label="Add a subtask"
+                  className="mt-3 h-9 w-full rounded-control border border-line bg-white px-2.5 text-sm text-navy placeholder:text-ink-muted"
+                />
                 <Button
                   variant="secondary"
                   size="sm"
@@ -424,8 +462,8 @@ export default function TasksPage() {
                   loading={suggesting}
                   onClick={() => suggestSubtasks(open)}
                 >
-                  <Sparkles className="size-4" aria-hidden />
-                  Suggest subtasks
+                  {!suggesting && <Sparkles className="size-4" aria-hidden />}
+                  {suggesting ? "Suggesting…" : "Suggest subtasks"}
                 </Button>
               </section>
               <section>
@@ -433,7 +471,13 @@ export default function TasksPage() {
                   Source
                 </h3>
                 <p className="text-sm text-navy">
-                  Created via WhatsApp · today
+                  Created via{" "}
+                  {open.source === "whatsapp"
+                    ? "WhatsApp"
+                    : open.source === "system"
+                      ? "Amiva"
+                      : "the web app"}
+                  {open.created_at ? ` · ${fmtDay(open.created_at)}` : ""}
                 </p>
               </section>
             </div>

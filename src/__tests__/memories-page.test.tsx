@@ -4,9 +4,9 @@ import userEvent from "@testing-library/user-event";
 import MemoriesPage from "@/app/app/memories/page";
 
 describe("Memories page", () => {
-  it("renders memory cards with category chips and source metadata", () => {
+  it("renders memory cards with category chips and source metadata", async () => {
     render(<MemoriesPage />);
-    expect(screen.getByText(/Landlord's account/)).toBeInTheDocument();
+    expect(await screen.findByText(/Landlord's account/)).toBeInTheDocument();
     expect(screen.getByText(/Wifi password/)).toBeInTheDocument();
   });
 
@@ -32,7 +32,7 @@ describe("Memories page", () => {
 
   it("permanent deletion requires an explicit confirm step (PRD MEM-06)", async () => {
     render(<MemoriesPage />);
-    await userEvent.click(screen.getByText(/Wifi password/));
+    await userEvent.click(await screen.findByText(/Wifi password/));
     const dialog = screen.getByRole("dialog", { name: "Memory detail" });
     expect(dialog).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
@@ -46,7 +46,7 @@ describe("Memories page", () => {
 
   it("confirmed deletion removes the memory for good", async () => {
     render(<MemoriesPage />);
-    await userEvent.click(screen.getByText(/Wifi password/));
+    await userEvent.click(await screen.findByText(/Wifi password/));
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
     await userEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -55,7 +55,7 @@ describe("Memories page", () => {
 
   it("edit updates the memory content in place", async () => {
     render(<MemoriesPage />);
-    await userEvent.click(screen.getByText(/Wifi password/));
+    await userEvent.click(await screen.findByText(/Wifi password/));
     await userEvent.click(screen.getByRole("button", { name: "Edit" }));
     const box = screen.getByLabelText("Edit memory content");
     await userEvent.clear(box);

@@ -3,12 +3,25 @@ import { vi, beforeEach, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 import React from "react";
 import { resetAllStores } from "@/lib/store";
+import { settingsStore } from "@/lib/stores";
+import { makeAdaSettings } from "./fixtures";
+import { reset as resetFakeApi } from "./fake-api";
 
-// Tests always run self-contained on the mock stores.
-process.env.NEXT_PUBLIC_USE_MOCKS = "1";
+// Tests run self-contained against the in-memory fake of the api() boundary
+// (the mock mode inside the runtime was retired 17 Aug 2026).
+vi.mock("@/lib/api/client", () => import("./fake-api"));
 
 afterEach(cleanup);
-beforeEach(() => resetAllStores()); // shared stores must not leak between tests
+beforeEach(async () => {
+  resetFakeApi(); // pristine fixture database + live session
+  resetAllStores(); // shared stores must not leak between tests
+  // Pages render without the app layout, whose loadMe() would fill the
+  // settings store from /users/me — seed it with the same Ada profile the
+  // fake's auth endpoints answer with.
+  settingsStore.set(() => makeAdaSettings());
+  const { queryClient } = await import("@/lib/query");
+  queryClient.clear(); // …nor the query cache (collections refetch per test)
+});
 
 // jsdom lacks scrollIntoView (used by the chat thread autoscroll).
 Element.prototype.scrollIntoView = vi.fn();
@@ -18,6 +31,7 @@ vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => {
     const { src, alt, priority: _priority, ...rest } = props;
     return (
+      // eslint-disable-next-line @next/next/no-img-element -- this IS the test double for next/image
       <img src={typeof src === "string" ? src : ""} alt={String(alt ?? "")} {...rest} />
     );
   },

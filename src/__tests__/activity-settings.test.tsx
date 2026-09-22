@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import SettingsPage from "@/app/app/settings/page";
 import { settingsStore } from "@/lib/stores";
@@ -94,11 +94,14 @@ describe("Settings page", () => {
 });
 
 describe("Activity log (inside Settings)", () => {
-  it("lists actions with risk chips and expandable approval details", async () => {
+  it("lists actions with risk chips and an expandable action detail", async () => {
     await openTab("Activity");
-    expect(screen.getByText(/Permanently deleted 1 memory/)).toBeInTheDocument();
+    // GET /activity rows carry no approval field any more — the expanded
+    // panel shows the machine action name instead.
+    expect(await screen.findByText(/Permanently deleted 1 memory/)).toBeInTheDocument();
+    expect(screen.getAllByText("high").length).toBeGreaterThan(0); // risk chip
     await userEvent.click(screen.getByText(/Permanently deleted 1 memory/));
-    expect(screen.getByText(/Confirmed by you via web/)).toBeInTheDocument();
+    expect(screen.getByText("memory.delete_permanent")).toBeInTheDocument();
   });
 
   it("filters by risk through the custom dropdown", async () => {
@@ -114,5 +117,41 @@ describe("Activity log (inside Settings)", () => {
     await openTab("Activity");
     await userEvent.click(screen.getByText(/Client dinner with Kemi/));
     expect(screen.getByText(/no change was made/)).toBeInTheDocument();
+  });
+});
+
+describe("WhatsApp linking (web-initiated, spec §3.2)", () => {
+  it("Connect opens the wa.me flow: prefilled deep link, fallback code, waiting state", async () => {
+    settingsStore.set((c) => ({
+      ...c,
+      integrations: { ...c.integrations, whatsapp: false },
+    }));
+    await openTab("Integrations");
+    await userEvent.click(screen.getByRole("button", { name: "Connect" }));
+    const dialog = await screen.findByRole("dialog", { name: "Connect WhatsApp" });
+    const open = within(dialog).getByRole("link", { name: /Open WhatsApp/ });
+    expect(open).toHaveAttribute(
+      "href",
+      "https://wa.me/2349058155331?text=LNK0TESTCD"
+    );
+    expect(open).toHaveAttribute("target", "_blank");
+    // The bot's parser only accepts "LINK <code>" — the fallback copy must
+    // include the prefix, never the bare code.
+    expect(within(dialog).getByText(/LINK LNK0TESTCD/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Waiting for your message/)).toBeInTheDocument();
+  });
+
+  it("unlinking calls the server and only then flips the store (no local-only lie)", async () => {
+    settingsStore.set((c) => ({
+      ...c,
+      integrations: { ...c.integrations, whatsapp: true },
+    }));
+    await openTab("Integrations");
+    await userEvent.click(screen.getByRole("button", { name: "Unlink" }));
+    const dialog = screen.getByRole("dialog", { name: "Confirm disconnect" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Disconnect" }));
+    await waitFor(() =>
+      expect(settingsStore.get().integrations.whatsapp).toBe(false)
+    );
   });
 });

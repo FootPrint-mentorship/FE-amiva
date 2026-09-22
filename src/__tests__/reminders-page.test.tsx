@@ -4,15 +4,24 @@ import userEvent from "@testing-library/user-event";
 import RemindersPage from "@/app/app/reminders/page";
 
 describe("Reminders page", () => {
-  it("shows scheduled reminders under Upcoming, grouped by day, with timezone visible", () => {
+  it("shows scheduled reminders under Upcoming, grouped by day, with timezone visible", async () => {
     render(<RemindersPage />);
-    expect(screen.getByText("Pay NEPA bill")).toBeInTheDocument();
+    expect(await screen.findByText("Pay NEPA bill")).toBeInTheDocument();
     expect(screen.getByText("Call Mum")).toBeInTheDocument();
     expect(screen.getByText("Today")).toBeInTheDocument();
     expect(screen.getByText("Tomorrow")).toBeInTheDocument();
     expect(screen.getAllByText("WAT").length).toBeGreaterThan(0); // PRD: tz always shown
     // Completed seed item is not in Upcoming
     expect(screen.queryByText("Standup prep")).not.toBeInTheDocument();
+  });
+
+  it("recurring reminders (due_at null) show their NEXT fire time, never the epoch", async () => {
+    // Prod QA 19 Aug 2026: rows rendered "Thu 1 Jan, 1:00 am" because the list
+    // formatted due_at, which the real API leaves null for recurring reminders.
+    render(<RemindersPage />);
+    expect(await screen.findByText("Pay NEPA bill")).toBeInTheDocument();
+    expect(screen.queryByText(/1 Jan/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/1970/)).not.toBeInTheDocument();
   });
 
   it("tabs filter by status", async () => {
@@ -26,7 +35,7 @@ describe("Reminders page", () => {
 
   it("completing a reminder moves it to Completed", async () => {
     render(<RemindersPage />);
-    const card = screen.getByText("Call Mum").closest("div.rounded-2xl")!;
+    const card = (await screen.findByText("Call Mum")).closest("div.rounded-2xl")!;
     await userEvent.click(within(card as HTMLElement).getByRole("button", { name: /Done/ }));
     expect(screen.queryByText("Call Mum")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("tab", { name: "Completed" }));
@@ -35,7 +44,7 @@ describe("Reminders page", () => {
 
   it("the overflow menu edits a reminder with fields prefilled", async () => {
     render(<RemindersPage />);
-    await userEvent.click(screen.getAllByRole("button", { name: "More options" })[0]);
+    await userEvent.click((await screen.findAllByRole("button", { name: "More options" }))[0]);
     await userEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(screen.getByRole("dialog", { name: "Edit reminder" })).toBeInTheDocument();
     expect(screen.getByDisplayValue("Pay NEPA bill")).toBeInTheDocument();
@@ -46,18 +55,31 @@ describe("Reminders page", () => {
 
   it("pause keeps the reminder visible with a Paused chip; delete removes it", async () => {
     render(<RemindersPage />);
-    await userEvent.click(screen.getAllByRole("button", { name: "More options" })[0]);
+    await userEvent.click((await screen.findAllByRole("button", { name: "More options" }))[0]);
     await userEvent.click(screen.getByRole("menuitem", { name: "Pause" }));
     expect(screen.getByText("Paused")).toBeInTheDocument();
     expect(screen.getByText("Pay NEPA bill")).toBeInTheDocument();
 
+    // Delete is destructive: it must confirm first (prod QA finding, 23 Aug).
     await userEvent.click(screen.getAllByRole("button", { name: "More options" })[0]);
     await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(screen.getByText(/Delete “Pay NEPA bill”\?/)).toBeInTheDocument();
+    expect(screen.getByText("Pay NEPA bill")).toBeInTheDocument(); // untouched
+
+    // "Keep it" backs out…
+    await userEvent.click(screen.getByRole("button", { name: "Keep it" }));
+    expect(screen.getByText("Pay NEPA bill")).toBeInTheDocument();
+
+    // …and confirming actually deletes.
+    await userEvent.click(screen.getAllByRole("button", { name: "More options" })[0]);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(screen.getByRole("button", { name: "Delete reminder" }));
     expect(screen.queryByText("Pay NEPA bill")).not.toBeInTheDocument();
   });
 
   it("creates a new reminder through the modal", async () => {
     render(<RemindersPage />);
+    await screen.findByText("Pay NEPA bill"); // list loaded — empty-state CTA gone
     await userEvent.click(screen.getByRole("button", { name: /New reminder/ }));
     await userEvent.type(screen.getByLabelText("Remind me to…"), "Water the plants");
     // pick a safely-future time

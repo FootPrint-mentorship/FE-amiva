@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CalendarPage from "@/app/app/calendar/page";
 
@@ -35,7 +35,9 @@ describe("Calendar page", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Yes, cancel event" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.queryByText("Investor sync with Tunde")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText("Investor sync with Tunde")).not.toBeInTheDocument()
+    );
   });
 
   it("backing out of a cancellation keeps the event", async () => {

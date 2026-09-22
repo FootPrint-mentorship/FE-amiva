@@ -9,11 +9,10 @@ import { Field } from "@/components/ui/field";
 import { PhoneField } from "@/components/ui/phone-field";
 import { Select } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
-import { setProfileComplete } from "@/lib/session";
 import { pendingGoogleProfile, clearGoogleProfile } from "@/lib/google";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
 import { completeProfile } from "@/lib/data/auth";
-import { ApiError, USE_MOCKS } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/client";
 
 /**
  * Post-Google-sign-in step: Google supplies name + verified email; this
@@ -47,7 +46,6 @@ export default function CompleteProfilePage() {
     })
       .then(() => {
         clearGoogleProfile();
-        if (USE_MOCKS) setProfileComplete(true);
         toast("Welcome to Amiva.");
         router.push("/onboarding");
       })

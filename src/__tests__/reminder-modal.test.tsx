@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ReminderModal } from "@/components/domain/reminder-modal";
-import type { Reminder } from "@/lib/mock";
+import type { Reminder } from "@/lib/types";
 
 const isoDate = (offsetDays: number) => {
   const d = new Date();

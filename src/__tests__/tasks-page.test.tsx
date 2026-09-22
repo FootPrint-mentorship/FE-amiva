@@ -4,9 +4,9 @@ import userEvent from "@testing-library/user-event";
 import TasksPage from "@/app/app/tasks/page";
 
 describe("Tasks page", () => {
-  it("shows today's open tasks with subtask progress and project chips", () => {
+  it("shows today's open tasks with subtask progress and project chips", async () => {
     render(<TasksPage />);
-    expect(screen.getByText("Send proposal to Kemi")).toBeInTheDocument();
+    expect(await screen.findByText("Send proposal to Kemi")).toBeInTheDocument();
     expect(screen.getByText("Review Q3 budget draft")).toBeInTheDocument();
     expect(screen.getByText("1/2")).toBeInTheDocument(); // subtask progress
     expect(screen.getByText("Client: Kemi")).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe("Tasks page", () => {
 
   it("completing a task moves it to Completed with undo-able state", async () => {
     render(<TasksPage />);
-    await userEvent.click(screen.getByLabelText("Complete Review Q3 budget draft"));
+    await userEvent.click(await screen.findByLabelText("Complete Review Q3 budget draft"));
     expect(screen.queryByText("Review Q3 budget draft")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("tab", { name: /Completed/ }));
     expect(screen.getByText("Review Q3 budget draft")).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe("Tasks page", () => {
 
   it("the detail drawer shows and toggles subtasks", async () => {
     render(<TasksPage />);
-    await userEvent.click(screen.getByText("Send proposal to Kemi"));
+    await userEvent.click(await screen.findByText("Send proposal to Kemi"));
     const dialog = screen.getByRole("dialog", { name: "Send proposal to Kemi" });
     expect(dialog).toBeInTheDocument();
     expect(screen.getByText("Draft pricing section")).toBeInTheDocument();
@@ -61,7 +61,7 @@ describe("Tasks page", () => {
 
   it("Mark complete in the drawer completes the task", async () => {
     render(<TasksPage />);
-    await userEvent.click(screen.getByText("Send proposal to Kemi"));
+    await userEvent.click(await screen.findByText("Send proposal to Kemi"));
     await userEvent.click(screen.getByRole("button", { name: "Mark complete" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.queryByText("Send proposal to Kemi")).not.toBeInTheDocument();

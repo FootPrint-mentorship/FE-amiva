@@ -7,8 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { MessageCircle, ShieldCheck } from "lucide-react";
-import { USE_MOCKS, ApiError } from "@/lib/api/client";
-import { setAuthed } from "@/lib/session";
+import { ApiError } from "@/lib/api/client";
 import { sessionActive } from "@/lib/data/auth";
 import { stashPendingLink, verifyWhatsAppLink } from "@/lib/data/linking";
 
@@ -20,22 +19,37 @@ function LinkContent() {
   const [error, setError] = useState("");
 
   if (!token) {
+    // No token: either a stale/used deep link, or someone navigated here
+    // hoping to connect. Offer the web-initiated flow instead of a dead end
+    // (the Settings page runs it via ?connect=whatsapp).
     return (
       <Card className="p-7 text-center">
-        <h1 className="text-xl font-semibold text-navy">Link expired</h1>
+        <h1 className="text-xl font-semibold text-navy">
+          {sessionActive() ? "Connect your WhatsApp" : "Link expired"}
+        </h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          This linking link has expired or was already used. Message Amiva again
-          on WhatsApp and she&apos;ll send you a fresh one.
+          {sessionActive()
+            ? "Start the connection from your settings — Amiva prefills a WhatsApp message, and sending it links your number."
+            : "This linking link has expired or was already used. Message Amiva again on WhatsApp and she'll send you a fresh one."}
         </p>
+        {sessionActive() && (
+          <Button
+            size="lg"
+            className="mt-5 w-full"
+            onClick={() => router.push("/app/settings?connect=whatsapp")}
+          >
+            Connect WhatsApp
+          </Button>
+        )}
       </Card>
     );
   }
 
-  const authed = USE_MOCKS ? false : sessionActive();
+  const authed = sessionActive();
 
   // Not signed in: the token waits in localStorage; the link completes
   // automatically the moment they sign in or finish creating an account.
-  if (!authed && !USE_MOCKS) {
+  if (!authed) {
     stashPendingLink(token);
     return (
       <Card className="p-7">
@@ -76,14 +90,6 @@ function LinkContent() {
   const confirm = async () => {
     setLinking(true);
     setError("");
-    if (USE_MOCKS) {
-      // Self-contained demo keeps the old happy path.
-      setTimeout(() => {
-        setAuthed(true);
-        router.push("/app/today");
-      }, 800);
-      return;
-    }
     try {
       await verifyWhatsAppLink(token);
       toast("WhatsApp linked — anything you tell Amiva shows up here too.");

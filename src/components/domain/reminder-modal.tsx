@@ -7,7 +7,8 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
-import { user, type Reminder } from "@/lib/mock";
+import type { Reminder } from "@/lib/types";
+import { timezoneAbbr } from "@/lib/timezones";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
 
@@ -55,7 +56,7 @@ export function ReminderModal({
 }) {
   const today = new Date();
   const init = initial ? parseRecurrence(initial.rrule) : null;
-  const initParts = initial ? toLocalParts(initial.due_at) : null;
+  const initParts = initial ? toLocalParts(initial.due_at ?? initial.next_fire_at ?? new Date().toISOString()) : null;
   const settings = useStore(settingsStore);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [date, setDate] = useState(
@@ -130,7 +131,7 @@ export function ReminderModal({
       title: title.trim(),
       notes: notes.trim() || null,
       due_at: dueAt.toISOString(),
-      timezone: user.timezone,
+      timezone: settings.timezone,
       rrule: recurrenceUntouched ? initial!.rrule : buildRrule(),
       recurrence_human: recurrenceUntouched
         ? initial!.recurrence_human
@@ -183,7 +184,7 @@ export function ReminderModal({
             <label className="text-sm font-medium text-navy">
               Time{" "}
               <span className="font-normal text-ink-muted">
-                ({user.tz_abbr})
+                ({timezoneAbbr(settings.timezone)})
               </span>
               <input
                 type="time"

@@ -45,8 +45,12 @@ describe("Onboarding wizard", () => {
     expect(nav.push).toHaveBeenCalledWith("/app/today");
   });
 
-  it("verifying the phone marks it verified and moves on", async () => {
-    settingsStore.set((c) => ({ ...c, phoneVerified: false }));
+  it("verifying a number already on file marks it verified and moves on", async () => {
+    settingsStore.set((c) => ({
+      ...c,
+      phone: "+2348012345678",
+      phoneVerified: false,
+    }));
     render(<OnboardingPage />);
     await userEvent.click(screen.getByRole("button", { name: /set you up/ }));
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -57,6 +61,35 @@ describe("Onboarding wizard", () => {
     expect(settingsStore.get().phoneVerified).toBe(true);
     // auto-advanced to the Calendar step
     expect(screen.getByRole("heading", { name: "Connect Google Calendar" })).toBeInTheDocument();
+  });
+
+  it("with no number on file, collects one in the step (never fires an empty send-code)", async () => {
+    // The common path now that phone is optional at signup — the old build
+    // sent an empty code, 422'd, and showed only a misleading "try again".
+    settingsStore.set((c) => ({ ...c, phone: "", phoneVerified: false }));
+    render(<OnboardingPage />);
+    await userEvent.click(screen.getByRole("button", { name: /set you up/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    // A number field appears instead of a dead "Send code" button.
+    const field = screen.getByLabelText(/phone number/i);
+    await userEvent.type(field, "8098765432");
+    await userEvent.click(screen.getByRole("button", { name: "Send code to WhatsApp" }));
+    const first = await screen.findByLabelText("Phone code digit 1");
+    await userEvent.click(first);
+    await userEvent.paste("482913");
+    expect(settingsStore.get().phoneVerified).toBe(true);
+    expect(screen.getByRole("heading", { name: "Connect Google Calendar" })).toBeInTheDocument();
+  });
+
+  it("blocks an empty number with an inline message rather than a silent 422", async () => {
+    settingsStore.set((c) => ({ ...c, phone: "", phoneVerified: false }));
+    render(<OnboardingPage />);
+    await userEvent.click(screen.getByRole("button", { name: /set you up/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: "Send code to WhatsApp" }));
+    expect(screen.getByText("Enter the full number.")).toBeInTheDocument();
+    // still on the phone step — no OTP boxes appeared
+    expect(screen.queryByLabelText("Phone code digit 1")).not.toBeInTheDocument();
   });
 
   it("has a back button and clickable completed dots", async () => {

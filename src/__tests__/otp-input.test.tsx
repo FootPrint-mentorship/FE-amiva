@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { useState } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { OtpInput } from "@/components/ui/otp-input";
 
@@ -42,6 +42,33 @@ describe("OtpInput", () => {
     await userEvent.click(first);
     await userEvent.paste("482913");
     expect(screen.getByTestId("value")).toHaveTextContent("482913");
+  });
+
+  it("a whole code arriving in ONE input event fills every box", () => {
+    // Autofill (and fast typing) deliver several digits in a single input
+    // event; maxLength={1} used to keep only the first and drop the rest.
+    render(<Harness />);
+    fireEvent.change(screen.getByLabelText("Email code digit 1"), {
+      target: { value: "482913" },
+    });
+    expect(screen.getByTestId("value")).toHaveTextContent("482913");
+  });
+
+  it("overflows into later boxes when digits land mid-code", () => {
+    render(<Harness />);
+    fireEvent.change(screen.getByLabelText("Email code digit 3"), {
+      target: { value: "2913" },
+    });
+    expect(screen.getByTestId("value")).toHaveTextContent("2913");
+    expect(screen.getByLabelText("Email code digit 3")).toHaveValue("2");
+  });
+
+  it("retyping a digit replaces it instead of shifting the code along", async () => {
+    render(<Harness />);
+    const first = screen.getByLabelText("Email code digit 1");
+    await userEvent.type(first, "4");
+    fireEvent.change(first, { target: { value: "47" } });
+    expect(screen.getByTestId("value")).toHaveTextContent("7");
   });
 
   it("backspace on an empty box moves focus back", async () => {

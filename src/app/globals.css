@@ -29,7 +29,7 @@
   --color-danger: #d9534f;
 
   --color-ink: #131628;
-  --color-ink-muted: #6b6f80;
+  --color-ink-muted: #646880; /* 4.87:1 on lavender-50, 5.48:1 on white (was #6b6f80 = 4.43 on lavender — Lighthouse contrast fail) */
   --color-line: #e3e5f0;
   --color-scrim: #131628;
   --color-warning-ink: #9a6a1d;
@@ -114,6 +114,23 @@ select:focus-visible {
   outline: none;
   border-color: var(--color-indigo-400);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo-500) 15%, transparent);
+}
+
+/* Opt-out for inputs whose container provides the visual field (e.g. the
+   chat composer) — these rules are unlayered, so Tailwind utilities can't
+   override them; this class must live here at higher specificity. */
+.focus-ring-none:focus-visible {
+  outline: none;
+  border-color: inherit;
+  box-shadow: none;
+}
+
+/* Scroll-reveal pending state (components/marketing/reveal.tsx): hides only
+   when JS is running (`js` class set by the inline script in the root
+   layout), so crawlers, no-JS readers and Google's OAuth brand review always
+   see the full page content. */
+html.js .reveal-hidden {
+  opacity: 0;
 }
 
 /* ── Marketing animations (consumed by components/marketing/reveal.tsx and

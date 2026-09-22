@@ -1,20 +1,21 @@
 /**
- * Store-hydrating repositories. Screens keep rendering from the shared
- * stores; in real-API mode every mutation goes to the backend first and the
- * store is updated from the server's response (server-authoritative). In
- * mock mode (NEXT_PUBLIC_USE_MOCKS=1) mutations edit the stores directly —
- * the original self-contained demo behaviour.
+ * Collection repositories on the TanStack Query cache. Screens render from
+ * the `useReminders`/`useTasks`/… hooks; every mutation goes to the backend
+ * first and the cache is updated from the server's response
+ * (server-authoritative). Tests fake the api() boundary.
  */
 
-import { api, Page, USE_MOCKS } from "@/lib/api/client";
+import { api, Page } from "@/lib/api/client";
 import {
-  remindersStore,
-  tasksStore,
-  memoriesStore,
-  eventsStore,
-  settingsStore,
-} from "@/lib/stores";
-import type { Reminder, Task, Memory, CalendarEvent } from "@/lib/mock";
+  qk,
+  queryClient,
+  useCollection,
+  upsertInList,
+  removeFromList,
+  patchInList,
+} from "@/lib/query";
+import { settingsStore } from "@/lib/stores";
+import type { Reminder, Task, Memory, CalendarEvent } from "@/lib/types";
 
 /* ------------------------------ hydration ------------------------------ */
 
@@ -24,33 +25,52 @@ function isoDaysFromNow(days: number) {
   return d.toISOString();
 }
 
+const fetchReminders = async () =>
+  (await api<Page<Reminder>>("/reminders?limit=50")).data;
+const fetchTasks = async () => (await api<Page<Task>>("/tasks?limit=50")).data;
+const fetchMemories = async () =>
+  (await api<Page<Memory>>("/memories?limit=50")).data;
+// NB: per openapi.yaml this endpoint returns a bare array, not the list envelope
+const fetchEvents = () =>
+  api<CalendarEvent[]>(
+    `/calendar/events?from=${isoDaysFromNow(-7)}&to=${isoDaysFromNow(30)}`
+  );
+
+/** Warm every collection cache once authed (app layout). fetchQuery — not
+ * prefetchQuery — so a dead backend still rejects into the layout's toast. */
 export async function hydrateAll(): Promise<void> {
-  if (USE_MOCKS) return;
-  const [reminders, tasks, memories, events] = await Promise.all([
-    api<Page<Reminder>>("/reminders?limit=50"),
-    api<Page<Task>>("/tasks?limit=50"),
-    api<Page<Memory>>("/memories?limit=50"),
-    // NB: per openapi.yaml this endpoint returns a bare array, not the list envelope
-    api<CalendarEvent[]>(
-      `/calendar/events?from=${isoDaysFromNow(-7)}&to=${isoDaysFromNow(30)}`
-    ).catch(() => null), // calendar may be unconnected; keep the rest
+  await Promise.all([
+    queryClient.fetchQuery({ queryKey: qk.reminders, queryFn: fetchReminders }),
+    queryClient.fetchQuery({ queryKey: qk.tasks, queryFn: fetchTasks }),
+    queryClient.fetchQuery({ queryKey: qk.memories, queryFn: fetchMemories }),
+    // calendar may be unconnected; keep the rest
+    queryClient
+      .fetchQuery({ queryKey: qk.events, queryFn: fetchEvents })
+      .catch(() => null),
   ]);
-  remindersStore.set(reminders.data);
-  tasksStore.set(tasks.data);
-  memoriesStore.set(memories.data);
-  if (events) eventsStore.set(events);
+}
+
+/** Mark every collection stale and refetch what's on screen — called after
+ * the assistant reports server-side changes (replaces the old re-hydration). */
+export function invalidateCollections(): Promise<void> {
+  return Promise.all(
+    [qk.reminders, qk.tasks, qk.memories, qk.events].map((queryKey) =>
+      queryClient.invalidateQueries({ queryKey })
+    )
+  ).then(() => undefined);
 }
 
 /* ------------------------------ reminders ------------------------------ */
 
+export function useReminders() {
+  return useCollection<Reminder>(qk.reminders, fetchReminders);
+}
+
 function upsertReminder(r: Reminder) {
-  remindersStore.set((cur) =>
-    cur.some((x) => x.id === r.id) ? cur.map((x) => (x.id === r.id ? r : x)) : [r, ...cur]
-  );
+  upsertInList(qk.reminders, r);
 }
 
 export async function saveReminder(r: Reminder, isNew: boolean): Promise<void> {
-  if (USE_MOCKS) return upsertReminder(r);
   const body = {
     title: r.title,
     notes: r.notes,
@@ -66,31 +86,10 @@ export async function saveReminder(r: Reminder, isNew: boolean): Promise<void> {
 }
 
 export async function completeReminder(id: string): Promise<void> {
-  if (USE_MOCKS) {
-    remindersStore.set((cur) =>
-      cur.map((r) => (r.id === id ? { ...r, status: "completed" as const } : r))
-    );
-    return;
-  }
   upsertReminder(await api<Reminder>(`/reminders/${id}/complete`, { method: "POST" }));
 }
 
 export async function snoozeReminder(id: string, until: Date): Promise<void> {
-  if (USE_MOCKS) {
-    remindersStore.set((cur) =>
-      cur.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              status: "snoozed" as const,
-              snoozed_until: until.toISOString(),
-              next_fire_at: until.toISOString(),
-            }
-          : r
-      )
-    );
-    return;
-  }
   upsertReminder(
     await api<Reminder>(`/reminders/${id}/snooze`, {
       method: "POST",
@@ -99,38 +98,13 @@ export async function snoozeReminder(id: string, until: Date): Promise<void> {
   );
 }
 
-export async function skipReminder(id: string, fallbackNext: Date): Promise<Reminder | null> {
-  if (USE_MOCKS) {
-    let updated: Reminder | null = null;
-    remindersStore.set((cur) =>
-      cur.map((r) => {
-        if (r.id !== id) return r;
-        updated = {
-          ...r,
-          due_at: fallbackNext.toISOString(),
-          next_fire_at: fallbackNext.toISOString(),
-        };
-        return updated;
-      })
-    );
-    return updated;
-  }
+export async function skipReminder(id: string): Promise<Reminder | null> {
   const saved = await api<Reminder>(`/reminders/${id}/skip`, { method: "POST" });
   upsertReminder(saved);
   return saved;
 }
 
 export async function toggleReminderPause(id: string, pause: boolean): Promise<void> {
-  if (USE_MOCKS) {
-    remindersStore.set((cur) =>
-      cur.map((r) =>
-        r.id === id
-          ? { ...r, status: (pause ? "paused" : "scheduled") as Reminder["status"] }
-          : r
-      )
-    );
-    return;
-  }
   upsertReminder(
     await api<Reminder>(`/reminders/${id}`, {
       method: "PATCH",
@@ -140,23 +114,21 @@ export async function toggleReminderPause(id: string, pause: boolean): Promise<v
 }
 
 export async function deleteReminder(id: string): Promise<void> {
-  if (!USE_MOCKS) await api(`/reminders/${id}`, { method: "DELETE" });
-  remindersStore.set((cur) => cur.filter((r) => r.id !== id));
+  await api(`/reminders/${id}`, { method: "DELETE" });
+  removeFromList<Reminder>(qk.reminders, id);
 }
 
 /* -------------------------------- tasks -------------------------------- */
 
+export function useTasks() {
+  return useCollection<Task>(qk.tasks, fetchTasks);
+}
+
 function upsertTask(t: Task) {
-  tasksStore.set((cur) =>
-    cur.some((x) => x.id === t.id) ? cur.map((x) => (x.id === t.id ? t : x)) : [t, ...cur]
-  );
+  upsertInList(qk.tasks, t);
 }
 
 export async function createTask(t: Omit<Task, "id"> & { id?: string }): Promise<void> {
-  if (USE_MOCKS) {
-    upsertTask({ ...t, id: t.id ?? `tsk_${Date.now()}` } as Task);
-    return;
-  }
   upsertTask(
     await api<Task>("/tasks", {
       method: "POST",
@@ -172,18 +144,10 @@ export async function createTask(t: Omit<Task, "id"> & { id?: string }): Promise
 }
 
 export async function patchTask(id: string, changes: Partial<Task>): Promise<void> {
-  if (USE_MOCKS) {
-    tasksStore.set((cur) => cur.map((t) => (t.id === id ? { ...t, ...changes } : t)));
-    return;
-  }
   upsertTask(await api<Task>(`/tasks/${id}`, { method: "PATCH", body: changes }));
 }
 
 export async function setTaskStatus(id: string, status: Task["status"]): Promise<void> {
-  if (USE_MOCKS) {
-    tasksStore.set((cur) => cur.map((t) => (t.id === id ? { ...t, status } : t)));
-    return;
-  }
   upsertTask(
     await api<Task>(`/tasks/${id}/${status === "completed" ? "complete" : "reopen"}`, {
       method: "POST",
@@ -191,78 +155,80 @@ export async function setTaskStatus(id: string, status: Task["status"]): Promise
   );
 }
 
+type Subtask = Task["subtasks"][number];
+
+/** Merge one server-confirmed subtask into the cached task. */
+function reconcileSubtask(taskId: string, sub: Subtask) {
+  patchInList<Task>(qk.tasks, taskId, (t) => ({
+    ...t,
+    subtasks: t.subtasks.map((s) => (s.id === sub.id ? { ...s, ...sub } : s)),
+  }));
+}
+
+/** Optimistic: the checkbox flips instantly; the server response (or a
+ * rollback on failure) reconciles. Ticking a subtask must never feel hung.
+ * Contract check (16 Aug 2026, found live): the subtask endpoints return the
+ * SubtaskOut object, NOT the parent task — upserting the response as a Task
+ * silently corrupted the list. */
 export async function toggleSubtask(task: Task, subId: string): Promise<void> {
   const flipped = task.subtasks.map((s) =>
     s.id === subId ? { ...s, completed: !s.completed } : s
   );
-  if (USE_MOCKS) {
-    tasksStore.set((cur) =>
-      cur.map((t) => (t.id === task.id ? { ...t, subtasks: flipped } : t))
-    );
-    return;
-  }
+  patchInList<Task>(qk.tasks, task.id, { subtasks: flipped });
   const sub = flipped.find((s) => s.id === subId)!;
-  upsertTask(
-    await api<Task>(`/tasks/${task.id}/subtasks/${subId}`, {
-      method: "PATCH",
-      body: { completed: sub.completed },
-    })
+  try {
+    reconcileSubtask(
+      task.id,
+      await api<Subtask>(`/tasks/${task.id}/subtasks/${subId}`, {
+        method: "PATCH",
+        body: { completed: sub.completed },
+      })
+    );
+  } catch (err) {
+    // Roll the optimistic flip back — the screen must not lie.
+    patchInList<Task>(qk.tasks, task.id, { subtasks: task.subtasks });
+    throw err;
+  }
+}
+
+/** Ideas for breaking a task down (backend LLM; 502 PROVIDER_ERROR without a
+ * key). Already-present titles are filtered out. */
+export async function suggestSubtaskIdeas(task: Task): Promise<string[]> {
+  const res = await api<{ suggestions: string[] }>(
+    `/tasks/${task.id}/suggest-subtasks`,
+    { method: "POST" }
+  );
+  return res.suggestions.filter(
+    (title) => !task.subtasks.some((s) => s.title === title)
   );
 }
 
 export async function addSubtasks(task: Task, titles: string[]): Promise<void> {
-  if (USE_MOCKS) {
-    tasksStore.set((cur) =>
-      cur.map((t) =>
-        t.id === task.id
-          ? {
-              ...t,
-              subtasks: [
-                ...t.subtasks,
-                ...titles.map((title, i) => ({
-                  id: `sub_${Date.now()}_${i}`,
-                  title,
-                  completed: false,
-                })),
-              ],
-            }
-          : t
-      )
-    );
-    return;
-  }
-  let latest: Task | null = null;
+  // POST returns the created SubtaskOut — append each into the cached task
+  // as it lands, so suggestions appear one by one instead of all-or-nothing.
   for (const title of titles) {
-    latest = await api<Task>(`/tasks/${task.id}/subtasks`, {
+    const sub = await api<Subtask>(`/tasks/${task.id}/subtasks`, {
       method: "POST",
       body: { title },
     });
+    patchInList<Task>(qk.tasks, task.id, (t) => ({
+      ...t,
+      subtasks: [...t.subtasks, sub],
+    }));
   }
-  if (latest) upsertTask(latest);
 }
 
 /* ------------------------------- memories ------------------------------ */
 
+export function useMemories() {
+  return useCollection<Memory>(qk.memories, fetchMemories);
+}
+
 function upsertMemory(m: Memory) {
-  memoriesStore.set((cur) =>
-    cur.some((x) => x.id === m.id) ? cur.map((x) => (x.id === m.id ? m : x)) : [m, ...cur]
-  );
+  upsertInList(qk.memories, m);
 }
 
 export async function createMemory(content: string, category: Memory["category"] | null): Promise<void> {
-  if (USE_MOCKS) {
-    upsertMemory({
-      id: `mem_${Date.now()}`,
-      content,
-      category: category ?? "other",
-      tags: [],
-      source_channel: "web",
-      favorite: false,
-      archived: false,
-      created_at: new Date().toISOString(),
-    });
-    return;
-  }
   upsertMemory(
     await api<Memory>("/memories", {
       method: "POST",
@@ -272,33 +238,25 @@ export async function createMemory(content: string, category: Memory["category"]
 }
 
 export async function patchMemory(id: string, changes: Partial<Memory>): Promise<void> {
-  if (USE_MOCKS) {
-    memoriesStore.set((cur) => cur.map((m) => (m.id === id ? { ...m, ...changes } : m)));
-    return;
-  }
   upsertMemory(await api<Memory>(`/memories/${id}`, { method: "PATCH", body: changes }));
 }
 
 export async function deleteMemoryForever(id: string): Promise<void> {
-  if (!USE_MOCKS)
-    await api(`/memories/${id}`, { method: "DELETE", body: { confirm: true } });
-  memoriesStore.set((cur) => cur.filter((m) => m.id !== id));
+  await api(`/memories/${id}`, { method: "DELETE", body: { confirm: true } });
+  removeFromList<Memory>(qk.memories, id);
 }
 
 /* -------------------------------- events ------------------------------- */
 
+export function useEvents() {
+  return useCollection<CalendarEvent>(qk.events, fetchEvents);
+}
+
 function upsertEvent(e: CalendarEvent) {
-  eventsStore.set((cur) =>
-    cur.some((x) => x.id === e.id) ? cur.map((x) => (x.id === e.id ? e : x)) : [...cur, e]
-  );
+  upsertInList(qk.events, e, { append: true });
 }
 
 export async function saveEvent(e: CalendarEvent, isNew: boolean): Promise<void> {
-  if (USE_MOCKS) {
-    if (isNew) eventsStore.set((cur) => [...cur, e]);
-    else upsertEvent(e);
-    return;
-  }
   // Contract check (16 Aug 2026, found via a live 422): EventCreate REQUIRES
   // `timezone`, and `attendees` is a list of plain email strings — not
   // {email} objects. PATCH takes the same shapes, optional.
@@ -311,6 +269,9 @@ export async function saveEvent(e: CalendarEvent, isNew: boolean): Promise<void>
     location: e.location,
     attendees: e.attendees.map((a) => a.email),
     conference: !!e.conference_url,
+    // Recurrence lives on the series master — PATCHing an instance with an
+    // rrule is a 422, so omit it there (the UI hides the controls anyway).
+    ...(e.recurring_event_id ? {} : { rrule: e.rrule ?? null }),
   };
   const saved = isNew
     ? await api<CalendarEvent>("/calendar/events", { method: "POST", body })
@@ -318,13 +279,18 @@ export async function saveEvent(e: CalendarEvent, isNew: boolean): Promise<void>
   upsertEvent(saved);
 }
 
-export async function cancelEvent(id: string): Promise<void> {
-  if (!USE_MOCKS)
-    await api(`/calendar/events/${id}`, {
-      method: "DELETE",
-      body: { notify_attendees: true },
-    });
-  eventsStore.set((cur) =>
-    cur.map((e) => (e.id === id ? { ...e, status: "cancelled" as const } : e))
-  );
+export async function cancelEvent(
+  e: CalendarEvent,
+  scope: "occurrence" | "series" = "occurrence",
+): Promise<void> {
+  await api(`/calendar/events/${e.id}`, {
+    method: "DELETE",
+    body: { notify_attendees: true, scope },
+  });
+  patchInList<CalendarEvent>(qk.events, e.id, { status: "cancelled" });
+  if (scope === "series") {
+    // The backend cancelled every occurrence — refetch rather than chase
+    // sibling instance rows through the cache one by one.
+    await queryClient.invalidateQueries({ queryKey: qk.events });
+  }
 }

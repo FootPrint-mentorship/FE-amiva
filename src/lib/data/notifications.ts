@@ -1,11 +1,20 @@
 /**
  * Notifications feed (GET /notifications, POST /notifications/read).
- * Mock mode keeps the seeded panel; real mode replaces it with the server
- * feed and reports reads back so badges stay honest across devices.
+ * Serves the server feed and reports reads back so badges stay honest
+ * across devices.
  */
 
-import { api, Page, USE_MOCKS } from "@/lib/api/client";
-import { notificationsStore, type AppNotification } from "@/lib/stores";
+import { api, Page } from "@/lib/api/client";
+import { qk, queryClient, setList, useCollection } from "@/lib/query";
+
+export type AppNotification = {
+  id: string;
+  title: string;
+  body: string;
+  href: string;
+  read: boolean;
+  at: string;
+};
 
 type ApiNotification = {
   id: string;
@@ -26,31 +35,35 @@ function kindHref(kind: string): string {
   return "/app/today";
 }
 
-export async function hydrateNotifications(): Promise<void> {
-  if (USE_MOCKS) return;
-  const page = await api<Page<ApiNotification>>("/notifications?limit=50");
-  notificationsStore.set(
-    page.data.map(
-      (n): AppNotification => ({
-        id: n.id,
-        title: n.title,
-        body: n.body ?? "",
-        href: kindHref(n.kind),
-        read: n.read_at !== null,
-        at: n.created_at,
-      })
-    )
+const fetchNotifications = async () =>
+  (await api<Page<ApiNotification>>("/notifications?limit=50")).data.map(
+    (n): AppNotification => ({
+      id: n.id,
+      title: n.title,
+      body: n.body ?? "",
+      href: kindHref(n.kind),
+      read: n.read_at !== null,
+      at: n.created_at,
+    })
   );
+
+/** The notifications feed (top-bar bell + panel). */
+export function useNotifications() {
+  return useCollection<AppNotification>(qk.notifications, fetchNotifications);
+}
+
+/** Warm the notifications cache from the server feed (app layout). */
+export async function hydrateNotifications(): Promise<void> {
+  setList(qk.notifications, await fetchNotifications());
 }
 
 /** Mark specific notifications (or all) read, locally and server-side. */
 export async function markNotificationsRead(opts: { ids?: string[]; all?: boolean }): Promise<void> {
-  notificationsStore.set((cur) =>
+  queryClient.setQueryData<AppNotification[]>(qk.notifications, (cur = []) =>
     cur.map((n) =>
       opts.all || opts.ids?.includes(n.id) ? { ...n, read: true } : n
     )
   );
-  if (USE_MOCKS) return;
   await api("/notifications/read", {
     method: "POST",
     body: opts.all ? { all: true } : { ids: opts.ids },

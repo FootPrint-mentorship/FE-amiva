@@ -1,20 +1,25 @@
 /**
- * Assistant + confirmations repository. Real mode talks to the backend's
- * assistant endpoints (rule-based parser in dev — no LLM key needed); mock
- * mode keeps the self-contained canned reply so the demo runs without a
- * backend. Approving a confirmation re-hydrates the collections so the
+ * Assistant + confirmations repository over the backend's assistant
+ * endpoints. Approving a confirmation re-hydrates the collections so the
  * server-made change shows up everywhere (server-authoritative, PRD: no
  * claimed success without tool confirmation).
  */
 
-import { api, Page, USE_MOCKS } from "@/lib/api/client";
+import { api, Page } from "@/lib/api/client";
 import {
-  confirmationsStore,
-  resolveConfirmation,
-  type Confirmation,
-} from "@/lib/stores";
-import { hydrateAll } from "@/lib/data/collections";
-import type { ChatMessage } from "@/lib/mock";
+  qk,
+  useCollection,
+  upsertInList,
+  patchInList,
+  setList,
+  getList,
+} from "@/lib/query";
+import { invalidateCollections } from "@/lib/data/collections";
+import type { ChatMessage, PendingConfirmation } from "@/lib/types";
+
+export type Confirmation = PendingConfirmation & {
+  status: "pending" | "approved" | "rejected";
+};
 
 export type ActionTaken = { type: string; resource: Record<string, unknown> };
 
@@ -44,8 +49,6 @@ type ApiChatMessage = {
   created_at: string;
 };
 
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 function toConfirmation(c: ApiConfirmation): Confirmation {
   return {
     id: c.id,
@@ -57,18 +60,36 @@ function toConfirmation(c: ApiConfirmation): Confirmation {
   };
 }
 
-/** Replace the confirmations store with the server's pending set. */
-export async function hydrateConfirmations(): Promise<void> {
-  if (USE_MOCKS) return;
-  const page = await api<Page<ApiConfirmation>>(
-    "/assistant/confirmations?status=pending"
+const fetchConfirmations = async () => {
+  const pending = (
+    await api<Page<ApiConfirmation>>("/assistant/confirmations?status=pending")
+  ).data.map(toConfirmation);
+  // The endpoint only returns pending items. Keep this session's resolved
+  // ones in the cache — Chat's in-thread cards read their status from here,
+  // and dropping them on a refetch (e.g. window refocus) would re-arm an
+  // already-approved card's buttons.
+  const resolved = getList<Confirmation>(qk.confirmations).filter(
+    (c) => c.status !== "pending" && !pending.some((p) => p.id === c.id)
   );
-  confirmationsStore.set(page.data.map(toConfirmation));
+  return [...pending, ...resolved];
+};
+
+/** Pending confirmations (shared by top bar, Today banner, Chat, tray). */
+export function useConfirmations() {
+  return useCollection<Confirmation>(qk.confirmations, fetchConfirmations);
 }
 
-/** Real mode: the server-side thread. Mock mode: null (page keeps its seed). */
-export async function loadChatHistory(): Promise<ChatMessage[] | null> {
-  if (USE_MOCKS) return null;
+/** Warm the confirmations cache with the server's pending set (app layout). */
+export async function hydrateConfirmations(): Promise<void> {
+  setList(qk.confirmations, await fetchConfirmations());
+}
+
+function resolveConfirmation(id: string, status: "approved" | "rejected") {
+  patchInList<Confirmation>(qk.confirmations, id, { status });
+}
+
+/** The server-side chat thread (shared with WhatsApp). */
+export async function loadChatHistory(): Promise<ChatMessage[]> {
   const page = await api<Page<ApiChatMessage>>("/assistant/messages?limit=50");
   return page.data
     .filter((m) => m.text)
@@ -82,27 +103,15 @@ export async function loadChatHistory(): Promise<ChatMessage[] | null> {
 }
 
 export async function sendAssistantMessage(text: string): Promise<AssistantResponse> {
-  if (USE_MOCKS) {
-    await delay(900);
-    return {
-      reply:
-        "This preview runs on mock data. Once the backend is connected I'll handle that for real. Here's how a confirmation looks:",
-      actions_taken: [],
-      pending_confirmation: null,
-    };
-  }
   const res = await api<AssistantResponse>("/assistant/messages", {
     method: "POST",
     body: { text },
   });
   if (res.pending_confirmation) {
-    const cnf = toConfirmation(res.pending_confirmation);
-    confirmationsStore.set((cur) =>
-      cur.some((c) => c.id === cnf.id) ? cur : [cnf, ...cur]
-    );
+    upsertInList(qk.confirmations, toConfirmation(res.pending_confirmation));
   }
   if (res.actions_taken.length > 0) {
-    void hydrateAll().catch(() => {
+    void invalidateCollections().catch(() => {
       /* the reply already reports what happened; lists catch up on next load */
     });
   }
@@ -117,19 +126,13 @@ export async function resolveConfirmationRemote(
   id: string,
   decision: "approved" | "rejected"
 ): Promise<string> {
-  if (USE_MOCKS) {
-    resolveConfirmation(id, decision);
-    return decision === "approved"
-      ? "Approved. Amiva is on it."
-      : "Rejected. Nothing was changed.";
-  }
   const res = await api<{ result: string; resource: unknown; reply: string }>(
     `/assistant/confirmations/${id}/${decision === "approved" ? "approve" : "reject"}`,
     { method: "POST" }
   );
   resolveConfirmation(id, decision);
   if (decision === "approved") {
-    void hydrateAll().catch(() => {
+    void invalidateCollections().catch(() => {
       /* see above */
     });
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -19,10 +19,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { OtpInput } from "@/components/ui/otp-input";
+import { PhoneField } from "@/components/ui/phone-field";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { WA_LINK } from "@/lib/site";
 import { sendAssistantMessage } from "@/lib/data/assistant";
+import { connectGoogle } from "@/lib/data/integrations";
+import { api, ApiError } from "@/lib/api/client";
 import { setAuthed } from "@/lib/session";
 import { useStore } from "@/lib/store";
 import { settingsStore } from "@/lib/stores";
@@ -60,6 +63,29 @@ const capabilities = [
 const channelOptions = ["WhatsApp", "Email"] as const;
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+/** PATCH the wizard's preferences to /users/me (working_hours drives the
+ * assistant's availability math — ISO weekday numbers, Mon=1). */
+function savePreferences(prefs: {
+  preferredName: string;
+  workDays: string[];
+  workStart: string;
+  workEnd: string;
+}): Promise<unknown> {
+  return api("/users/me", {
+    method: "PATCH",
+    body: {
+      ...(prefs.preferredName.trim()
+        ? { preferred_name: prefs.preferredName.trim() }
+        : {}),
+      working_hours: {
+        start: prefs.workStart,
+        end: prefs.workEnd,
+        days: prefs.workDays.map((d) => days.indexOf(d) + 1),
+      },
+    },
+  });
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const settings = useStore(settingsStore);
@@ -72,6 +98,40 @@ export default function OnboardingPage() {
     workEnd: "17:00",
   }));
   const [calendarConnected, setCalendarConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+
+  // Google OAuth bounce-back: the API callback redirects to
+  // /onboarding?connected=google[&error=…] when the flow started here.
+  // Resume at the Calendar step, say what happened, clean the URL.
+  // (Deferred callback, not the effect body — setState-in-effect idiom.)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connected") !== "google") return;
+    const t = setTimeout(() => {
+      setStep(3); // the Calendar step
+      if (params.get("error")) {
+        toast("Google connection didn't complete — nothing was changed. Please try again.", {
+          tone: "error",
+        });
+      } else {
+        setCalendarConnected(true); // the callback only redirects clean after the exchange
+        toast("Google Calendar connected.");
+      }
+      window.history.replaceState(null, "", "/onboarding");
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  const startCalendarConnect = () => {
+    setConnecting(true);
+    connectGoogle("calendar", "/onboarding").catch(() => {
+      setConnecting(false);
+      toast(
+        "Google connections aren't configured on this server yet — you can skip this step.",
+        { tone: "error" }
+      );
+    });
+  };
   const [tryText, setTryText] = useState(
     "Remind me to call Mum tomorrow at 6 pm",
   );
@@ -98,6 +158,14 @@ export default function OnboardingPage() {
   // phone verification (skippable — OTP goes only to the channel being verified)
   const [phoneStage, setPhoneStage] = useState<"idle" | "sent">("idle");
   const [phoneOtp, setPhoneOtp] = useState("");
+  // A number the account already carries (registered with one) can be verified
+  // as-is; otherwise the user must enter one here — without this the step sent
+  // an empty send-code and 422'd with only a misleading "try again" toast.
+  const [newCc, setNewCc] = useState("+234");
+  const [newPhone, setNewPhone] = useState("");
+  const [phoneErr, setPhoneErr] = useState("");
+  const [sendingPhone, setSendingPhone] = useState(false);
+  const hasNumberOnFile = Boolean(settings.phone);
 
   const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
@@ -108,6 +176,8 @@ export default function OnboardingPage() {
   };
 
   const sendPhoneCode = () => {
+    // Verify a number already on the account; the field path uses its own
+    // handler so the two never send an empty body.
     setPhoneStage("sent");
     sendPhoneCodeApi()
       .then(() => toast("Code sent to your WhatsApp number."))
@@ -117,6 +187,26 @@ export default function OnboardingPage() {
           tone: "error",
         });
       });
+  };
+
+  const sendCodeToNewNumber = () => {
+    const digits = newPhone.replace(/[\s()-]/g, "");
+    if (digits.length < 7) {
+      setPhoneErr("Enter the full number.");
+      return;
+    }
+    setPhoneErr("");
+    setSendingPhone(true);
+    sendPhoneCodeApi(`${newCc}${digits.replace(/^0/, "")}`)
+      .then(() => setPhoneStage("sent"))
+      .catch((err) =>
+        setPhoneErr(
+          err instanceof ApiError && err.code === "CONFLICT"
+            ? "An account with this number already exists."
+            : "Couldn't send the code just now. Please try again."
+        )
+      )
+      .finally(() => setSendingPhone(false));
   };
 
   const onPhoneOtp = (code: string) => {
@@ -336,6 +426,14 @@ export default function OnboardingPage() {
                       preferredName:
                         prefs.preferredName.trim() || c.preferredName,
                     }));
+                    // Persist name + working hours server-side (availability
+                    // math uses them) — best-effort, the wizard moves on.
+                    savePreferences(prefs).catch(() =>
+                      toast(
+                        "Couldn't save your preferences just now, you can adjust them later in Settings.",
+                        { tone: "error" }
+                      )
+                    );
                     next();
                   }}
                 >
@@ -371,15 +469,7 @@ export default function OnboardingPage() {
                     is verified. We&apos;ll send a one-time code there — nowhere
                     else.
                   </p>
-                  {phoneStage === "idle" ? (
-                    <Button
-                      className="mt-5 w-full"
-                      size="lg"
-                      onClick={sendPhoneCode}
-                    >
-                      Send code to WhatsApp
-                    </Button>
-                  ) : (
+                  {phoneStage === "sent" ? (
                     <div className="mt-5 rounded-xl border border-line bg-soft p-4">
                       <p className="mb-2 text-xs text-ink-muted">
                         Enter the 6-digit code.
@@ -389,6 +479,37 @@ export default function OnboardingPage() {
                         onChange={onPhoneOtp}
                         label="Phone code"
                       />
+                    </div>
+                  ) : hasNumberOnFile ? (
+                    <Button
+                      className="mt-5 w-full"
+                      size="lg"
+                      onClick={sendPhoneCode}
+                    >
+                      Send code to WhatsApp
+                    </Button>
+                  ) : (
+                    // No number on file (phone is optional at signup) — collect
+                    // one here instead of firing an empty send-code that 422s.
+                    <div className="mt-5">
+                      <PhoneField
+                        cc={newCc}
+                        phone={newPhone}
+                        onCcChange={setNewCc}
+                        onPhoneChange={(v) => {
+                          setNewPhone(v);
+                          if (phoneErr) setPhoneErr("");
+                        }}
+                        error={phoneErr || undefined}
+                      />
+                      <Button
+                        className="mt-4 w-full"
+                        size="lg"
+                        onClick={sendCodeToNewNumber}
+                        loading={sendingPhone}
+                      >
+                        Send code to WhatsApp
+                      </Button>
                     </div>
                   )}
                   <div className="mt-3">
@@ -431,9 +552,10 @@ export default function OnboardingPage() {
                 <Button
                   className="mt-5 w-full"
                   size="lg"
-                  onClick={() => setCalendarConnected(true)}
+                  loading={connecting}
+                  onClick={startCalendarConnect}
                 >
-                  Connect Google Calendar
+                  {connecting ? "Opening Google…" : "Connect Google Calendar"}
                 </Button>
               )}
               <div className="mt-3 flex justify-between">

@@ -16,21 +16,24 @@ import {
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
-import { agendaSummary, fmtTime } from "@/lib/mock";
-import { USE_MOCKS } from "@/lib/api/client";
+import { fmtTime } from "@/lib/format";
 import { timezoneAbbr } from "@/lib/timezones";
 import { useStore } from "@/lib/store";
+import { settingsStore } from "@/lib/stores";
 import {
-  confirmationsStore,
-  eventsStore,
-  remindersStore,
-  settingsStore,
-  tasksStore,
-} from "@/lib/stores";
-import { resolveConfirmationRemote } from "@/lib/data/assistant";
+  resolveConfirmationRemote,
+  useConfirmations,
+} from "@/lib/data/assistant";
 import { toast } from "@/components/ui/toast";
-import { completeReminder, setTaskStatus } from "@/lib/data/collections";
+import {
+  completeReminder,
+  setTaskStatus,
+  useEvents,
+  useReminders,
+  useTasks,
+} from "@/lib/data/collections";
 import { cn } from "@/lib/cn";
+import { RichText } from "@/lib/rich-text";
 
 const priorityTone = {
   urgent: "danger",
@@ -41,10 +44,10 @@ const priorityTone = {
 
 export default function TodayPage() {
   const settings = useStore(settingsStore);
-  const allReminders = useStore(remindersStore);
-  const allTasks = useStore(tasksStore);
-  const allEvents = useStore(eventsStore);
-  const confirmations = useStore(confirmationsStore).filter(
+  const { items: allReminders } = useReminders();
+  const { items: allTasks } = useTasks();
+  const { items: allEvents } = useEvents();
+  const confirmations = useConfirmations().items.filter(
     (c) => c.status === "pending",
   );
   const reminders = allReminders.filter((r) => r.status === "scheduled");
@@ -80,11 +83,9 @@ export default function TodayPage() {
     remindersToday ? `${plural(remindersToday, "reminder")} due` : "",
     tasks.length ? `${plural(tasks.length, "task")} due` : "",
   ].filter(Boolean);
-  const daySummary = USE_MOCKS
-    ? agendaSummary
-    : summaryParts.length
-      ? `Today: ${summaryParts.join(" · ")}.`
-      : "Your day is clear. Anything you tell Amiva on WhatsApp shows up here too.";
+  const daySummary = summaryParts.length
+    ? `Today: ${summaryParts.join(" · ")}.`
+    : "Your day is clear. Anything you tell Amiva on WhatsApp shows up here too.";
 
   const greeting =
     new Date().getHours() < 12
@@ -120,7 +121,7 @@ export default function TodayPage() {
               <span className="font-semibold">
                 1 action needs your approval:
               </span>{" "}
-              {confirmations[0].summary}
+              <RichText text={confirmations[0].summary} />
             </p>
             <div className="flex gap-2">
               <Button
@@ -272,7 +273,7 @@ export default function TodayPage() {
                       {r.title}
                     </p>
                     <p className="text-xs tabular-nums text-ink-muted">
-                      {fmtTime(r.due_at)} {timezoneAbbr(settings.timezone)}
+                      {fmtTime(r.due_at ?? r.next_fire_at ?? "")} {timezoneAbbr(settings.timezone)}
                       {r.recurrence_human ? ` · ${r.recurrence_human}` : ""}
                     </p>
                   </div>

@@ -12,15 +12,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
-import { chatSeed, fmtDay, fmtTime, type ChatMessage } from "@/lib/mock";
-import { useStore } from "@/lib/store";
-import { confirmationsStore } from "@/lib/stores";
+import { fmtDay, fmtTime } from "@/lib/format";
+import { RichText } from "@/lib/rich-text";
+import type { ChatMessage } from "@/lib/types";
 import { toast } from "@/components/ui/toast";
-import { USE_MOCKS } from "@/lib/api/client";
 import {
   loadChatHistory,
   resolveConfirmationRemote,
   sendAssistantMessage,
+  useConfirmations,
   type ActionTaken,
 } from "@/lib/data/assistant";
 
@@ -63,27 +63,27 @@ function actionResource(actions: ActionTaken[]): ChatMessage["resource"] {
 }
 
 export default function ChatPage() {
-  const confirmations = useStore(confirmationsStore);
-  const [messages, setMessages] = useState<ChatMessage[]>(
-    USE_MOCKS ? chatSeed : [],
-  );
+  const { items: confirmations } = useConfirmations();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  // Real mode: the thread lives on the server (shared with WhatsApp).
+  // The thread lives on the server (shared with WhatsApp).
   useEffect(() => {
     loadChatHistory()
-      .then((history) => {
-        if (history) setMessages(history);
-      })
+      .then(setMessages)
       .catch(() => {
         /* empty thread is an honest starting point; sending still works */
       });
   }, []);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Set scrollTop directly: smooth scrollIntoView animations cancel each
+    // other when messages land in quick succession (optimistic → typing →
+    // reply), stranding the thread mid-scroll with the answer off-screen.
+    const thread = endRef.current?.parentElement;
+    if (thread) thread.scrollTop = thread.scrollHeight;
   }, [messages, typing]);
 
   const send = (text?: string) => {
@@ -128,7 +128,7 @@ export default function ChatPage() {
     <div className="mx-auto flex h-[calc(100vh-8.5rem)] max-w-190 flex-col">
       {/* Thread */}
       <div
-        className="flex-1 space-y-4 overflow-y-auto pb-4"
+        className="flex-1 space-y-4 overflow-y-auto pb-4 pr-3"
         aria-live="polite"
         aria-label="Conversation with Amiva"
       >
@@ -160,7 +160,7 @@ export default function ChatPage() {
                     : "rounded-tl-sm border border-line bg-white text-navy",
                 )}
               >
-                {m.text}
+                <RichText text={m.text} />
                 <span
                   className={cn(
                     "mt-1 block text-right text-[10px]",
@@ -207,7 +207,7 @@ export default function ChatPage() {
                         />
                         <div>
                           <p className="text-sm text-navy">
-                            {m.confirmation.summary}
+                            <RichText text={m.confirmation.summary} />
                           </p>
                           <Chip
                             tone={
@@ -329,7 +329,7 @@ export default function ChatPage() {
           rows={1}
           placeholder="Message Amiva…"
           aria-label="Message Amiva"
-          className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-[15px] text-navy outline-none placeholder:text-ink-muted"
+          className="focus-ring-none max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-[15px] text-navy outline-none placeholder:text-ink-muted"
         />
         <Button
           size="sm"

@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { clearTokens } from "@/lib/api/client";
 import userEvent from "@testing-library/user-event";
 import LoginPage from "@/app/(public)/login/page";
 import RegisterPage from "@/app/(public)/register/page";
 import ForgotPasswordPage from "@/app/(public)/forgot-password/page";
 import LinkPage from "@/app/(public)/link/page";
 import CompleteProfilePage from "@/app/(public)/complete-profile/page";
+import { Toaster } from "@/components/ui/toast";
 import { nav } from "@/test/setup";
 
 const WAIT = { timeout: 3000 }; // mock submits resolve in 600–800ms
@@ -47,10 +49,20 @@ describe("Login", () => {
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/app/today"), WAIT);
   });
 
-  it("Google sign-in routes to complete-profile when the profile is incomplete", async () => {
-    render(<LoginPage />);
+  it("Google sign-in surfaces an honest error when OAuth isn't configured (no fake sign-in)", async () => {
+    // Real mode hands the browser to Google; without NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    // it must refuse honestly instead of pretending to sign in.
+    render(
+      <>
+        <LoginPage />
+        <Toaster />
+      </>
+    );
     await userEvent.click(screen.getByRole("button", { name: /Sign in with Google/ }));
-    expect(nav.push).toHaveBeenCalledWith("/complete-profile");
+    expect(
+      await screen.findByText(/Google sign-in isn't configured/)
+    ).toBeInTheDocument();
+    expect(nav.push).not.toHaveBeenCalled();
   });
 
   it("password field has a working show/hide toggle", async () => {
@@ -93,6 +105,23 @@ describe("Register", () => {
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/onboarding"), WAIT);
   });
 
+  it("a successful verify clears the earlier wrong-code error", async () => {
+    // Found in prod QA 19 Aug: "Code is invalid or has expired" stayed on
+    // screen directly above the green "Email verified" line.
+    render(<><RegisterPage /><Toaster /></>);
+    await userEvent.type(screen.getByLabelText(/Email/), "qa@example.com");
+    await userEvent.click(screen.getByRole("button", { name: "Send code" }));
+    const first = await screen.findByLabelText("Email code digit 1", undefined, WAIT);
+    await userEvent.click(first);
+    await userEvent.paste("111111");
+    expect(await screen.findByText("Code is invalid or has expired")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText("Email code digit 1"));
+    await userEvent.paste("482913");
+    expect(await screen.findByText("Email verified")).toBeInTheDocument();
+    expect(screen.queryByText("Code is invalid or has expired")).not.toBeInTheDocument();
+  });
+
   it("phone input strips non-numeric characters", async () => {
     render(<RegisterPage />);
     const phone = screen.getByLabelText("Phone number");
@@ -100,10 +129,18 @@ describe("Register", () => {
     expect(phone).toHaveValue("8012345678");
   });
 
-  it("Google sign-up hands off to complete-profile", async () => {
-    render(<RegisterPage />);
+  it("Google sign-up surfaces an honest error when OAuth isn't configured (no fake sign-up)", async () => {
+    render(
+      <>
+        <RegisterPage />
+        <Toaster />
+      </>
+    );
     await userEvent.click(screen.getByRole("button", { name: /Sign up with Google/ }));
-    expect(nav.push).toHaveBeenCalledWith("/complete-profile");
+    expect(
+      await screen.findByText(/Google sign-in isn't configured/)
+    ).toBeInTheDocument();
+    expect(nav.push).not.toHaveBeenCalled();
   });
 });
 
@@ -134,10 +171,19 @@ describe("Forgot password", () => {
 });
 
 describe("WhatsApp link landing", () => {
-  it("shows the expired state without a token", () => {
+  it("signed out without a token: shows the expired state", () => {
     nav.search = "";
+    clearTokens();
     render(<LinkPage />);
     expect(screen.getByText("Link expired")).toBeInTheDocument();
+  });
+
+  it("signed in without a token: offers the web connect flow instead of a dead end", async () => {
+    nav.search = "";
+    render(<LinkPage />);
+    expect(screen.getByText("Connect your WhatsApp")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Connect WhatsApp" }));
+    expect(nav.push).toHaveBeenCalledWith("/app/settings?connect=whatsapp");
   });
 
   it("with a token, asks for explicit confirmation then routes to the app", async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TodayPage from "@/app/app/today/page";
 
@@ -12,14 +12,20 @@ describe("Today page", () => {
 
   it("surfaces the pending confirmation banner and resolves it on approve", async () => {
     render(<TodayPage />);
-    expect(screen.getByText(/1 action needs your approval/)).toBeInTheDocument();
+    expect(await screen.findByText(/1 action needs your approval/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Approve" }));
-    expect(screen.queryByText(/1 action needs your approval/)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText(/1 action needs your approval/)).not.toBeInTheDocument()
+    );
   });
 
-  it("shows the AI day summary and the three columns", () => {
+  it("shows the day summary narrating real data, and the three columns", async () => {
     render(<TodayPage />);
-    expect(screen.getByText(/You have 3 meetings today/)).toBeInTheDocument();
+    // The summary strip narrates the fetched collections (the old canned
+    // "You have 3 meetings today" line went with the mock mode).
+    expect(
+      await screen.findByText(/3 meetings on your calendar .* 2 reminders due .* 2 tasks due/)
+    ).toBeInTheDocument();
     expect(screen.getByText("Schedule")).toBeInTheDocument();
     expect(screen.getByText("Reminders")).toBeInTheDocument();
     expect(screen.getByText("Tasks due")).toBeInTheDocument();
@@ -29,16 +35,18 @@ describe("Today page", () => {
   it("completing a reminder removes it; empty state appears when all are done", async () => {
     render(<TodayPage />);
     // complete every scheduled reminder shown
-    for (const btn of screen.getAllByRole("button", { name: /Done/ })) {
+    for (const btn of await screen.findAllByRole("button", { name: /Done/ })) {
       await userEvent.click(btn);
     }
-    expect(screen.getByText(/All caught up/)).toBeInTheDocument();
+    expect(await screen.findByText(/All caught up/)).toBeInTheDocument();
   });
 
   it("completing a task removes it from Tasks due", async () => {
     render(<TodayPage />);
-    await userEvent.click(screen.getByLabelText("Complete Send proposal to Kemi"));
-    expect(screen.queryByText("Send proposal to Kemi")).not.toBeInTheDocument();
+    await userEvent.click(await screen.findByLabelText("Complete Send proposal to Kemi"));
+    await waitFor(() =>
+      expect(screen.queryByText("Send proposal to Kemi")).not.toBeInTheDocument()
+    );
   });
 
   it("cross-links each column to its module", () => {

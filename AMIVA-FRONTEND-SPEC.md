@@ -23,7 +23,7 @@
 
 **Repository:** `amiva-web/` — separate repo from the backend, own CI/CD, deployed to CDN/edge (e.g. Vercel). Env: `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_WA_BOT_NUMBER` (E.164, for `wa.me` links).
 
-**Domain strategy:** one domain (e.g. `amiva.example`). Marketing pages at the root (`/`, `/pricing`, …), auth at `/login`, `/register`, application under `/app/*`. One deployment, no subdomain juggling; the backend's `DASHBOARD_ORIGIN` points at this domain.
+**Domain strategy:** one domain (e.g. `amiva.example`). Marketing pages at the root, auth at `/login`, `/register`, application under `/app/*`. One deployment, no subdomain juggling; the backend's `DASHBOARD_ORIGIN` points at this domain.
 
 ```
 src/
@@ -34,7 +34,7 @@ src/
 │   └── (app)/app/              # §6 — main shell, auth-guarded
 ├── components/ui/              # §8 primitives
 ├── components/domain/          # ReminderCard, EventCard, TaskRow, MemoryCard, ...
-├── components/marketing/       # Hero, FeatureSection, PricingTable, FaqAccordion, ...
+├── components/marketing/       # Hero, FeatureSection, FaqAccordion, ...
 ├── lib/api/                    # generated client + fetch wrapper + query keys
 ├── lib/hooks/                  # useUser, useConfirmations, useSse, ...
 └── styles/tokens.css           # §2 as CSS variables

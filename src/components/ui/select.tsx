@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -33,6 +33,7 @@ export function Select({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  const listboxId = useId();
   const listRef = useRef<HTMLUListElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -97,6 +98,7 @@ export function Select({
         type="button"
         role="combobox"
         aria-expanded={open}
+        aria-controls={listboxId}
         aria-haspopup="listbox"
         aria-label={label}
         onClick={() => (open ? setOpen(false) : openPanel())}
@@ -159,6 +161,7 @@ export function Select({
             )}
             <ul
               ref={listRef}
+              id={listboxId}
               role="listbox"
               aria-label={label}
               tabIndex={-1}
