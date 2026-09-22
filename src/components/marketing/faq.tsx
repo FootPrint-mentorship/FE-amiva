@@ -17,10 +17,6 @@ const faqs = [
     q: "Is my data private?",
     a: "Yes. Your data is encrypted, never used to train AI models, and you can see, export or permanently delete everything from the privacy centre. Important actions, like cancelling a meeting with attendees, always require your explicit approval first.",
   },
-  {
-    q: "How much does it cost?",
-    a: "Amiva has a free plan to get organised, and a Pro plan for unlimited use. Pricing is in your local currency. See the pricing section for details.",
-  },
 ];
 
 export function FaqAccordion() {
