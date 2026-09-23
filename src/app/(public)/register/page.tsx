@@ -15,6 +15,7 @@ import { GoogleButton, OrDivider } from "@/components/ui/google-button";
 import { toast } from "@/components/ui/toast";
 import { sendEmailCode as sendCode, verifyEmailCode, register as registerAccount } from "@/lib/data/auth";
 import { ApiError } from "@/lib/api/client";
+import { buildE164, isValidE164, PHONE_ERROR } from "@/lib/phone";
 import { startGoogleSignIn } from "@/lib/google";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
 import { cn } from "@/lib/cn";
@@ -99,7 +100,8 @@ export default function RegisterPage() {
     if (!form.name.trim()) errs.name = "Your name is required.";
     if (!EMAIL_RE.test(form.email)) errs.email = "Enter a valid email address.";
     else if (emailStage !== "verified") errs.email = "Verify your email to continue.";
-    if (form.phone && form.phone.length < 7) errs.phone = "Enter a valid phone number, or leave it empty.";
+    const phone = form.phone ? buildE164(form.cc, form.phone) : undefined;
+    if (phone && !isValidE164(phone)) errs.phone = PHONE_ERROR;
     if (form.password.length < 8) errs.password = "Use at least 8 characters.";
     if (!form.consent) errs.consent = "Please accept the terms to continue.";
     setErrors(errs);
@@ -109,17 +111,32 @@ export default function RegisterPage() {
       await registerAccount({
         name: form.name.trim(),
         email: form.email,
-        phone: form.phone ? `${form.cc}${form.phone.replace(/^0/, "")}` : undefined,
+        phone,
         password: form.password,
         timezone: form.timezone,
       });
       router.push("/onboarding");
     } catch (err) {
       setSubmitting(false);
-      setErrors((e) => ({
-        ...e,
-        email: err instanceof ApiError ? err.message : "Registration failed. Try again.",
-      }));
+      // Server 422s carry per-field errors (details.errors[].field) — pin
+      // each message to ITS field. A phone regex rejection rendered under
+      // the email input (live report, 23 Sep 2026) is exactly the bug this
+      // mapping prevents; anything field-less lands as a form-level toast.
+      const fieldErrors: Record<string, string> = {};
+      if (err instanceof ApiError) {
+        const items = (err.details?.errors ?? []) as Array<{ field?: string | null; message?: string }>;
+        for (const item of items) {
+          if (item.field === "phone") fieldErrors.phone = PHONE_ERROR;
+          else if (item.field && item.message) fieldErrors[item.field] = item.message;
+        }
+        if (!Object.keys(fieldErrors).length) {
+          if (/email/i.test(err.message)) fieldErrors.email = err.message;
+          else toast(err.message, { tone: "error" });
+        }
+      } else {
+        toast("Registration failed. Try again.", { tone: "error" });
+      }
+      setErrors((e) => ({ ...e, ...fieldErrors }));
     }
   };
 

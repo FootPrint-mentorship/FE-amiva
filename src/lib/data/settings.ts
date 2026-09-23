@@ -61,6 +61,9 @@ export async function hydrateNotificationPrefs(): Promise<void> {
       ])
     ),
     quietHours: prefs.quiet_hours !== null,
+    dailyAgendaEnabled: prefs.daily_agenda_enabled ?? false,
+    // API returns "HH:MM:SS"; the <input type="time"> wants "HH:MM".
+    dailyAgendaTime: (prefs.daily_agenda_time ?? "07:30").slice(0, 5),
   }));
 }
 
@@ -81,6 +84,8 @@ export async function saveNotificationPrefs(): Promise<void> {
       quiet_hours: s.quietHours
         ? { start: "22:00", end: "07:00", timezone: s.timezone, urgent_override: true }
         : null,
+      daily_agenda_enabled: s.dailyAgendaEnabled,
+      daily_agenda_time: s.dailyAgendaTime || null,
     },
   });
 }

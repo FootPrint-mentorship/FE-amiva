@@ -22,6 +22,7 @@ import { OtpInput } from "@/components/ui/otp-input";
 import { PhoneField } from "@/components/ui/phone-field";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
+import { buildE164 } from "@/lib/phone";
 import { WA_LINK } from "@/lib/site";
 import { sendAssistantMessage } from "@/lib/data/assistant";
 import { connectGoogle } from "@/lib/data/integrations";
@@ -197,7 +198,7 @@ export default function OnboardingPage() {
     }
     setPhoneErr("");
     setSendingPhone(true);
-    sendPhoneCodeApi(`${newCc}${digits.replace(/^0/, "")}`)
+    sendPhoneCodeApi(buildE164(newCc, digits))
       .then(() => setPhoneStage("sent"))
       .catch((err) =>
         setPhoneErr(

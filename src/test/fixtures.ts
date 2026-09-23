@@ -607,6 +607,8 @@ export function makeAdaSettings(): Settings {
     emailVerified: true,
     phoneVerified: true,
     hasPassword: true,
+    dailyAgendaEnabled: false,
+    dailyAgendaTime: "07:30",
     matrix: {
       Reminders: ["WhatsApp", "Email"],
       Tasks: ["WhatsApp"],

@@ -42,7 +42,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    // suppressHydrationWarning: the body's first script adds the `js` class
+    // BEFORE hydration (the reveal-hidden gate below), so the client html
+    // element never matches the server-rendered one — that mismatch is the
+    // whole point. Scoped to this element's attributes only; child
+    // mismatches still warn.
+    <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         {/* Runs synchronously before the rest of the body parses: gates the
             reveal-hidden class (globals.css) so content is only ever hidden

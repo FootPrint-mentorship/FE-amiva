@@ -33,6 +33,7 @@ import { PhoneField } from "@/components/ui/phone-field";
 import { toast } from "@/components/ui/toast";
 import { ActivityLog } from "@/components/domain/activity-log";
 import { cn } from "@/lib/cn";
+import { buildE164 } from "@/lib/phone";
 import { useStore } from "@/lib/store";
 import { settingsStore, type FeatureKey } from "@/lib/stores";
 import { timezoneOptions } from "@/lib/timezones";
@@ -304,7 +305,7 @@ export default function SettingsPage() {
     }
     setPhoneErr("");
     setSendingPhone(true);
-    sendPhoneCode(`${newCc}${digits.replace(/^0/, "")}`)
+    sendPhoneCode(buildE164(newCc, digits))
       .then(() => setPhoneStage("code"))
       .catch((err) =>
         setPhoneErr(
@@ -579,6 +580,39 @@ export default function SettingsPage() {
                 onChange={() => settingsStore.set((c) => ({ ...c, quietHours: !c.quietHours }))}
               />
             </label>
+          </div>
+
+          <div className="mt-5 border-t border-line pt-5">
+            <div className="flex items-center justify-between">
+              <span>
+                <span className="block text-sm font-medium text-navy">Daily agenda summary</span>
+                <span className="text-xs text-ink-muted">
+                  Your day (events, reminders and due tasks) sent each morning
+                </span>
+              </span>
+              <Toggle
+                on={settings.dailyAgendaEnabled}
+                label="Daily agenda summary"
+                onChange={() =>
+                  settingsStore.set((c) => ({ ...c, dailyAgendaEnabled: !c.dailyAgendaEnabled }))
+                }
+              />
+            </div>
+            {settings.dailyAgendaEnabled && (
+              <label className="mt-3 flex items-center gap-3 text-sm text-ink-muted">
+                Send it at
+                <input
+                  type="time"
+                  aria-label="Daily agenda time"
+                  value={settings.dailyAgendaTime}
+                  onChange={(e) =>
+                    settingsStore.set((c) => ({ ...c, dailyAgendaTime: e.target.value }))
+                  }
+                  className="h-10 rounded-control border border-line bg-white px-3 tabular-nums text-navy"
+                />
+                <span className="text-xs">({settings.timezone})</span>
+              </label>
+            )}
           </div>
           <Button className="mt-6" onClick={savePrefs}>Save preferences</Button>
         </Card>

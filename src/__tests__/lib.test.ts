@@ -39,7 +39,9 @@ describe("date helpers", () => {
     expect(fmtDay(at(0))).toBe("Today");
     expect(fmtDay(at(1))).toBe("Tomorrow");
     expect(fmtDay(at(-1))).toBe("Yesterday");
-    expect(fmtDay(at(5))).toMatch(/^\w{3} \d{1,2} \w{3}$/); // e.g. "Fri 31 Jul"
+    // 3–4 letter month: en-GB renders September as "Sept" — the 3-letter
+    // pattern made this test fail only when run in September (found live).
+    expect(fmtDay(at(5))).toMatch(/^\w{3} \d{1,2} \w{3,4}$/); // e.g. "Fri 31 Jul", "Mon 28 Sept"
   });
 });
 
