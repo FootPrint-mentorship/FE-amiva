@@ -11,7 +11,6 @@ import { MarketingHeader } from "@/components/marketing/header";
 
 const footerProduct = [
   { href: "/#features", label: "Features" },
-  { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
 ];
 
