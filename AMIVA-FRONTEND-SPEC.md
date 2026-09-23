@@ -23,7 +23,7 @@
 
 **Repository:** `amiva-web/` — separate repo from the backend, own CI/CD, deployed to CDN/edge (e.g. Vercel). Env: `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_WA_BOT_NUMBER` (E.164, for `wa.me` links).
 
-**Domain strategy:** one domain (e.g. `amiva.example`). Marketing pages at the root (`/`, `/pricing`, …), auth at `/login`, `/register`, application under `/app/*`. One deployment, no subdomain juggling; the backend's `DASHBOARD_ORIGIN` points at this domain.
+**Domain strategy:** one domain (e.g. `amiva.example`). Marketing pages at the root, auth at `/login`, `/register`, application under `/app/*`. One deployment, no subdomain juggling; the backend's `DASHBOARD_ORIGIN` points at this domain.
 
 ```
 src/
@@ -34,7 +34,7 @@ src/
 │   └── (app)/app/              # §6 — main shell, auth-guarded
 ├── components/ui/              # §8 primitives
 ├── components/domain/          # ReminderCard, EventCard, TaskRow, MemoryCard, ...
-├── components/marketing/       # Hero, FeatureSection, PricingTable, FaqAccordion, ...
+├── components/marketing/       # Hero, FeatureSection, FaqAccordion, ...
 ├── lib/api/                    # generated client + fetch wrapper + query keys
 ├── lib/hooks/                  # useUser, useConfirmations, useSse, ...
 └── styles/tokens.css           # §2 as CSS variables
@@ -100,13 +100,13 @@ The front door. Users arriving from ads, social or word of mouth land here, unde
 
 ### 4.0 Global rules for marketing pages
 - **Performance budget (hard):** African mobile data is the target context. SSG only; ≤ 100 KB JS per page (no app bundle leakage — enforce with bundle analyzer in CI); images as responsive AVIF/WebP with explicit dimensions; self-hosted Inter (swap); LCP < 2.5 s on simulated 3G; Lighthouse ≥ 90 on all categories.
-- **Header (marketing variant):** Amiva horizontal logo (links `/`) · nav: Features, Pricing, FAQ · right: **Log in** (ghost → `/login`), **Get started** (primary → `/register`). Sticky, blurs on scroll. Mobile: hamburger sheet.
-- **Footer:** logo + one-liner · columns: Product (Features, Pricing, FAQ) · Company (Contact) · Legal (Privacy Policy, Terms of Service) · WhatsApp CTA button · © Amiva 2026 · language placeholder.
+- **Header (marketing variant):** Amiva horizontal logo (links `/`) · nav: Features, FAQ · right: **Log in** (ghost → `/login`), **Get started** (primary → `/register`). Sticky, blurs on scroll. Mobile: hamburger sheet.
+- **Footer:** logo + one-liner · Product links (Features, FAQ) · Legal links (Privacy Policy, Terms of Service) · WhatsApp CTA button · © Amiva 2026.
 - **Primary CTAs** (identical pair, reused across pages):
   - **Start on WhatsApp** — `https://wa.me/{WA_BOT_NUMBER}?text=Hi%20Amiva` (opens the bot with a prefilled greeting; the bot handles onboarding + account linking from there, backend spec §3.1).
   - **Create free account** — `/register`.
-- **SEO:** unique `<title>`/meta description per page; OpenGraph + Twitter cards (branded OG image template: indigo background, cyan accent, page title); `sitemap.xml`, `robots.txt`; JSON-LD (`Organization` sitewide, `FAQPage` on FAQ, `Product` + `Offer` on Pricing); canonical URLs.
-- **Analytics:** lightweight, cookieless-by-default analytics; events: `cta_whatsapp_click`, `cta_register_click`, `pricing_view`, `faq_open`. Consent banner only if/when non-essential cookies are added.
+- **SEO:** unique `<title>`/meta description per page; OpenGraph + Twitter cards (branded OG image template: indigo background, cyan accent, page title); `sitemap.xml`, `robots.txt`; JSON-LD (`Organization` sitewide, `FAQPage` on FAQ); canonical URLs.
+- **Analytics:** lightweight, cookieless-by-default analytics; events: `cta_whatsapp_click`, `cta_register_click`, `faq_open`. Consent banner only if/when non-essential cookies are added.
 
 ### 4.1 Home (`/`)
 - **Purpose:** communicate "manage your life and work from one conversation" and convert to WhatsApp or sign-up in one screenful.
@@ -116,9 +116,8 @@ The front door. Users arriving from ads, social or word of mouth land here, unde
   3. **Feature tour** — alternating text/visual rows, one per module: Reminders ("Set it in one sentence — get it on WhatsApp, email or both"), Calendar ("Schedules meetings, finds free slots, handles time zones"), Memory ("Tell Amiva once, find it forever"), Email ("Your inbox, summarised; replies drafted, sent only with your approval"), Tasks & Lists ("From voice note to organised to-do"). Each row ends with a micro-CTA "Try it on WhatsApp →".
   4. **Trust & privacy band** (indigo background, white text) — 3 columns: "You approve every important action" / "Your data is encrypted and yours to delete" / "See everything Amiva does in your activity log". Link → Privacy Policy.
   5. **Web dashboard teaser** — browser-frame screenshot of the Today screen: "Everything from your chats, organised on the web" + **Open the web app** (→ `/login`).
-  6. **Pricing teaser** — two mini-cards (Free / Pro from §4.3) + "See full pricing".
-  7. **FAQ preview** — top 4 questions (accordion) + link to `/faq`.
-  8. **Final CTA band** — headline "Start in the chat you already use." + CTA pair.
+  6. **FAQ preview** — top questions (accordion) + support links.
+  7. **Final CTA band** — headline "Start in the chat you already use." + CTA pair.
 - **Acceptance:** both CTAs above the fold at 360px; LCP element is the hero headline (not the mockup); all module claims match shipped MVP features (no vaporware copy).
 
 ### 4.2 Features (`/features`)
@@ -126,17 +125,11 @@ The front door. Users arriving from ads, social or word of mouth land here, unde
 - **Layout:** sticky in-page section nav (scroll-spy); per module: heading, 2–3 sentence description, 3 bullet capabilities (drawn from the PRD's user stories), a conversation snippet example styled as WhatsApp bubbles, and where relevant a dashboard screenshot. Order: Reminders · Calendar · Tasks & Lists · Memory & Search · Email · Web dashboard · Privacy & control (confirmation policy, activity log, delete-anything).
 - **Acceptance:** every capability listed is MVP-real; each section shares its anchor URL cleanly (OG title reflects fragment target on share where supported).
 
-### 4.3 Pricing (`/pricing`)
-- **Purpose:** transparent tiers; convert Free users, justify Pro.
-- **Layout:** toggle **NGN / KES / USD** (static conversion table at build time — no live FX; default currency by `Accept-Language`/geo hint with manual override). Two cards:
-  - **Free** — "Get organised": capped monthly quotas (e.g. 30 assistant messages, 10 active reminders, memory up to 50 items — final numbers TBD by product), WhatsApp + web, Google Calendar. CTA: Start on WhatsApp.
-  - **Pro** (highlighted, indigo border, "Most popular" pill) — everything unlimited*, Gmail module, voice notes, priority support. Price placeholder ~₦1,500 / KSh 250 / $1.99 per month (TBD — see scope doc unit economics). CTA: Create account. Footnote * fair-use limits.
-- Below: billing FAQ accordion (payment methods — Paystack/Flutterwave cards & mobile money; cancel anytime; what happens to data on downgrade), and a comparison table (rows = features, ✓/— per tier).
-- **States:** if billing isn't live at launch, Pro card shows **Join the waitlist** (email capture → simple endpoint or provider form) instead of a buy button — never a dead button.
-- **Acceptance:** currency toggle changes all figures including footnotes; JSON-LD `Offer` matches displayed default currency.
+### 4.3 Pricing
+Pricing is intentionally unpublished. Keep the existing pricing-section implementation in `src/app/(marketing)/page.tsx` for future use, but hide it from the site and omit pricing links and billing FAQ copy until product approves its return.
 
 ### 4.4 FAQ (`/faq`)
-Accordion groups: **Getting started** (Do I need to install anything? How do I link WhatsApp to the web app?), **Privacy & data** (What does Amiva store? Can I delete everything? Who can see my email?), **Features** (What can I ask? Which calendars/email work? Recurring reminders?), **Billing** (mirrors §4.3). Each answer ≤ 90 words, plain language. `FAQPage` JSON-LD. Search-filter input on top.
+Accordion groups: **Getting started** (Do I need to install anything? How do I link WhatsApp to the web app?), **Privacy & data** (What does Amiva store? Can I delete everything? Who can see my email?), and **Features** (What can I ask? Which calendars/email work? Recurring reminders?). Each answer ≤ 90 words, plain language. `FAQPage` JSON-LD. Search-filter input on top.
 
 ### 4.5 Contact / Support (`/contact`)
 Short page: support email (`mailto:`), **Chat with us on WhatsApp** (same bot — the orchestrator routes "help/support" intents), response-time expectation, and links to FAQ/Privacy. No contact form at MVP (nothing to build or spam-protect).
@@ -284,14 +277,14 @@ Bell → dropdown panel (latest 10, `GET /notifications`) with mark-all-read; "V
 
 **App primitives:** `Button` (primary indigo / secondary violet-outline / ghost / danger; sm-md-lg; loading state) · `Input`, `Textarea`, `Select`, `Combobox`, `PhoneInput`, `OtpInput`, `DateTimePicker` (tz-aware), `RecurrencePicker` · `Card`, `Modal`, `Drawer`, `ConfirmDialog` (standard + danger variants) · `Tabs`, `SegmentedControl`, `Chip/Pill`, `Badge`, `Tooltip` · `Toast` system · `EmptyState` (illustration + title + body + CTA) · `Skeleton` · `Avatar`, `SourceIcon` (whatsapp/web/email/calendar) · `RiskChip`, `ConfidenceBadge`, `ImportanceChip` · `ResourceCard` (mini reminder/task/event/memory for chat & citations) · `ConfirmationCard` (summary, risk, expiry countdown, approve/reject) · `PageHeader`, `SidebarNav`, `TopBar`, `SearchPalette`.
 
-**Marketing components:** `MarketingHeader`, `MarketingFooter`, `Hero`, `CtaPair` (WhatsApp + register, the single source of truth for both links), `WhatsAppMockup` (DOM-built chat bubbles), `FeatureRow`, `StepCard`, `TrustBand`, `PricingCard`, `ComparisonTable`, `FaqAccordion`, `LegalProse` (MDX wrapper), `OgImage` template.
+**Marketing components:** `MarketingHeader`, `MarketingFooter`, `Hero`, `CtaPair` (WhatsApp + register, the single source of truth for both links), `WhatsAppMockup` (DOM-built chat bubbles), `FeatureRow`, `StepCard`, `TrustBand`, `FaqAccordion`, `LegalProse` (MDX wrapper), `OgImage` template.
 
 ---
 
 ## 9. Build Order for an AI Agent
 
 1. **Foundations** — repo scaffold, tokens/theme (light+dark), generated API client + auth wrapper (login/refresh/logout against staging), route groups, app shell layout with nav. *Check: login → empty Today screen → refresh survives token expiry.*
-2. **Marketing site** — §4 in full: home, features, pricing, FAQ, contact, legal templates, 404, SEO plumbing. Built **second, before app screens**, because Meta business verification and Google OAuth verification (backend Phase 0) both require the live site and legal URLs. *Check: Lighthouse ≥90 ×4 on 3G simulation; privacy/terms live at final URLs; both CTAs resolve.*
+2. **Marketing site** — §4 in full: home, features, FAQ, contact, legal templates, 404, SEO plumbing. Built **second, before app screens**, because Meta business verification and Google OAuth verification (backend Phase 0) both require the live site and legal URLs. *Check: Lighthouse ≥90 ×4 on 3G simulation; privacy/terms live at final URLs; both CTAs resolve.*
 3. **Component library** — §8 app primitives with Storybook (or a `/kitchen-sink` route) in both themes. *Check: keyboard + screen-reader pass on Modal, ConfirmDialog, Tabs.*
 4. **Reminders screen** end-to-end (list, create/edit modal, snooze/complete). *Check: acceptance criteria §6.2.*
 5. **Tasks + Lists.** *Check: §6.4/§6.5 acceptance.*
