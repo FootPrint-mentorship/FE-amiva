@@ -20,6 +20,9 @@ export type Settings = {
   hasPassword: boolean;
   matrix: Record<string, string[]>;
   quietHours: boolean;
+  /** Morning agenda push (§8.2): master toggle + local send time "HH:MM". */
+  dailyAgendaEnabled: boolean;
+  dailyAgendaTime: string;
   theme: "system" | "light" | "dark";
   integrations: { whatsapp: boolean; calendar: boolean };
   features: Record<FeatureKey, boolean>;
@@ -44,6 +47,8 @@ const settingsBlank: Settings = {
 
   matrix: { Reminders: [], Tasks: [], "Daily agenda": [], "Product updates": [] },
   quietHours: false,
+  dailyAgendaEnabled: false,
+  dailyAgendaTime: "07:30",
   theme: "system",
   integrations: { whatsapp: false, calendar: false },
   features: {

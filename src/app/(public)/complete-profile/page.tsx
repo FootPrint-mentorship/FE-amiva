@@ -10,6 +10,7 @@ import { PhoneField } from "@/components/ui/phone-field";
 import { Select } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
 import { pendingGoogleProfile, clearGoogleProfile } from "@/lib/google";
+import { buildE164 } from "@/lib/phone";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
 import { completeProfile } from "@/lib/data/auth";
 import { ApiError } from "@/lib/api/client";
@@ -40,7 +41,7 @@ export default function CompleteProfilePage() {
     setError("");
     setSubmitting(true);
     completeProfile({
-      phone: digits ? `${cc}${digits.replace(/^0/, "")}` : null,
+      phone: digits ? buildE164(cc, digits) : null,
       preferredName: preferredName.trim() || null,
       timezone,
     })

@@ -87,10 +87,10 @@ describe("Landing page", () => {
     );
   });
 
-  it("pricing shows Free and Pro in local currency", () => {
+  it("keeps the pricing implementation hidden for future use", () => {
     render(<HomePage />);
+    expect(screen.getByText("Simple pricing").closest("section")).toHaveClass("hidden");
     expect(screen.getByText("₦0")).toBeInTheDocument();
     expect(screen.getByText(/₦1,500/)).toBeInTheDocument();
-    expect(screen.getByText("Most popular")).toBeInTheDocument();
   });
 });

@@ -4,7 +4,14 @@ import { useId, useRef, useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-export type SelectOption = { value: string; label: string; hint?: string };
+export type SelectOption = {
+  value: string;
+  label: string;
+  hint?: string;
+  /** Compact text for the CLOSED trigger when the full label is too wide
+   * for it (e.g. country selects: label "🇳🇬 Nigeria", trigger "🇳🇬 +234"). */
+  triggerLabel?: string;
+};
 
 /**
  * Brand-styled replacement for native <select>: ARIA combobox trigger +
@@ -119,7 +126,7 @@ export function Select({
             !selected && "text-ink-muted",
           )}
         >
-          {selected ? selected.label : placeholder}
+          {selected ? (selected.triggerLabel ?? selected.label) : placeholder}
         </span>
         {selected?.hint && !hideHintInTrigger && (
           <span className="shrink-0 text-xs text-ink-muted">
@@ -138,7 +145,10 @@ export function Select({
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={close} aria-hidden />
-          <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-line bg-white shadow-pop">
+          {/* min-w-full w-max: never narrower than the trigger, but a narrow
+              trigger (country-code select) no longer squeezes the panel until
+              its own option text truncates. */}
+          <div className="absolute z-50 mt-1.5 min-w-full w-max max-w-72 overflow-hidden rounded-xl border border-line bg-white shadow-pop">
             {searchable && (
               <div className="flex items-center gap-2 border-b border-line px-3">
                 <Search

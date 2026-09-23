@@ -535,7 +535,7 @@ export default function HomePage() {
         </Reveal>
       </section>
 
-      <section id="pricing" className="scroll-mt-20 bg-lavender-50 px-5 py-28">
+      <section id="pricing" className="hidden scroll-mt-20 bg-lavender-50 px-5 py-28">
         <div className="mx-auto max-w-270">
           <Reveal>
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">

@@ -1,31 +1,54 @@
 "use client";
 
-import { Select } from "@/components/ui/select";
+import { useMemo } from "react";
+import { Select, type SelectOption } from "@/components/ui/select";
+import { allCountries } from "@/lib/country-codes";
 import { cn } from "@/lib/cn";
 import { RequiredMark } from "@/components/ui/field";
 
-export const countryCodes = [
-  { value: "+234", label: "Nigeria", hint: "+234" },
-  { value: "+254", label: "Kenya", hint: "+254" },
-  { value: "+233", label: "Ghana", hint: "+233" },
-  { value: "+27", label: "South Africa", hint: "+27" },
-  { value: "+255", label: "Tanzania", hint: "+255" },
-  { value: "+256", label: "Uganda", hint: "+256" },
-  { value: "+250", label: "Rwanda", hint: "+250" },
-  { value: "+20", label: "Egypt", hint: "+20" },
-  { value: "+212", label: "Morocco", hint: "+212" },
-  { value: "+225", label: "Côte d'Ivoire", hint: "+225" },
-  { value: "+237", label: "Cameroon", hint: "+237" },
-  { value: "+251", label: "Ethiopia", hint: "+251" },
-  { value: "+44", label: "United Kingdom", hint: "+44" },
-  { value: "+1", label: "United States / Canada", hint: "+1" },
-  { value: "+33", label: "France", hint: "+33" },
-  { value: "+49", label: "Germany", hint: "+49" },
-  { value: "+971", label: "United Arab Emirates", hint: "+971" },
-  { value: "+91", label: "India", hint: "+91" },
+/** Launch markets + common diaspora, pinned to the top of the list — the
+ * full 248-country list (lib/country-codes.ts) follows alphabetically and
+ * is always one search away. */
+const POPULAR_ISO = [
+  "NG", "KE", "GH", "ZA", "TZ", "UG", "RW", "EG", "MA", "CI", "CM", "ET",
+  "GB", "US", "FR", "DE", "AE", "IN",
 ];
 
-/** Country-code Select + digits-only number input (item: numeric only). */
+/** ISO-3166 alpha-2 → flag emoji (regional indicator pair) — no data table. */
+function flag(iso: string): string {
+  return String.fromCodePoint(...[...iso].map((c) => 0x1f1a5 + c.charCodeAt(0)));
+}
+
+/** Country name in the viewer's own language when the browser can; the
+ * dataset's English name otherwise. */
+function displayName(iso: string, english: string): string {
+  try {
+    return new Intl.DisplayNames(undefined, { type: "region" }).of(iso) ?? english;
+  } catch {
+    return english;
+  }
+}
+
+function buildOptions(): SelectOption[] {
+  const byIso = new Map(allCountries.map((c) => [c.iso, c]));
+  const popular = POPULAR_ISO.map((iso) => byIso.get(iso)).filter(
+    (c): c is NonNullable<typeof c> => Boolean(c),
+  );
+  const rest = allCountries.filter((c) => !POPULAR_ISO.includes(c.iso));
+  return [...popular, ...rest].map((c) => ({
+    value: c.iso,
+    label: `${flag(c.iso)} ${displayName(c.iso, c.name)}`,
+    hint: c.dial,
+    triggerLabel: `${flag(c.iso)} ${c.dial}`,
+  }));
+}
+
+/** Country-code Select + digits-only number input (item: numeric only).
+ * The public contract stays the DIAL STRING (`cc`, e.g. "+234") — that's
+ * what buildE164 consumes — while the Select is keyed by ISO code, since
+ * several countries share a dial code (+1, +44, +7…). Mapping a dial back
+ * to a country picks the first match (popular list wins), which only
+ * affects which row shows the checkmark, never the number built. */
 export function PhoneField({
   required,
   label = "WhatsApp phone number",
@@ -45,22 +68,23 @@ export function PhoneField({
   hint?: string;
   error?: string;
 }) {
+  const options = useMemo(() => buildOptions(), []);
+  const selectedIso = options.find((o) => o.hint === cc)?.value ?? null;
+  const dialByIso = (iso: string) =>
+    allCountries.find((c) => c.iso === iso)?.dial ?? cc;
+
   return (
     <div>
       <p className="mb-1.5 text-sm font-medium text-navy">{label}{required && <RequiredMark />}</p>
       <div className="flex gap-2">
         <Select
           label="Country code"
-          value={cc}
-          onChange={onCcChange}
-          options={countryCodes.map((c) => ({
-            value: c.value,
-            label: c.hint,
-            hint: c.label,
-          }))}
+          value={selectedIso}
+          onChange={(iso) => onCcChange(dialByIso(iso))}
+          options={options}
           searchable
           hideHintInTrigger
-          className="w-28 shrink-0"
+          className="w-32 shrink-0"
         />
         <input
           aria-label="Phone number"
