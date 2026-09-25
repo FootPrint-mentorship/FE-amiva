@@ -41,6 +41,7 @@ export async function saveProfile(): Promise<void> {
       name: s.fullName,
       preferred_name: s.preferredName,
       timezone: s.timezone,
+      language: s.language || null,
     },
   });
 }

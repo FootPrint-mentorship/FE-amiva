@@ -2271,6 +2271,8 @@ export interface components {
             timezone: string;
             /** Locale */
             locale: string;
+            /** Language */
+            language: string | null;
             /** Whatsapp Linked */
             whatsapp_linked: boolean;
             /** Profile Complete */
@@ -2298,6 +2300,8 @@ export interface components {
             timezone?: string | null;
             /** Locale */
             locale?: string | null;
+            /** Language */
+            language?: string | null;
             working_hours?: components["schemas"]["WorkingHours"] | null;
         };
         /** ValidationError */

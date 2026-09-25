@@ -433,6 +433,27 @@ export default function SettingsPage() {
             />
           </div>
           <div>
+            <p className="mb-1.5 text-sm font-medium text-navy">Chat language</p>
+            <Select
+              label="Chat language"
+              value={settings.language}
+              onChange={(language) => settingsStore.set((c) => ({ ...c, language }))}
+              options={[
+                { value: "", label: "English (default)" },
+                { value: "fr", label: "Français", hint: "French" },
+                { value: "sw", label: "Kiswahili", hint: "Swahili" },
+                { value: "ar", label: "العربية", hint: "Arabic" },
+                { value: "pcm", label: "Naija Pidgin", hint: "Nigerian Pidgin" },
+                { value: "it", label: "Italiano", hint: "Italian" },
+              ]}
+            />
+            <p className="mt-1 text-xs text-ink-muted">
+              The language Amiva replies in on WhatsApp. Amiva understands you in
+              most languages either way; a language you pick here applies as soon
+              as it launches.
+            </p>
+          </div>
+          <div>
             <p className="mb-2 text-sm font-medium text-navy">Appearance</p>
             <div className="flex w-fit gap-1 rounded-xl bg-indigo-50 p-1">
               {(["system", "light", "dark"] as const).map((t) => (
