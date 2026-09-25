@@ -17,6 +17,7 @@ type ApiUser = {
   name: string;
   preferred_name: string | null;
   timezone: string;
+  language?: string | null;
   email_verified?: boolean;
   phone_verified?: boolean;
   whatsapp_linked?: boolean;
@@ -34,6 +35,7 @@ function absorbUser(u: ApiUser) {
     email: u.email,
     phone: u.phone ?? "",
     timezone: u.timezone,
+    language: u.language ?? "",
     emailVerified: u.email_verified ?? true,
     phoneVerified: u.phone_verified ?? false,
     integrations: {

@@ -14,6 +14,8 @@ export type Settings = {
   email: string;
   phone: string;
   timezone: string;
+  /** Reply language (spec §17); "" = English default / never chosen. */
+  language: string;
   emailVerified: boolean;
   phoneVerified: boolean;
   /** False for Google-only accounts — no password exists to change/reset. */
@@ -41,6 +43,7 @@ const settingsBlank: Settings = {
   email: "",
   phone: "",
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  language: "",
   emailVerified: false,
   phoneVerified: false,
   hasPassword: true, // assume yes until /users/me answers

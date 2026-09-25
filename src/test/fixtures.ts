@@ -607,6 +607,7 @@ export function makeAdaSettings(): Settings {
     emailVerified: true,
     phoneVerified: true,
     hasPassword: true,
+    language: "",
     dailyAgendaEnabled: false,
     dailyAgendaTime: "07:30",
     matrix: {
