@@ -1,15 +1,17 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Logo } from "@/components/logo";
 import { Year } from "@/components/year";
 
-const bubbles = [
-  { text: "Remind me to pay rent on Friday morning", who: "user" as const, delay: "0s" },
-  { text: "⏰ Done. Friday, 9:00 AM. Consider it handled.", who: "amiva" as const, delay: "5s" },
-  { text: "💾 Saved under Finance. Ask me any time.", who: "amiva" as const, delay: "10s" },
-];
-
-/** Animated left-side brand panel shared by the auth screens and onboarding. */
+/** Animated left-side brand panel shared by the auth screens and onboarding.
+ *  Localized (Phase 2): renders inside a NextIntlClientProvider. */
 export function BrandPanel() {
+  const t = useTranslations("brand");
+  const bubbles = [
+    { text: t("bubbleUser"), who: "user" as const, delay: "0s" },
+    { text: t("bubbleDone"), who: "amiva" as const, delay: "5s" },
+    { text: t("bubbleSaved"), who: "amiva" as const, delay: "10s" },
+  ];
   return (
     <aside className="relative hidden w-[42%] flex-col justify-between overflow-hidden bg-gradient-to-b from-indigo-900 to-navy p-10 lg:flex">
       {/* drifting glow */}
@@ -27,18 +29,15 @@ export function BrandPanel() {
         }}
       />
 
-      <Link href="/" aria-label="Amiva home" className="relative">
+      <Link href="/" aria-label={t("home")} className="relative">
         <Logo variant="light" size={32} />
       </Link>
 
       <div className="relative">
         <p className="max-w-90 text-3xl font-semibold leading-snug text-white">
-          Manage your life and work from one conversation.
+          {t("tagline")}
         </p>
-        <p className="mt-4 max-w-90 text-white/60">
-          Reminders, calendar, tasks and memory, handled by your personal
-          chief of staff on WhatsApp.
-        </p>
+        <p className="mt-4 max-w-90 text-white/60">{t("sub")}</p>
 
         {/* cycling conversation vignette */}
         <div aria-hidden className="relative mt-10 h-24 max-w-90">

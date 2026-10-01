@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useTranslations } from "next-intl";
 
 /** Six-box OTP input with auto-advance and paste support. */
 export function OtpInput({
@@ -12,6 +13,7 @@ export function OtpInput({
   onChange: (v: string) => void;
   label: string;
 }) {
+  const t = useTranslations("ui");
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
   const setChar = (i: number, ch: string) => {
@@ -46,7 +48,7 @@ export function OtpInput({
           // the first. The controlled value still renders one digit per box.
           maxLength={6}
           autoComplete={i === 0 ? "one-time-code" : "off"}
-          aria-label={`${label} digit ${i + 1}`}
+          aria-label={t("otpDigit", { label, n: i + 1 })}
           value={value[i]?.trim() ?? ""}
           onChange={(e) => {
             let digits = e.target.value.replace(/\D/g, "");

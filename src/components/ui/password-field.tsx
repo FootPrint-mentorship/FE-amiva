@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, InputHTMLAttributes } from "react";
+import { useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { RequiredMark } from "@/components/ui/field";
@@ -19,6 +20,7 @@ export function PasswordField({
   error?: string;
 }) {
   const id = useId();
+  const t = useTranslations("ui");
   const [visible, setVisible] = useState(false);
   return (
     <div className={className}>
@@ -44,7 +46,7 @@ export function PasswordField({
         />
         <button
           type="button"
-          aria-label={visible ? "Hide password" : "Show password"}
+          aria-label={visible ? t("hidePassword") : t("showPassword")}
           aria-pressed={visible}
           onClick={() => setVisible((v) => !v)}
           className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-indigo-50 hover:text-navy"

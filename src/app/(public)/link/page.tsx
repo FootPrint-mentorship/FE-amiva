@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
@@ -14,6 +15,7 @@ import { stashPendingLink, verifyWhatsAppLink } from "@/lib/data/linking";
 function LinkContent() {
   const router = useRouter();
   const params = useSearchParams();
+  const t = useTranslations("link");
   const token = params.get("token");
   const [linking, setLinking] = useState(false);
   const [error, setError] = useState("");
@@ -25,12 +27,10 @@ function LinkContent() {
     return (
       <Card className="p-7 text-center">
         <h1 className="text-xl font-semibold text-navy">
-          {sessionActive() ? "Connect your WhatsApp" : "Link expired"}
+          {sessionActive() ? t("connectTitle") : t("expiredTitle")}
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          {sessionActive()
-            ? "Start the connection from your settings — Amiva prefills a WhatsApp message, and sending it links your number."
-            : "This linking link has expired or was already used. Message Amiva again on WhatsApp and she'll send you a fresh one."}
+          {sessionActive() ? t("connectBody") : t("expiredBody")}
         </p>
         {sessionActive() && (
           <Button
@@ -38,7 +38,7 @@ function LinkContent() {
             className="mt-5 w-full"
             onClick={() => router.push("/app/settings?connect=whatsapp")}
           >
-            Connect WhatsApp
+            {t("connectButton")}
           </Button>
         )}
       </Card>
@@ -57,22 +57,21 @@ function LinkContent() {
           <MessageCircle className="size-6 text-whatsapp" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
-          Almost there
+          {t("almostTitle")}
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          Sign in or create your Amiva account and the WhatsApp number you just
-          messaged from will be connected automatically.
+          {t("almostBody")}
         </p>
         <div className="mt-5 grid gap-2">
           <Button size="lg" onClick={() => router.push("/login")}>
-            Sign in
+            {t("signIn")}
           </Button>
           <Button
             size="lg"
             variant="secondary"
             onClick={() => router.push("/register")}
           >
-            Create an account
+            {t("createAccount")}
           </Button>
         </div>
         <div className="mt-4 flex items-start gap-2 rounded-control bg-soft p-3 text-xs text-ink-muted">
@@ -80,8 +79,7 @@ function LinkContent() {
             className="mt-0.5 size-4 shrink-0 text-success"
             aria-hidden
           />
-          Only continue if you just messaged Amiva yourself. You can unlink the
-          number any time in Settings.
+          {t("onlyContinue")}
         </div>
       </Card>
     );
@@ -92,14 +90,14 @@ function LinkContent() {
     setError("");
     try {
       await verifyWhatsAppLink(token);
-      toast("WhatsApp linked — anything you tell Amiva shows up here too.");
+      toast(t("linkedToast"));
       router.push("/app/today");
     } catch (err) {
       setLinking(false);
       setError(
         err instanceof ApiError && err.status === 422
-          ? "This link has expired or was already used — message Amiva on WhatsApp for a fresh one."
-          : "Couldn't link right now. Please try again.",
+          ? t("errorExpired")
+          : t("errorFailed"),
       );
     }
   };
@@ -110,19 +108,17 @@ function LinkContent() {
         <MessageCircle className="size-6 text-whatsapp" aria-hidden />
       </span>
       <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
-        Link your WhatsApp
+        {t("linkTitle")}
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-        Connect the WhatsApp number you just messaged Amiva from to this
-        account? Everything you do in the chat will appear here, and vice versa.
+        {t("linkBody")}
       </p>
       <div className="mt-4 flex items-start gap-2 rounded-control bg-soft p-3 text-xs text-ink-muted">
         <ShieldCheck
           className="mt-0.5 size-4 shrink-0 text-success"
           aria-hidden
         />
-        Only link a number that belongs to you. You can unlink it any time in
-        Settings.
+        {t("onlyLink")}
       </div>
       {error && (
         <p className="mt-3 text-sm text-danger" role="alert">
@@ -135,12 +131,12 @@ function LinkContent() {
         loading={linking}
         onClick={confirm}
       >
-        Link WhatsApp
+        {t("linkButton")}
       </Button>
       <p className="mt-3 text-center text-xs text-ink-muted">
-        Wrong account?{" "}
+        {t("wrongAccount")}{" "}
         <Link href="/login" className="underline">
-          Switch account
+          {t("switchAccount")}
         </Link>
       </p>
     </Card>

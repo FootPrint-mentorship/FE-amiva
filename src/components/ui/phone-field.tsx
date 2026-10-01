@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { allCountries } from "@/lib/country-codes";
 import { cn } from "@/lib/cn";
@@ -51,7 +52,7 @@ function buildOptions(): SelectOption[] {
  * affects which row shows the checkmark, never the number built. */
 export function PhoneField({
   required,
-  label = "WhatsApp phone number",
+  label,
   cc,
   phone,
   onCcChange,
@@ -68,6 +69,7 @@ export function PhoneField({
   hint?: string;
   error?: string;
 }) {
+  const t = useTranslations("ui");
   const options = useMemo(() => buildOptions(), []);
   const selectedIso = options.find((o) => o.hint === cc)?.value ?? null;
   const dialByIso = (iso: string) =>
@@ -75,10 +77,10 @@ export function PhoneField({
 
   return (
     <div>
-      <p className="mb-1.5 text-sm font-medium text-navy">{label}{required && <RequiredMark />}</p>
+      <p className="mb-1.5 text-sm font-medium text-navy">{label ?? t("phoneLabel")}{required && <RequiredMark />}</p>
       <div className="flex gap-2">
         <Select
-          label="Country code"
+          label={t("countryCode")}
           value={selectedIso}
           onChange={(iso) => onCcChange(dialByIso(iso))}
           options={options}
@@ -87,7 +89,7 @@ export function PhoneField({
           className="w-32 shrink-0"
         />
         <input
-          aria-label="Phone number"
+          aria-label={t("phoneNumber")}
           inputMode="numeric"
           autoComplete="tel-national"
           placeholder="8012345678"

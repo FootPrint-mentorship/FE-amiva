@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -20,6 +21,7 @@ const PHONE_RE = /^\+?\d{7,15}$/;
 export default function LoginPage() {
   useRedirectAuthed();
   const router = useRouter();
+  const t = useTranslations("login");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +31,7 @@ export default function LoginPage() {
     const id = identifier.trim().replace(/[\s()-]/g, "");
     const valid = EMAIL_RE.test(id) || PHONE_RE.test(id);
     if (!valid || !password) {
-      setError("Enter your email or phone number, and your password.");
+      setError(t("errorInvalid"));
       return;
     }
     setError("");
@@ -41,10 +43,10 @@ export default function LoginPage() {
       setSubmitting(false);
       setError(
         err instanceof ApiError && err.status === 401
-          ? "That email/phone and password don't match."
+          ? t("errorMismatch")
           : err instanceof ApiError
           ? err.message
-          : "Couldn't reach the server. Try again."
+          : t("errorNetwork")
       );
     }
   };
@@ -53,26 +55,26 @@ export default function LoginPage() {
     try {
       startGoogleSignIn(); // browser is off to Google
     } catch {
-      toast("Google sign-in isn't configured on this server.", { tone: "error" });
+      toast(t("googleNotConfigured"), { tone: "error" });
     }
   };
 
   return (
     <Card className="p-7">
       <h1 className="text-2xl font-semibold tracking-tight text-navy">
-        Welcome back
+        {t("title")}
       </h1>
 
       <div className="mt-6">
-        <GoogleButton label="Sign in with Google" onClick={google} />
+        <GoogleButton label={t("google")} onClick={google} />
         <OrDivider />
       </div>
 
       <div className="space-y-4">
         <Field
           required
-          label="Email or phone number"
-          placeholder="you@example.com or 08012345678"
+          label={t("identifier")}
+          placeholder={t("identifierPlaceholder")}
           autoComplete="username"
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
@@ -81,7 +83,7 @@ export default function LoginPage() {
         <div>
           <PasswordField
             required
-            label="Password"
+            label={t("password")}
             placeholder="••••••••"
             autoComplete="current-password"
             value={password}
@@ -92,7 +94,7 @@ export default function LoginPage() {
             href="/forgot-password"
             className="mt-1.5 inline-block text-xs font-medium text-indigo-900 hover:underline"
           >
-            Forgot password?
+            {t("forgot")}
           </Link>
         </div>
         {error && (
@@ -101,16 +103,16 @@ export default function LoginPage() {
           </p>
         )}
         <Button className="w-full" size="lg" loading={submitting} onClick={submit}>
-          Log in
+          {t("submit")}
         </Button>
 
         <p className="border-t border-line pt-5 text-center text-sm font-medium text-ink-muted">
-          Don&apos;t have an account?{" "}
+          {t("noAccount")}{" "}
           <Link
             href="/register"
             className="font-semibold text-violet-700 underline decoration-cyan-500 decoration-2 underline-offset-4 transition-colors hover:text-indigo-900"
           >
-            Sign up
+            {t("signUp")}
           </Link>
         </p>
       </div>

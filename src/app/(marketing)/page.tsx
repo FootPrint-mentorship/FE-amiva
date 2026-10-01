@@ -112,65 +112,63 @@ function MiniAppCard({
   );
 }
 
-function DashboardPreview() {
-  // Decorative illustration of the product: hidden from assistive tech (no
-  // interactive children), and stripped of landmark/heading semantics so it
-  // can't distort the real page outline (it renders twice).
+type AppScreenshotProps = {
+  /** Desktop capture, 2880px wide (1440 @2x). */
+  src: string;
+  /** Intrinsic pixel height of the desktop PNG. */
+  height?: number;
+  /** Phone capture, 1170x2532 (390x844 @3x); shown below the md breakpoint
+   *  because the desktop frame shrinks to an unreadable thumbnail there. */
+  mobileSrc: string;
+  alt: string;
+  priority?: boolean;
+};
+
+/**
+ * Real screenshots of the web app (public/screens/*.png) — a desktop capture
+ * in a light browser-window frame, and a phone capture in a phone-shaped
+ * frame on small screens. Regenerate the PNGs whenever the app shell changes
+ * so the marketing site never drifts from the product.
+ */
+function AppScreenshot({
+  src,
+  height = 1680,
+  mobileSrc,
+  alt,
+  priority = false,
+}: AppScreenshotProps) {
   return (
-    <div
-      aria-hidden="true"
-      className="overflow-hidden rounded-[18px] border border-line-soft bg-white shadow-[0_30px_90px_rgba(31,24,91,0.15)]"
-    >
-      <div className="flex h-8 items-center gap-1.5 border-b border-line bg-surface px-3">
-        <i className="size-1.5 rounded-full bg-mist-300" />
-        <i className="size-1.5 rounded-full bg-mist-300" />
-        <i className="size-1.5 rounded-full bg-mist-300" />
-      </div>
-      <div className="grid min-h-75 grid-cols-[74px_1fr] sm:min-h-90 sm:grid-cols-[150px_1fr]">
-        <div className="bg-indigo-900 p-4 text-white sm:p-6">
-          <Image
-            src="/brand/wordmark-white.svg"
-            alt="Amiva"
-            width={74}
-            height={20}
-          />
-          <div className="mt-10 space-y-5 text-[9px] text-white/60 sm:text-[11px]">
-            <p className="text-white">Today</p>
-            <p>Reminders</p>
-            <p>Calendar</p>
-            <p>Tasks</p>
-            <p>Memories</p>
-          </div>
+    <>
+      <div className="hidden overflow-hidden rounded-[18px] border border-line-soft bg-white shadow-[0_30px_90px_rgba(31,24,91,0.15)] md:block">
+        <div
+          aria-hidden="true"
+          className="flex h-8 items-center gap-1.5 border-b border-line bg-surface px-3"
+        >
+          <i className="size-1.5 rounded-full bg-mist-300" />
+          <i className="size-1.5 rounded-full bg-mist-300" />
+          <i className="size-1.5 rounded-full bg-mist-300" />
         </div>
-        <div className="p-5 sm:p-9">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[9px] text-ink-muted">Monday, 10 August</p>
-              <p className="mt-1 text-xl font-bold tracking-[-0.04em] text-navy sm:text-3xl">
-                Good morning, Amani.
-              </p>
-            </div>
-            <span className="hidden rounded-full bg-indigo-900 px-4 py-2 text-[9px] font-semibold text-white sm:block">
-              Talk to Amiva
-            </span>
-          </div>
-          <div className="mt-7 rounded-[14px] bg-indigo-900 p-5 text-white">
-            <p className="text-[9px] text-cyan-300">Today at a glance</p>
-            <p className="mt-2 text-xs font-semibold sm:text-sm">
-              Two meetings, three reminders and one item awaiting approval.
-            </p>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {["Next meeting", "Reminders due", "Tasks open"].map((x, i) => (
-              <div key={x} className="rounded-xl border border-line p-4">
-                <p className="text-[9px] text-ink-muted">{x}</p>
-                <b className="mt-2 block text-sm text-navy">{i + 1}</b>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Image
+          src={src}
+          alt={alt}
+          width={2880}
+          height={height}
+          priority={priority}
+          sizes="(max-width: 1120px) 100vw, 1080px"
+          className="block h-auto w-full"
+        />
       </div>
-    </div>
+      <div className="mx-auto w-full max-w-70 overflow-hidden rounded-[28px] border-[6px] border-navy bg-navy shadow-[0_30px_90px_rgba(31,24,91,0.2)] md:hidden">
+        <Image
+          src={mobileSrc}
+          alt={alt}
+          width={1170}
+          height={2532}
+          sizes="280px"
+          className="block h-auto w-full rounded-[22px]"
+        />
+      </div>
+    </>
   );
 }
 
@@ -431,7 +429,12 @@ export default function HomePage() {
                 Explore your dashboard
               </Link>
             </div>
-            <DashboardPreview />
+            <AppScreenshot
+              src="/screens/chat.png"
+              height={1800}
+              mobileSrc="/screens/chat-mobile.png"
+              alt="The Amiva web app's Chat screen showing a conversation continued from WhatsApp: a rent reminder set, today's meetings summarised, a 1:1 moved to 5pm and a birthday saved to memories"
+            />
           </div>
         </Reveal>
       </section>
@@ -529,7 +532,11 @@ export default function HomePage() {
               Everything from your chats, organised on the web.
             </h2>
             <div className="mt-14">
-              <DashboardPreview />
+              <AppScreenshot
+                src="/screens/today.png"
+                mobileSrc="/screens/today-mobile.png"
+                alt="The Amiva web app's Today screen: a greeting, a one-line summary of the day, and three columns for the schedule, reminders due and tasks due"
+              />
             </div>
           </div>
         </Reveal>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   AlarmClock,
   Brain,
@@ -35,34 +36,19 @@ import {
   verifyPhoneCode,
 } from "@/lib/data/settings";
 
-const steps = [
-  "Welcome",
-  "Preferences",
-  "Verify phone",
-  "Calendar",
-  "First action",
-];
-
-const capabilities = [
-  {
-    icon: AlarmClock,
-    title: "Remind",
-    body: "One-time and recurring reminders, delivered where you'll see them.",
-  },
-  {
-    icon: ListChecks,
-    title: "Organise",
-    body: "Calendar, tasks and checklists managed from one conversation.",
-  },
-  {
-    icon: Brain,
-    title: "Remember",
-    body: "A personal memory you control. Save once, find forever.",
-  },
-];
-
+// Internal ids stay English (working_hours maps them to ISO weekday numbers,
+// Mon=1); only the labels are localized.
 const channelOptions = ["WhatsApp", "Email"] as const;
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+const DAY_KEYS = {
+  Mon: "dayMon",
+  Tue: "dayTue",
+  Wed: "dayWed",
+  Thu: "dayThu",
+  Fri: "dayFri",
+  Sat: "daySat",
+  Sun: "daySun",
+} as const;
 
 /** PATCH the wizard's preferences to /users/me (working_hours drives the
  * assistant's availability math — ISO weekday numbers, Mon=1). */
@@ -81,7 +67,7 @@ function savePreferences(prefs: {
       working_hours: {
         start: prefs.workStart,
         end: prefs.workEnd,
-        days: prefs.workDays.map((d) => days.indexOf(d) + 1),
+        days: prefs.workDays.map((d) => days.indexOf(d as (typeof days)[number]) + 1),
       },
     },
   });
@@ -89,7 +75,21 @@ function savePreferences(prefs: {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const t = useTranslations("onboarding");
   const settings = useStore(settingsStore);
+  const steps = [
+    t("stepWelcome"),
+    t("stepPreferences"),
+    t("stepPhone"),
+    t("stepCalendar"),
+    t("stepFirst"),
+  ];
+  const capabilities = [
+    { icon: AlarmClock, title: t("capRemindTitle"), body: t("capRemindBody") },
+    { icon: ListChecks, title: t("capOrganiseTitle"), body: t("capOrganiseBody") },
+    { icon: Brain, title: t("capRememberTitle"), body: t("capRememberBody") },
+  ];
+  const channelLabel = { WhatsApp: t("channelWhatsApp"), Email: t("channelEmail") } as const;
   const [step, setStep] = useState(0);
   const [prefs, setPrefs] = useState(() => ({
     preferredName: settingsStore.get().preferredName,
@@ -108,34 +108,27 @@ export default function OnboardingPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("connected") !== "google") return;
-    const t = setTimeout(() => {
+    const tm = setTimeout(() => {
       setStep(3); // the Calendar step
       if (params.get("error")) {
-        toast("Google connection didn't complete — nothing was changed. Please try again.", {
-          tone: "error",
-        });
+        toast(t("googleFailedToast"), { tone: "error" });
       } else {
         setCalendarConnected(true); // the callback only redirects clean after the exchange
-        toast("Google Calendar connected.");
+        toast(t("googleConnectedToast"));
       }
       window.history.replaceState(null, "", "/onboarding");
     }, 0);
-    return () => clearTimeout(t);
-  }, []);
+    return () => clearTimeout(tm);
+  }, [t]);
 
   const startCalendarConnect = () => {
     setConnecting(true);
     connectGoogle("calendar", "/onboarding").catch(() => {
       setConnecting(false);
-      toast(
-        "Google connections aren't configured on this server yet — you can skip this step.",
-        { tone: "error" }
-      );
+      toast(t("googleNotConfigured"), { tone: "error" });
     });
   };
-  const [tryText, setTryText] = useState(
-    "Remind me to call Mum tomorrow at 6 pm",
-  );
+  const [tryText, setTryText] = useState(() => t("tryDefault"));
   const [trying, setTrying] = useState(false);
   const [tryReply, setTryReply] = useState<string | null>(null);
 
@@ -148,11 +141,7 @@ export default function OnboardingPage() {
     setTryReply(null);
     sendAssistantMessage(text)
       .then((res) => setTryReply(res.reply))
-      .catch(() =>
-        setTryReply(
-          "I couldn't reach Amiva just now — you can try again, or skip ahead.",
-        ),
-      )
+      .catch(() => setTryReply(t("tryFailed")))
       .finally(() => setTrying(false));
   };
 
@@ -181,19 +170,17 @@ export default function OnboardingPage() {
     // handler so the two never send an empty body.
     setPhoneStage("sent");
     sendPhoneCodeApi()
-      .then(() => toast("Code sent to your WhatsApp number."))
+      .then(() => toast(t("codeSentToast")))
       .catch(() => {
         setPhoneStage("idle");
-        toast("Couldn't send the code just now. Please try again.", {
-          tone: "error",
-        });
+        toast(t("codeFailedToast"), { tone: "error" });
       });
   };
 
   const sendCodeToNewNumber = () => {
     const digits = newPhone.replace(/[\s()-]/g, "");
     if (digits.length < 7) {
-      setPhoneErr("Enter the full number.");
+      setPhoneErr(t("errorEnterFull"));
       return;
     }
     setPhoneErr("");
@@ -203,8 +190,8 @@ export default function OnboardingPage() {
       .catch((err) =>
         setPhoneErr(
           err instanceof ApiError && err.code === "CONFLICT"
-            ? "An account with this number already exists."
-            : "Couldn't send the code just now. Please try again."
+            ? t("errorPhoneConflict")
+            : t("codeFailedToast")
         )
       )
       .finally(() => setSendingPhone(false));
@@ -215,12 +202,12 @@ export default function OnboardingPage() {
     if (code.length === 6) {
       verifyPhoneCode(code)
         .then(() => {
-          toast("Phone verified. WhatsApp delivery is live.");
+          toast(t("phoneVerifiedToast"));
           next();
         })
         .catch(() => {
           setPhoneOtp("");
-          toast("That code didn't match. Please try again.", { tone: "error" });
+          toast(t("codeMismatchToast"), { tone: "error" });
         });
     }
   };
@@ -234,22 +221,22 @@ export default function OnboardingPage() {
           onClick={finishToApp}
           className="absolute right-5 top-5 cursor-pointer text-sm font-medium text-ink-muted hover:text-navy"
         >
-          Skip onboarding →
+          {t("skip")}
         </button>
 
-        <Link href="/" className="lg:hidden" aria-label="Amiva home">
+        <Link href="/" className="lg:hidden" aria-label="Amiva">
           <Logo size={30} />
         </Link>
 
         {/* Progress dots (visited steps are clickable) */}
         <div
           className="mt-8 flex items-center gap-2"
-          aria-label={`Step ${step + 1} of ${steps.length}: ${steps[step]}`}
+          aria-label={t("stepLabel", { n: step + 1, total: steps.length, label: steps[step] })}
         >
           {steps.map((label, i) => (
             <button
               key={label}
-              aria-label={`Go to step ${i + 1}: ${label}`}
+              aria-label={t("goToStep", { n: i + 1, label })}
               disabled={i >= step}
               onClick={() => setStep(i)}
               className={cn(
@@ -268,7 +255,7 @@ export default function OnboardingPage() {
             onClick={back}
             className="mt-3 cursor-pointer text-sm font-medium text-ink-muted hover:text-navy"
           >
-            ← Back
+            {t("back")}
           </button>
         )}
 
@@ -277,7 +264,7 @@ export default function OnboardingPage() {
           {step === 0 && (
             <Card className="p-8 text-center">
               <h1 className="text-2xl font-semibold tracking-tight text-navy">
-                Meet Amiva, your personal chief of staff
+                {t("welcomeTitle")}
               </h1>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 {capabilities.map((c) => (
@@ -294,18 +281,17 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <p className="mt-6 text-xs text-ink-muted">
-                Amiva only remembers what you allow, and asks before doing
-                anything important.{" "}
+                {t("privacyNote")}{" "}
                 <Link
                   href="/privacy-policy"
                   target="_blank"
                   className="text-indigo-900 hover:underline"
                 >
-                  How we handle your data
+                  {t("privacyLink")}
                 </Link>
               </p>
               <Button className="mt-6 w-full" size="lg" onClick={next}>
-                Let&apos;s set you up
+                {t("letsGo")}
               </Button>
             </Card>
           )}
@@ -314,11 +300,11 @@ export default function OnboardingPage() {
           {step === 1 && (
             <Card className="p-8">
               <h1 className="text-2xl font-semibold tracking-tight text-navy">
-                Your preferences
+                {t("prefsTitle")}
               </h1>
               <div className="mt-6 space-y-5">
                 <Field
-                  label="What should Amiva call you?"
+                  label={t("callYou")}
                   value={prefs.preferredName}
                   onChange={(e) =>
                     setPrefs({ ...prefs, preferredName: e.target.value })
@@ -326,7 +312,7 @@ export default function OnboardingPage() {
                 />
                 <div>
                   <p className="mb-2 text-sm font-medium text-navy">
-                    Where should notifications go?
+                    {t("notifWhere")}
                   </p>
                   <div className="flex gap-2">
                     {channelOptions.map((c) => {
@@ -356,7 +342,7 @@ export default function OnboardingPage() {
                               aria-hidden
                             />
                           )}
-                          {c}
+                          {channelLabel[c]}
                         </button>
                       );
                     })}
@@ -364,15 +350,17 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <p className="mb-2 text-sm font-medium text-navy">
-                    Working days
+                    {t("workingDays")}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {days.map((d) => {
                       const on = prefs.workDays.includes(d);
+                      const label = t(DAY_KEYS[d]);
                       return (
                         <button
                           key={d}
                           aria-pressed={on}
+                          aria-label={label}
                           onClick={() =>
                             setPrefs({
                               ...prefs,
@@ -388,7 +376,7 @@ export default function OnboardingPage() {
                               : "border border-line bg-white text-ink-muted",
                           )}
                         >
-                          {d[0]}
+                          {label[0]}
                         </button>
                       );
                     })}
@@ -396,7 +384,7 @@ export default function OnboardingPage() {
                 </div>
                 <div className="flex gap-3">
                   <label className="flex-1 text-sm font-medium text-navy">
-                    Start
+                    {t("start")}
                     <input
                       type="time"
                       value={prefs.workStart}
@@ -407,7 +395,7 @@ export default function OnboardingPage() {
                     />
                   </label>
                   <label className="flex-1 text-sm font-medium text-navy">
-                    End
+                    {t("end")}
                     <input
                       type="time"
                       value={prefs.workEnd}
@@ -430,15 +418,12 @@ export default function OnboardingPage() {
                     // Persist name + working hours server-side (availability
                     // math uses them) — best-effort, the wizard moves on.
                     savePreferences(prefs).catch(() =>
-                      toast(
-                        "Couldn't save your preferences just now, you can adjust them later in Settings.",
-                        { tone: "error" }
-                      )
+                      toast(t("prefsSaveFailed"), { tone: "error" })
                     );
                     next();
                   }}
                 >
-                  Continue
+                  {t("continue")}
                 </Button>
               </div>
             </Card>
@@ -451,34 +436,29 @@ export default function OnboardingPage() {
                 <Smartphone className="size-6 text-indigo-900" aria-hidden />
               </span>
               <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
-                Verify your phone
+                {t("phoneTitle")}
               </h1>
               {settings.phoneVerified ? (
                 <>
                   <p className="mt-5 flex items-center gap-2 rounded-control bg-success/10 px-4 py-3 text-sm font-medium text-success">
-                    <Check className="size-4" aria-hidden /> Phone already
-                    verified
+                    <Check className="size-4" aria-hidden /> {t("phoneAlreadyVerified")}
                   </p>
                   <Button className="mt-5 w-full" size="lg" onClick={next}>
-                    Continue
+                    {t("continue")}
                   </Button>
                 </>
               ) : (
                 <>
                   <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                    Amiva delivers reminders on WhatsApp only after your number
-                    is verified. We&apos;ll send a one-time code there — nowhere
-                    else.
+                    {t("phoneBody")}
                   </p>
                   {phoneStage === "sent" ? (
                     <div className="mt-5 rounded-xl border border-line bg-soft p-4">
-                      <p className="mb-2 text-xs text-ink-muted">
-                        Enter the 6-digit code.
-                      </p>
+                      <p className="mb-2 text-xs text-ink-muted">{t("enterCode")}</p>
                       <OtpInput
                         value={phoneOtp}
                         onChange={onPhoneOtp}
-                        label="Phone code"
+                        label={t("phoneCode")}
                       />
                     </div>
                   ) : hasNumberOnFile ? (
@@ -487,7 +467,7 @@ export default function OnboardingPage() {
                       size="lg"
                       onClick={sendPhoneCode}
                     >
-                      Send code to WhatsApp
+                      {t("sendToWhatsApp")}
                     </Button>
                   ) : (
                     // No number on file (phone is optional at signup) — collect
@@ -509,7 +489,7 @@ export default function OnboardingPage() {
                         onClick={sendCodeToNewNumber}
                         loading={sendingPhone}
                       >
-                        Send code to WhatsApp
+                        {t("sendToWhatsApp")}
                       </Button>
                     </div>
                   )}
@@ -518,12 +498,9 @@ export default function OnboardingPage() {
                       onClick={next}
                       className="cursor-pointer text-sm text-ink-muted hover:text-navy"
                     >
-                      Skip for now
+                      {t("skipForNow")}
                     </button>
-                    <p className="mt-1.5 text-xs text-ink-muted">
-                      You can verify later in Settings. Until then, nothing is
-                      sent to this number.
-                    </p>
+                    <p className="mt-1.5 text-xs text-ink-muted">{t("phoneLater")}</p>
                   </div>
                 </>
               )}
@@ -537,17 +514,14 @@ export default function OnboardingPage() {
                 <CalendarDays className="size-6 text-indigo-900" aria-hidden />
               </span>
               <h1 className="mt-4 text-2xl font-semibold tracking-tight text-navy">
-                Connect Google Calendar
+                {t("calendarTitle")}
               </h1>
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                Amiva can create events, spot conflicts and find free slots. It
-                only requests the calendar permissions it needs, and you can
-                disconnect any time.
+                {t("calendarBody")}
               </p>
               {calendarConnected ? (
                 <p className="mt-5 flex items-center gap-2 rounded-control bg-success/10 px-4 py-3 text-sm font-medium text-success">
-                  <Check className="size-4" aria-hidden /> Google Calendar
-                  connected
+                  <Check className="size-4" aria-hidden /> {t("calendarConnected")}
                 </p>
               ) : (
                 <Button
@@ -556,7 +530,7 @@ export default function OnboardingPage() {
                   loading={connecting}
                   onClick={startCalendarConnect}
                 >
-                  {connecting ? "Opening Google…" : "Connect Google Calendar"}
+                  {connecting ? t("openingGoogle") : t("connectCalendar")}
                 </Button>
               )}
               <div className="mt-3 flex justify-between">
@@ -564,11 +538,11 @@ export default function OnboardingPage() {
                   onClick={next}
                   className="cursor-pointer text-sm text-ink-muted hover:text-navy"
                 >
-                  Skip for now
+                  {t("skipForNow")}
                 </button>
                 {calendarConnected && (
                   <Button size="sm" variant="ghost" onClick={next}>
-                    Continue →
+                    {t("continueArrow")}
                   </Button>
                 )}
               </div>
@@ -579,20 +553,20 @@ export default function OnboardingPage() {
           {step === 4 && (
             <Card className="p-8">
               <h1 className="text-2xl font-semibold tracking-tight text-navy">
-                Try your first request
+                {t("tryTitle")}
               </h1>
               <div className="mt-5 flex gap-2">
                 <input
                   value={tryText}
                   onChange={(e) => setTryText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && sendFirstRequest()}
-                  aria-label="Try a request"
+                  aria-label={t("tryLabel")}
                   className="h-11 flex-1 rounded-control border border-line bg-white px-3.5 text-[15px] text-navy"
                 />
                 <Button
                   onClick={sendFirstRequest}
                   loading={trying}
-                  aria-label="Send"
+                  aria-label={t("send")}
                 >
                   <Send className="size-4" aria-hidden />
                 </Button>
@@ -608,7 +582,7 @@ export default function OnboardingPage() {
                     className="size-4 text-whatsapp"
                     aria-hidden
                   />
-                  Prefer WhatsApp? Say hello and Amiva will link your chat:
+                  {t("preferWhatsApp")}
                 </p>
                 <a
                   href={WA_LINK}
@@ -616,11 +590,11 @@ export default function OnboardingPage() {
                   rel="noopener noreferrer"
                   className="mt-2 inline-block text-sm font-semibold text-whatsapp hover:underline"
                 >
-                  Open WhatsApp →
+                  {t("openWhatsApp")}
                 </a>
               </div>
               <Button className="mt-6 w-full" size="lg" onClick={finishToApp}>
-                Go to my dashboard
+                {t("goDashboard")}
               </Button>
             </Card>
           )}
