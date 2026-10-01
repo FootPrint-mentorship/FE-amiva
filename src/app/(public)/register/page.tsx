@@ -21,6 +21,7 @@ import { startGoogleSignIn } from "@/lib/google";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
 import { cn } from "@/lib/cn";
 import { useRedirectAuthed } from "@/lib/use-redirect-authed";
+import { EVENTS, track } from "@/lib/analytics";
 
 function strength(pw: string) {
   let s = 0;
@@ -124,6 +125,7 @@ export default function RegisterPage() {
         password: form.password,
         timezone: form.timezone,
       });
+      track(EVENTS.signupCompleted, { method: "email" });
       router.push("/onboarding");
     } catch (err) {
       setSubmitting(false);

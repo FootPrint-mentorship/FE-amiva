@@ -21,10 +21,10 @@ function subscribeToSession(onChange: () => void) {
 }
 
 // Contact goes straight to the WhatsApp chat — the product IS the chat.
-const nav = [
+const nav: { href: string; label: string; external?: boolean; event?: string }[] = [
   { href: "/#features", label: "Features" },
   { href: "/#faq", label: "Questions" },
-  { href: WA_LINK, label: "Contact", external: true },
+  { href: WA_LINK, label: "Contact", external: true, event: "cta-start-whatsapp" },
 ];
 
 export function MarketingHeader() {
@@ -53,6 +53,8 @@ export function MarketingHeader() {
                   href={n.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-umami-event={n.event}
+                  data-umami-event-placement="header"
                   className="hover:text-indigo-900"
                 >
                   {n.label}
@@ -86,6 +88,8 @@ export function MarketingHeader() {
                 </Link>
                 <Link
                   href="/register"
+                data-umami-event="cta-create-account"
+                data-umami-event-placement="header"
                   className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-indigo-900 px-5 text-sm font-semibold text-white transition-all hover:bg-indigo-700 hover:-translate-y-px"
                 >
                   <span>Get started</span>
@@ -125,6 +129,8 @@ export function MarketingHeader() {
                     href={n.href}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-umami-event={n.event}
+                    data-umami-event-placement="header-mobile"
                     className="text-[15px] font-medium text-navy"
                     onClick={() => setMobileOpen(false)}
                   >
@@ -161,6 +167,8 @@ export function MarketingHeader() {
                   </Link>
                   <Link
                     href="/register"
+                data-umami-event="cta-create-account"
+                data-umami-event-placement="header"
                     className="flex-1 inline-flex h-11 items-center justify-center gap-1 rounded-full bg-indigo-900 text-sm font-semibold text-white"
                   >
                     <span>Get started</span>

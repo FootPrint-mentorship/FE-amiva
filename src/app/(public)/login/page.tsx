@@ -14,6 +14,7 @@ import { login as loginAccount } from "@/lib/data/auth";
 import { ApiError } from "@/lib/api/client";
 import { startGoogleSignIn } from "@/lib/google";
 import { useRedirectAuthed } from "@/lib/use-redirect-authed";
+import { EVENTS, track } from "@/lib/analytics";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const PHONE_RE = /^\+?\d{7,15}$/;
@@ -38,6 +39,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await loginAccount(id, password);
+      track(EVENTS.loginCompleted);
       router.push("/app/today");
     } catch (err) {
       setSubmitting(false);

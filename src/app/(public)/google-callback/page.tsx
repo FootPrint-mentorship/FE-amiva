@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { googleSignIn } from "@/lib/data/auth";
 import { googleRedirectUri } from "@/lib/google";
 import { toast } from "@/components/ui/toast";
+import { EVENTS, track } from "@/lib/analytics";
 
 /** Google bounces here with ?code=… after consent (or ?error=… on cancel).
  * The code is exchanged server-side via POST /auth/google; success lands in
@@ -27,9 +28,10 @@ export default function GoogleCallbackPage() {
       return;
     }
     googleSignIn(code, googleRedirectUri())
-      .then(({ profileComplete }) =>
-        router.replace(profileComplete ? "/app/today" : "/complete-profile")
-      )
+      .then(({ profileComplete }) => {
+        track(profileComplete ? EVENTS.loginCompleted : EVENTS.signupCompleted, { method: "google" });
+        router.replace(profileComplete ? "/app/today" : "/complete-profile");
+      })
       .catch(() => {
         toast(t("failed"), { tone: "error" });
         router.replace("/login");
