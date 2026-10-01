@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -21,6 +22,7 @@ import { MailCheck } from "lucide-react";
  */
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const t = useTranslations("forgot");
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -32,29 +34,29 @@ export default function ForgotPasswordPage() {
   // mount (SSR has no location); setState runs in a deferred callback per
   // the react-hooks/set-state-in-effect rule.
   useEffect(() => {
-    const t = setTimeout(() => {
+    const tm = setTimeout(() => {
       const param = new URLSearchParams(window.location.search).get("token");
       if (param) setToken(param);
     }, 0);
-    return () => clearTimeout(t);
+    return () => clearTimeout(tm);
   }, []);
 
   const sendLink = () => {
     if (!/^\S+@\S+\.\S+$/.test(email)) {
-      setError("Enter a valid email address.");
+      setError(t("errorEmailInvalid"));
       return;
     }
     setError("");
     setSubmitting(true);
     requestPasswordReset(email)
       .then(() => setSent(true))
-      .catch(() => setError("That didn't go through. Please try again."))
+      .catch(() => setError(t("errorFailed")))
       .finally(() => setSubmitting(false));
   };
 
   const applyReset = () => {
     if (password.length < 8) {
-      setError("Use at least 8 characters.");
+      setError(t("errorPasswordShort"));
       return;
     }
     setError("");
@@ -65,12 +67,12 @@ export default function ForgotPasswordPage() {
         // login page bounces a "signed-in" ghost back into the app.
         clearTokens();
         setAuthed(false);
-        toast("Password updated. Log in with your new password.");
+        toast(t("updatedToast"));
         router.replace("/login");
       })
       .catch(() => {
         setSubmitting(false);
-        setError("That link is invalid or has expired. Request a fresh one below.");
+        setError(t("errorLinkInvalid"));
         setToken(null);
       });
   };
@@ -79,16 +81,14 @@ export default function ForgotPasswordPage() {
     return (
       <Card className="p-7">
         <h1 className="text-2xl font-semibold tracking-tight text-navy">
-          Choose a new password
+          {t("newTitle")}
         </h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          You&apos;ll be signed out everywhere and can log in with the new one.
-        </p>
+        <p className="mt-1 text-sm text-ink-muted">{t("newSub")}</p>
         <div className="mt-6 space-y-4">
           <PasswordField
             required
-            label="New password"
-            placeholder="At least 8 characters"
+            label={t("newPassword")}
+            placeholder={t("passwordPlaceholder")}
             autoComplete="new-password"
             value={password}
             error={error}
@@ -96,7 +96,7 @@ export default function ForgotPasswordPage() {
             onKeyDown={(e) => e.key === "Enter" && applyReset()}
           />
           <Button className="w-full" size="lg" loading={submitting} onClick={applyReset}>
-            Set new password
+            {t("setNew")}
           </Button>
         </div>
       </Card>
@@ -107,16 +107,18 @@ export default function ForgotPasswordPage() {
     return (
       <Card className="p-7 text-center">
         <MailCheck className="mx-auto size-8 text-success" aria-hidden />
-        <h1 className="mt-3 text-xl font-semibold text-navy">Check your inbox</h1>
+        <h1 className="mt-3 text-xl font-semibold text-navy">{t("inboxTitle")}</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          If an account exists for <strong>{email}</strong>, we&apos;ve sent a
-          link to reset your password. It works for 30 minutes.
+          {t.rich("inboxBody", {
+            email,
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </p>
         <Link
           href="/login"
           className="mt-5 inline-block text-sm font-medium text-indigo-900 hover:underline"
         >
-          ← Back to log in
+          {t("backToLogin")}
         </Link>
       </Card>
     );
@@ -125,28 +127,26 @@ export default function ForgotPasswordPage() {
   return (
     <Card className="p-7">
       <h1 className="text-2xl font-semibold tracking-tight text-navy">
-        Reset your password
+        {t("title")}
       </h1>
-      <p className="mt-1 text-sm text-ink-muted">
-        Enter your account email and we&apos;ll send you a reset link.
-      </p>
+      <p className="mt-1 text-sm text-ink-muted">{t("sub")}</p>
       <div className="mt-6 space-y-4">
         <Field
           required
-          label="Email"
+          label={t("email")}
           type="email"
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
           value={email}
           error={error}
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendLink()}
         />
         <Button className="w-full" size="lg" loading={submitting} onClick={sendLink}>
-          Send reset link
+          {t("sendLink")}
         </Button>
         <p className="text-center">
           <Link href="/login" className="text-sm font-medium text-indigo-900 hover:underline">
-            ← Back to log in
+            {t("backToLogin")}
           </Link>
         </p>
       </div>

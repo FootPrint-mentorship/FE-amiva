@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { googleSignIn } from "@/lib/data/auth";
 import { googleRedirectUri } from "@/lib/google";
 import { toast } from "@/components/ui/toast";
@@ -12,15 +13,14 @@ import { toast } from "@/components/ui/toast";
  * the app (or complete-profile for first-time Google accounts). */
 export default function GoogleCallbackPage() {
   const router = useRouter();
+  const t = useTranslations("google");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     if (!code) {
       toast(
-        params.get("error") === "access_denied"
-          ? "Google sign-in was cancelled."
-          : "Google sign-in didn't complete. Please try again.",
+        params.get("error") === "access_denied" ? t("cancelled") : t("failed"),
         { tone: "error" }
       );
       router.replace("/login");
@@ -31,10 +31,10 @@ export default function GoogleCallbackPage() {
         router.replace(profileComplete ? "/app/today" : "/complete-profile")
       )
       .catch(() => {
-        toast("Google sign-in didn't complete. Please try again.", { tone: "error" });
+        toast(t("failed"), { tone: "error" });
         router.replace("/login");
       });
-  }, [router]);
+  }, [router, t]);
 
   // Rendered inside the (public) auth shell (brand panel + centered column).
   return (
@@ -53,8 +53,8 @@ export default function GoogleCallbackPage() {
         />
       </div>
       <div className="text-center">
-        <p className="text-sm font-medium text-navy">Signing you in with Google…</p>
-        <p className="mt-1 text-xs text-ink-muted">This only takes a moment.</p>
+        <p className="text-sm font-medium text-navy">{t("signingIn")}</p>
+        <p className="mt-1 text-xs text-ink-muted">{t("moment")}</p>
       </div>
     </div>
   );

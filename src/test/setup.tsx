@@ -26,6 +26,58 @@ beforeEach(async () => {
 // jsdom lacks scrollIntoView (used by the chat thread autoscroll).
 Element.prototype.scrollIntoView = vi.fn();
 
+// next-intl → a tiny double over messages/en.json: real keys (a typo throws),
+// {placeholder} interpolation and t.rich(<tag>…</tag>). Pages render without
+// the localized layouts, so there is no provider to supply messages.
+import en from "../../messages/en.json";
+
+vi.mock("next-intl", () => {
+  type Values = Record<string, unknown>;
+  const lookup = (ns: string | undefined, key: string): string => {
+    let cur: unknown = en;
+    for (const part of (ns ? `${ns}.${key}` : key).split(".")) {
+      cur = (cur as Record<string, unknown> | undefined)?.[part];
+    }
+    if (typeof cur !== "string") throw new Error(`Missing message: ${ns}.${key}`);
+    return cur;
+  };
+  const fill = (s: string, values?: Values) =>
+    s.replace(/\{(\w+)\}/g, (m, k) => (values && k in values ? String(values[k]) : m));
+  const rich = (s: string, values?: Values): React.ReactNode[] => {
+    const out: React.ReactNode[] = [];
+    const re = /<(\w+)>(.*?)<\/\1>/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    let i = 0;
+    while ((m = re.exec(s))) {
+      if (m.index > last) out.push(fill(s.slice(last, m.index), values));
+      const fn = values?.[m[1]];
+      const inner = fill(m[2], values);
+      out.push(
+        typeof fn === "function"
+          ? React.cloneElement((fn as (c: React.ReactNode) => React.ReactElement)(inner), { key: i++ })
+          : inner,
+      );
+      last = m.index + m[0].length;
+    }
+    if (last < s.length) out.push(fill(s.slice(last), values));
+    return out;
+  };
+  const useTranslations = (ns?: string) => {
+    const t = ((key: string, values?: Values) => fill(lookup(ns, key), values)) as ((
+      key: string,
+      values?: Values,
+    ) => string) & { rich: (key: string, values?: Values) => React.ReactNode[] };
+    t.rich = (key: string, values?: Values) => rich(lookup(ns, key), values);
+    return t;
+  };
+  return {
+    useTranslations,
+    useLocale: () => "en",
+    NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
 // next/image → plain <img> (strip Next-only props so React doesn't warn).
 vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => {

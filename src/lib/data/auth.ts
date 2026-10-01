@@ -1,3 +1,4 @@
+import { rememberLocale } from "@/i18n/client";
 import { api, clearTokens, hasSession, setTokens } from "@/lib/api/client";
 import { setAuthed } from "@/lib/session";
 import { settingsStore } from "@/lib/stores";
@@ -28,6 +29,7 @@ type ApiUser = {
 
 /** Push the freshly authenticated user into the settings store. */
 function absorbUser(u: ApiUser) {
+  rememberLocale(u.language); // web follows the chat language (Phase 2)
   settingsStore.set((c) => ({
     ...c,
     fullName: u.name,

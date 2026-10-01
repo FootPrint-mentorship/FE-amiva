@@ -4,6 +4,7 @@
  * /users/me/preferences/notifications, and the /auth/phone/* verify flow.
  */
 
+import { rememberLocale } from "@/i18n/client";
 import { api } from "@/lib/api/client";
 import { settingsStore, type FeatureKey } from "@/lib/stores";
 
@@ -44,6 +45,7 @@ export async function saveProfile(): Promise<void> {
       language: s.language || null,
     },
   });
+  rememberLocale(s.language); // Settings choice → web locale (Phase 2)
 }
 
 /** Persist one feature flag (partial merge server-side). */

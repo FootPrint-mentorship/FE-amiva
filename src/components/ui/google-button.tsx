@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 /** "Continue with Google" with the official four-colour G, drawn inline. */
 export function GoogleButton({
   onClick,
@@ -38,10 +40,11 @@ export function GoogleButton({
 }
 
 export function OrDivider() {
+  const t = useTranslations("ui");
   return (
     <div className="my-5 flex items-center gap-3" aria-hidden>
       <span className="h-px flex-1 bg-line" />
-      <span className="text-xs text-ink-muted">or</span>
+      <span className="text-xs text-ink-muted">{t("or")}</span>
       <span className="h-px flex-1 bg-line" />
     </div>
   );
