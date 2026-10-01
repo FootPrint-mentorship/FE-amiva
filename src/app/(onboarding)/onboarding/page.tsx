@@ -24,7 +24,8 @@ import { PhoneField } from "@/components/ui/phone-field";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { buildE164 } from "@/lib/phone";
-import { WA_LINK } from "@/lib/site";
+import { waLink } from "@/lib/site";
+import { EVENTS, track } from "@/lib/analytics";
 import { sendAssistantMessage } from "@/lib/data/assistant";
 import { connectGoogle } from "@/lib/data/integrations";
 import { api, ApiError } from "@/lib/api/client";
@@ -139,6 +140,7 @@ export default function OnboardingPage() {
     if (!text || trying) return;
     setTrying(true);
     setTryReply(null);
+    track(EVENTS.firstRequestSent);
     sendAssistantMessage(text)
       .then((res) => setTryReply(res.reply))
       .catch(() => setTryReply(t("tryFailed")))
@@ -162,6 +164,7 @@ export default function OnboardingPage() {
 
   const finishToApp = () => {
     setAuthed(true);
+    track(EVENTS.onboardingFinished, { step: step + 1 });
     router.push("/app/today");
   };
 
@@ -585,9 +588,11 @@ export default function OnboardingPage() {
                   {t("preferWhatsApp")}
                 </p>
                 <a
-                  href={WA_LINK}
+                  href={waLink("app")}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-umami-event="cta-start-whatsapp"
+                  data-umami-event-placement="onboarding"
                   className="mt-2 inline-block text-sm font-semibold text-whatsapp hover:underline"
                 >
                   {t("openWhatsApp")}

@@ -467,6 +467,8 @@ export default function HomePage() {
                       href={WA_LINK}
                       target="_blank"
                       rel="noopener noreferrer"
+                      data-umami-event="cta-start-whatsapp"
+                      data-umami-event-placement={`feature-${item.eyebrow.toLowerCase().replace(/\s+/g, "-")}`}
                       className="mt-5 inline-flex text-xs font-semibold text-indigo-900"
                     >
                       Try on WhatsApp →
@@ -615,6 +617,8 @@ export default function HomePage() {
                   {plan.popular ? (
                     <Link
                       href="/register"
+                      data-umami-event="cta-create-account"
+                      data-umami-event-placement="pricing"
                       className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-indigo-900 text-xs font-semibold text-white"
                     >
                       Get started
@@ -624,6 +628,8 @@ export default function HomePage() {
                       href={WA_LINK}
                       target="_blank"
                       rel="noopener noreferrer"
+                      data-umami-event="cta-start-whatsapp"
+                      data-umami-event-placement="pricing"
                       className="mt-auto flex min-h-11 items-center justify-center rounded-full bg-lavender-50 text-xs font-semibold text-indigo-900"
                     >
                       Start on WhatsApp

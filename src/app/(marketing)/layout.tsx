@@ -51,7 +51,7 @@ export default function MarketingLayout({
           <p className="mt-0 text-[13px] text-lavender-200">
             Free to start · No app to install
           </p>
-          <CtaPair className="mt-6 justify-center" invert />
+          <CtaPair className="mt-6 justify-center" invert placement="footer" />
         </div>
 
         {/* White card */}

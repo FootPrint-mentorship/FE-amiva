@@ -9,10 +9,13 @@ import { cn } from "@/lib/cn";
 export function CtaPair({
   className,
   invert = false,
+  placement = "hero",
 }: {
   className?: string;
   /** invert = on dark/indigo backgrounds */
   invert?: boolean;
+  /** Where on the page this pair sits — recorded on the click event. */
+  placement?: string;
 }) {
   return (
     <div className={cn("flex flex-wrap items-center gap-3", className)}>
@@ -20,6 +23,8 @@ export function CtaPair({
         href={WA_LINK}
         target="_blank"
         rel="noopener noreferrer"
+        data-umami-event="cta-start-whatsapp"
+        data-umami-event-placement={placement}
         className={cn(
           "inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-all",
           "hover:-translate-y-px active:scale-[0.98]",
@@ -36,6 +41,8 @@ export function CtaPair({
       </a>
       <Link
         href="/register"
+        data-umami-event="cta-create-account"
+        data-umami-event-placement={placement}
         className={cn(
           "inline-flex min-h-11 items-center rounded-full px-5 text-sm font-medium transition-all",
           invert

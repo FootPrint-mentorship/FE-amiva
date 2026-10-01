@@ -11,6 +11,7 @@ import { MessageCircle, ShieldCheck } from "lucide-react";
 import { ApiError } from "@/lib/api/client";
 import { sessionActive } from "@/lib/data/auth";
 import { stashPendingLink, verifyWhatsAppLink } from "@/lib/data/linking";
+import { EVENTS, track } from "@/lib/analytics";
 
 function LinkContent() {
   const router = useRouter();
@@ -90,6 +91,7 @@ function LinkContent() {
     setError("");
     try {
       await verifyWhatsAppLink(token);
+      track(EVENTS.whatsappLinked, { via: "deep-link" });
       toast(t("linkedToast"));
       router.push("/app/today");
     } catch (err) {

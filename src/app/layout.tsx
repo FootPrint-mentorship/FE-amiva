@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -36,6 +37,8 @@ export const metadata: Metadata = {
   },
 };
 
+const UMAMI_WEBSITE_ID = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -59,6 +62,27 @@ export default function RootLayout({
         />
         {children}
         <Toaster />
+        {/* Umami (cookie-free analytics, free tier). Loads only when the site id
+            is configured, so dev/preview builds send nothing. Page views and
+            UTM attribution are automatic; umami.track() adds outcome events
+            (src/lib/analytics.ts). Umami derives UTM parameters SERVER-side
+            from the reported URL, so the query string must reach it — instead
+            of data-exclude-search, the before-send hook strips only the
+            sensitive params (link/reset tokens, OAuth codes) from the URL. */}
+        {UMAMI_WEBSITE_ID && (
+          <>
+            <Script id="umami-before-send" strategy="beforeInteractive">
+              {`window.amivaUmamiBeforeSend=function(type,payload){try{var u=new URL(payload.url,location.origin);["token","code","state","scope","authuser","prompt"].forEach(function(k){u.searchParams.delete(k)});payload.url=u.pathname+u.search+u.hash;if(payload.referrer){var r=new URL(payload.referrer,location.origin);["token","code"].forEach(function(k){r.searchParams.delete(k)});payload.referrer=r.href}}catch(e){}return payload};`}
+            </Script>
+            <Script
+              src="https://cloud.umami.is/script.js"
+              data-website-id={UMAMI_WEBSITE_ID}
+              data-domains="tryamiva.com,www.tryamiva.com"
+              data-before-send="amivaUmamiBeforeSend"
+              strategy="afterInteractive"
+            />
+          </>
+        )}
       </body>
     </html>
   );
