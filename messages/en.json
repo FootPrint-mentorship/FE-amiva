@@ -198,6 +198,7 @@
     "tryFailed": "I couldn't reach Amiva just now — you can try again, or skip ahead.",
     "preferWhatsApp": "Prefer WhatsApp? Say hello and Amiva will link your chat:",
     "openWhatsApp": "Open WhatsApp →",
-    "goDashboard": "Go to my dashboard"
+    "goDashboard": "Go to my dashboard",
+    "errorNotOnWhatsApp": "That number doesn't seem to be on WhatsApp. Check the digits, or use the number you chat from."
   }
 }
