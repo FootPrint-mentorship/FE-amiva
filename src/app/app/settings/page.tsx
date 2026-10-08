@@ -311,7 +311,9 @@ export default function SettingsPage() {
         setPhoneErr(
           err instanceof ApiError && err.code === "CONFLICT"
             ? "An account with this phone number already exists."
-            : "Couldn't send the code just now. Please try again."
+            : err instanceof ApiError && err.status === 422
+              ? err.message
+              : "Couldn't send the code just now. Please try again."
         )
       )
       .finally(() => setSendingPhone(false));

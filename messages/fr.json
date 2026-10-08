@@ -198,6 +198,7 @@
     "tryFailed": "Je n'ai pas pu joindre Amiva à l'instant — vous pouvez réessayer, ou passer à l'étape suivante.",
     "preferWhatsApp": "Vous préférez WhatsApp ? Dites bonjour et Amiva reliera votre conversation :",
     "openWhatsApp": "Ouvrir WhatsApp →",
-    "goDashboard": "Accéder à mon tableau de bord"
+    "goDashboard": "Accéder à mon tableau de bord",
+    "errorNotOnWhatsApp": "Ce numéro ne semble pas être sur WhatsApp. Vérifiez les chiffres ou utilisez le numéro avec lequel vous discutez."
   }
 }

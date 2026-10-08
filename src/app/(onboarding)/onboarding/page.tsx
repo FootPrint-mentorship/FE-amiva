@@ -194,7 +194,9 @@ export default function OnboardingPage() {
         setPhoneErr(
           err instanceof ApiError && err.code === "CONFLICT"
             ? t("errorPhoneConflict")
-            : t("codeFailedToast")
+            : err instanceof ApiError && err.details?.reason === "not_on_whatsapp"
+              ? t("errorNotOnWhatsApp")
+              : t("codeFailedToast")
         )
       )
       .finally(() => setSendingPhone(false));

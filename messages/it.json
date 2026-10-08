@@ -198,6 +198,7 @@
     "tryFailed": "Non sono riuscita a contattare Amiva in questo momento — può riprovare oppure andare avanti.",
     "preferWhatsApp": "Preferisce WhatsApp? Dica 'ciao' ad Amiva e collegherò la Sua chat:",
     "openWhatsApp": "Apri WhatsApp →",
-    "goDashboard": "Vada alla mia dashboard"
+    "goDashboard": "Vada alla mia dashboard",
+    "errorNotOnWhatsApp": "Questo numero non sembra essere su WhatsApp. Controlli le cifre o usi il numero con cui chatta."
   }
 }
