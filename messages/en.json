@@ -1,8 +1,8 @@
 {
   "brand": {
     "home": "Amiva home",
-    "tagline": "Manage your life and work from one conversation.",
-    "sub": "Reminders, calendar, tasks and memory, handled by your personal chief of staff on WhatsApp.",
+    "tagline": "Reminders that reach you, on WhatsApp.",
+    "sub": "Set a reminder in a WhatsApp message and Amiva brings it back on time. Calendar, tasks and memory live in the same chat.",
     "bubbleUser": "Remind me to pay rent on Friday morning",
     "bubbleDone": "⏰ Done. Friday, 9:00 AM. Consider it handled.",
     "bubbleSaved": "💾 Saved under Finance. Ask me any time."
@@ -144,10 +144,10 @@
     "capRemindTitle": "Remind",
     "capRemindBody": "One-time and recurring reminders, delivered where you'll see them.",
     "capOrganiseTitle": "Organise",
-    "capOrganiseBody": "Calendar, tasks and checklists managed from one conversation.",
+    "capOrganiseBody": "Calendar, tasks and checklists, kept in the same chat as your reminders.",
     "capRememberTitle": "Remember",
     "capRememberBody": "A personal memory you control. Save once, find forever.",
-    "welcomeTitle": "Meet Amiva, your personal chief of staff",
+    "welcomeTitle": "Meet Amiva, your reminders on WhatsApp",
     "privacyNote": "Amiva only remembers what you allow, and asks before doing anything important.",
     "privacyLink": "How we handle your data",
     "letsGo": "Let's set you up",

@@ -12,7 +12,7 @@ const sections: LegalSection[] = [
     id: "service",
     heading: "The service",
     body: [
-      "Amiva is an AI personal assistant available through WhatsApp and a web dashboard. It helps you create reminders, manage calendars and tasks, store notes and retrieve information through natural conversation.",
+      "Amiva is a reminder service available through WhatsApp and a web dashboard. It also helps you manage calendars and tasks, store notes and retrieve information through natural conversation.",
       "By creating an account or messaging Amiva, you agree to these terms and to our Privacy Policy.",
     ],
   },
@@ -96,7 +96,7 @@ export default function TermsPage() {
       effectiveDate="1 August 2026"
       draft={false}
       summary={[
-        "Amiva is a personal assistant on WhatsApp and the web: reminders, tasks, calendar and a personal memory.",
+        "Amiva is a reminder service on WhatsApp and the web, with tasks, calendar and a personal memory alongside.",
         "You need to be at least 16 and keep your account credentials to yourself. Your WhatsApp number identifies you, so don't share access to it.",
         "Important actions (like cancelling calendar events) always ask for your confirmation first; you are responsible for what you approve.",
         "Amiva is an organiser, not a professional adviser, so don't rely on it as your only safeguard for critical matters.",

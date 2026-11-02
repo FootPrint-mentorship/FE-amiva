@@ -1,8 +1,8 @@
 {
   "brand": {
     "home": "Accueil Amiva",
-    "tagline": "Gérez votre vie et votre travail depuis une seule conversation.",
-    "sub": "Rappels, calendrier, tâches et mémoire, gérés par votre chef de cabinet personnel sur WhatsApp.",
+    "tagline": "Des rappels qui vous parviennent, sur WhatsApp.",
+    "sub": "Programmez un rappel dans un message WhatsApp et Amiva vous le renvoie à l'heure. Agenda, tâches et mémoire restent dans la même conversation.",
     "bubbleUser": "Rappelez-moi de payer le loyer vendredi matin",
     "bubbleDone": "⏰ C'est fait. Vendredi, 9h00. Considérez que c'est réglé.",
     "bubbleSaved": "💾 Enregistré dans Finance. Posez-moi vos questions à tout moment."
@@ -144,10 +144,10 @@
     "capRemindTitle": "Rappeler",
     "capRemindBody": "Des rappels uniques ou récurrents, envoyés là où vous les verrez.",
     "capOrganiseTitle": "Organiser",
-    "capOrganiseBody": "Agenda, tâches et checklists, le tout géré dans une seule conversation.",
+    "capOrganiseBody": "Agenda, tâches et checklists, conservés dans la même conversation que vos rappels.",
     "capRememberTitle": "Retenir",
     "capRememberBody": "Une mémoire personnelle que vous contrôlez. Enregistrez une fois, retrouvez toujours.",
-    "welcomeTitle": "Voici Amiva, votre chef de cabinet personnel",
+    "welcomeTitle": "Voici Amiva, vos rappels sur WhatsApp",
     "privacyNote": "Amiva ne retient que ce que vous autorisez, et vous demande toujours avant toute action importante.",
     "privacyLink": "Comment nous gérons vos données",
     "letsGo": "Commençons votre configuration",

@@ -12,7 +12,7 @@ const sections: LegalSection[] = [
     id: "who-we-are",
     heading: "Who we are",
     body: [
-      "Amiva is an AI personal assistant that helps you manage reminders, calendars, tasks and personal notes through WhatsApp and a web dashboard. This policy explains what data we collect, why, how it is protected, and the controls you have over it.",
+      "Amiva is a reminder service that also helps you manage calendars, tasks and personal notes through WhatsApp and a web dashboard. This policy explains what data we collect, why, how it is protected, and the controls you have over it.",
       "This policy applies to the Amiva WhatsApp assistant, the web application, and any Amiva mobile applications.",
     ],
   },

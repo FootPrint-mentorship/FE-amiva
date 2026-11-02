@@ -1,8 +1,8 @@
 {
   "brand": {
     "home": "Home di Amiva",
-    "tagline": "Gestisca la Sua vita e il Suo lavoro in un'unica conversazione.",
-    "sub": "Promemoria, calendario, attività e memoria, gestiti dal Suo personale chief of staff su WhatsApp.",
+    "tagline": "Promemoria che La raggiungono, su WhatsApp.",
+    "sub": "Imposti un promemoria in un messaggio WhatsApp e Amiva glielo riporta puntuale. Calendario, attività e memoria restano nella stessa chat.",
     "bubbleUser": "Mi ricordi di pagare l'affitto venerdì mattina, per favore",
     "bubbleDone": "⏰ Fatto. Venerdì, 9:00. Consideri la questione risolta.",
     "bubbleSaved": "💾 Salvato in Finanze. Me lo chieda pure in qualsiasi momento."
@@ -144,10 +144,10 @@
     "capRemindTitle": "Promemoria",
     "capRemindBody": "Promemoria singoli e ricorrenti, recapitati dove li vedrà di sicuro.",
     "capOrganiseTitle": "Organizzazione",
-    "capOrganiseBody": "Calendario, attività e liste di controllo gestiti in un'unica conversazione.",
+    "capOrganiseBody": "Calendario, attività e liste di controllo, nella stessa chat dei Suoi promemoria.",
     "capRememberTitle": "Memoria",
     "capRememberBody": "Una memoria personale sotto il Suo controllo. Salvi una volta, ritrovi per sempre.",
-    "welcomeTitle": "Le presento Amiva, il Suo chief of staff personale",
+    "welcomeTitle": "Le presento Amiva, i Suoi promemoria su WhatsApp",
     "privacyNote": "Amiva ricorda solo ciò che Lei consente e chiede sempre prima di fare qualcosa di importante.",
     "privacyLink": "Come gestiamo i Suoi dati",
     "letsGo": "Iniziamo a configurare il Suo profilo",

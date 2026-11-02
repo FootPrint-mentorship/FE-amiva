@@ -16,20 +16,20 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://tryamiva.com"),
   applicationName: "Amiva",
   title: {
-    default: "Amiva | Your personal chief of staff, on WhatsApp",
+    default: "Amiva | Reminders on WhatsApp",
     template: "%s · Amiva",
   },
   description:
-    "Reminders, calendar, email and memory, managed through one natural conversation on WhatsApp, with a web dashboard for everything else.",
+    "Set one-off or recurring reminders by sending Amiva a WhatsApp message, and get them back on time. Calendar, tasks, lists and memory live in the same chat, with a web dashboard for a bigger view.",
   alternates: { canonical: "/" },
   openGraph: {
     siteName: "Amiva",
-    title: "Amiva | Your personal chief of staff, on WhatsApp",
+    title: "Amiva | Reminders on WhatsApp",
     description:
-      "Reminders, calendar, email and memory, managed through one natural conversation on WhatsApp, with a web dashboard for everything else.",
+      "Set one-off or recurring reminders by sending Amiva a WhatsApp message, and get them back on time. Calendar, tasks, lists and memory live in the same chat, with a web dashboard for a bigger view.",
     url: "https://tryamiva.com",
     type: "website",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Amiva — your personal chief of staff, on WhatsApp" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Amiva: reminders on WhatsApp" }],
   },
   twitter: {
     card: "summary_large_image",
