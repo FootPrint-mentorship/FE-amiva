@@ -92,9 +92,9 @@ function refreshSession(): Promise<boolean> {
 
 export async function api<T>(
   path: string,
-  init?: { method?: string; body?: unknown; auth?: boolean }
+  init?: { method?: string; body?: unknown; auth?: boolean; credentials?: RequestCredentials }
 ): Promise<T> {
-  const { method = "GET", body, auth = true } = init ?? {};
+  const { method = "GET", body, auth = true, credentials } = init ?? {};
 
   const attempt = async (): Promise<Response> =>
     fetch(`${BASE}${path}`, {
@@ -104,6 +104,7 @@ export async function api<T>(
         ...(auth && accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      ...(credentials ? { credentials } : {}),
     });
 
   let res = await attempt();

@@ -36,7 +36,11 @@ export default function ForgotPasswordPage() {
   useEffect(() => {
     const tm = setTimeout(() => {
       const param = new URLSearchParams(window.location.search).get("token");
-      if (param) setToken(param);
+      if (param) {
+        setToken(param);
+        // The 30-minute reset token must not linger in history/sync.
+        window.history.replaceState(null, "", window.location.pathname);
+      }
     }, 0);
     return () => clearTimeout(tm);
   }, []);

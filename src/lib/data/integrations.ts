@@ -58,7 +58,9 @@ export async function connectGoogle(
 ): Promise<void> {
   const res = await api<{ authorization_url: string }>(
     "/integrations/google/authorize",
-    { method: "POST", body: { scopes: [scope], return_to: returnTo } }
+    // The API binds the OAuth state to this browser with an HttpOnly cookie
+    // on its own origin (same-site), which Google's redirect then carries back.
+    { method: "POST", body: { scopes: [scope], return_to: returnTo }, credentials: "include" }
   );
   window.location.href = res.authorization_url;
 }

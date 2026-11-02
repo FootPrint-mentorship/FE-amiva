@@ -13,6 +13,7 @@ export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 export type GoogleProfile = { name: string; email: string };
 
 const KEY = "amiva_google_pending";
+const STATE_KEY = "amiva_google_state";
 
 export function googleRedirectUri(): string {
   return `${window.location.origin}/google-callback`;
@@ -30,8 +31,28 @@ export function startGoogleSignIn(): boolean {
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid email profile");
   url.searchParams.set("prompt", "select_account");
+  // OAuth `state`: a per-attempt nonce this tab remembers, so a code minted
+  // in someone else's browser cannot be replayed into this one (login CSRF).
+  const state = crypto.randomUUID();
+  try {
+    sessionStorage.setItem(STATE_KEY, state);
+  } catch {
+    /* private mode: the callback then rejects, same as an expired attempt */
+  }
+  url.searchParams.set("state", state);
   window.location.href = url.toString();
   return true;
+}
+
+/** True when `state` is the nonce this tab issued; the nonce is single-use. */
+export function consumeGoogleState(state: string | null): boolean {
+  try {
+    const expected = sessionStorage.getItem(STATE_KEY);
+    sessionStorage.removeItem(STATE_KEY);
+    return !!state && !!expected && state === expected;
+  } catch {
+    return false;
+  }
 }
 
 export function pendingGoogleProfile(): GoogleProfile | null {

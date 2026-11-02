@@ -10,8 +10,15 @@
 const JID_RE = /\+?\d{9,15}(@(?:lid|c\.us|s\.whatsapp\.net|g\.us))?/g;
 const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
 
+// Single-use secrets that ride in query strings: WhatsApp link + password
+// reset tokens, OAuth codes/state. Breadcrumbs and request.url carry them.
+const SECRET_PARAM_RE = /([?&](?:token|code|state)=)[^&#\s]+/gi;
+
 export function scrubText(value: string): string {
-  return value.replace(EMAIL_RE, "[email]").replace(JID_RE, "[number]");
+  return value
+    .replace(SECRET_PARAM_RE, "$1[redacted]")
+    .replace(EMAIL_RE, "[email]")
+    .replace(JID_RE, "[number]");
 }
 
 function scrubAny(value: unknown): unknown {
@@ -41,6 +48,7 @@ export function scrubEvent<E>(event: E): E {
     if (exc.value) exc.value = scrubText(exc.value);
   }
   if (e.request) {
+    if (typeof e.request.url === "string") e.request.url = scrubText(e.request.url);
     delete e.request.data;
     delete e.request.cookies;
     delete e.request.query_string;
