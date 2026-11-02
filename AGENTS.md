@@ -1,6 +1,7 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
+> **Session note (2 Nov 2026, night) — REPOSITIONED as a reminder service (STAGED uncommitted; tsc + eslint + 164 vitest + `next build` green):** every approved row of `~/Documents/V/Claude/Amiva-review-2026-11/05-rebrand-copy-proposal.md` applied: metadata (title "Amiva | Reminders on WhatsApp", description, OG alt), JSON-LD description, hero h1 "Reminders that reach you, on WhatsApp." + subline, features/privacy/web section headlines, plan descs, footer, `messages/{en,fr,it}.json` brand.tagline/brand.sub/onboarding.welcomeTitle/onboarding.capOrganiseBody, FAQ (two rewrites + NEW "Where will Amiva remind me?"), chat error copy, marketing test regexes, AGENTS/spec headers, and the three product-description sentences in Terms + Privacy (counsel to glance). **`public/og.png` regenerated** by the NEW `scripts/make-og.mjs` from `scripts/og-template.html` (1200×630, Playwright, Inter via Google Fonts) — re-run it whenever the headline changes. `public/brand/iPhone Amiva_Hero.png` already shows a reminder exchange (header reads "AI assistant", design asset, left as is).
 > **Session note (2 Nov 2026) — security batch (STAGED uncommitted; tsc + eslint + 164 vitest + `next build` green):** `npm audit fix` → next 16.4.3 / sharp 0.35.5 / @sentry/nextjs 10.78.0 (critical Next.js image-optimizer advisories; 22 moderate DEV-only advisories remain, need major bumps); security headers + `poweredByHeader:false` in `next.config.ts` (no CSP yet — inline bootstrap scripts need hashes; roll out Report-Only first); Google sign-in now sends/verifies an OAuth `state` nonce (`lib/google.ts` `consumeGoogleState`) and strips code/state from history; Sentry scrub redacts `token`/`code`/`state` query values incl. `request.url`; reset token removed from history; conference links only render for http(s); `api()` gained an opt-in `credentials` option used ONLY by `connectGoogle` (the BE binds OAuth state to an HttpOnly cookie on the API origin — **deploy with the BE batch and re-test one Google Connect on prod**). Sentry `sourcemaps.deleteSourcemapsAfterUpload: true`. Full report: `~/Documents/V/Claude/Amiva-review-2026-11/03-security-review.md`.
 
 
@@ -9,7 +10,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Amiva Web — Project Context
 
-Frontend for **Amiva**, an AI personal assistant ("chief of staff") delivered through WhatsApp with this web dashboard as the second surface. This one Next.js app contains both the **public marketing site** (`/`) and the **authenticated web app** (`/app/*`).
+Frontend for **Amiva**, a reminder service delivered through WhatsApp (more channels later), with calendar, tasks, lists and memory alongside, and this web dashboard as the second surface. This one Next.js app contains both the **public marketing site** (`/`) and the **authenticated web app** (`/app/*`).
 
 ## Read these first
 

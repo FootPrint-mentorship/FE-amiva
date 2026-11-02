@@ -188,7 +188,7 @@ export default function HomePage() {
             applicationCategory: "ProductivityApplication",
             operatingSystem: "Web, WhatsApp",
             description:
-              "Amiva is a personal assistant that helps you create reminders, manage your meetings and calendar, organise tasks and remember the details that matter, all in one WhatsApp conversation with a web dashboard.",
+              "Amiva is a reminder service on WhatsApp. Tell it what to remind you about and when, and it messages you on time. It also keeps your calendar, tasks, lists and memory in the same conversation, with a web dashboard.",
             offers: { "@type": "Offer", price: "0" },
             publisher: { "@type": "Organization", name: "Amiva", url: "https://tryamiva.com" },
           }),
@@ -213,7 +213,7 @@ export default function HomePage() {
       <section className="hero-water-scene relative overflow-hidden pt-10 text-center sm:pt-12">
         <div className="relative z-10 mx-auto max-w-212.5 px-5">
           <h1 className="animate-rise mx-auto mt-2 max-w-175 text-[clamp(36px,5vw,64px)] font-bold leading-[1.04] tracking-[-0.06em] text-navy">
-            Your personal chief of staff,{" "}
+            Reminders that reach you,{" "}
             <span className="mt-2 inline-block rounded-2xl bg-iris-600 px-4 py-1 text-white shadow-xs">
               on WhatsApp.
             </span>
@@ -222,10 +222,11 @@ export default function HomePage() {
             className="animate-rise mx-auto mt-5 max-w-135 text-[13px] leading-relaxed text-ink-soft sm:text-sm"
             style={{ animationDelay: "120ms" }}
           >
-            Amiva is a personal assistant that helps you create reminders, manage
-            your meetings and calendar, organises tasks and remembers the
-            details that matter, all in one calm WhatsApp conversation, with
-            a web dashboard for everything else.
+            Tell Amiva what to remind you about and when, in a normal WhatsApp
+            message. It messages you when the time comes. Email and other
+            channels are coming. Your calendar, tasks, lists and notes also
+            live in the same chat, with a web dashboard when you want a
+            bigger view.
           </p>
           <div className="animate-rise" style={{ animationDelay: "220ms" }}>
             <CtaPair className="mt-6 justify-center" />
@@ -352,13 +353,13 @@ export default function HomePage() {
           <Reveal>
             <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-end">
               <h2 className="max-w-155 text-[clamp(42px,5vw,68px)] font-bold leading-[0.98] tracking-[-0.065em] text-navy">
-                Less time managing tools.
+                Never miss the things
                 <br />
-                More time moving forward.
+                you said you&apos;d do.
               </h2>
               <p className="max-w-90 text-sm leading-7 text-ink-muted">
-                Your tools work better together. Amiva connects the details,
-                keeps everything organised and asks before acting.
+                Set a reminder the way you&apos;d text a friend. Amiva keeps it,
+                checks the details and messages you on time.
               </p>
             </div>
           </Reveal>
@@ -443,10 +444,10 @@ export default function HomePage() {
         <div className="mx-auto max-w-270">
           <Reveal>
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-500">
-              What Amiva handles
+              Reminders first, and more
             </p>
             <h2 className="mt-5 text-[clamp(44px,5vw,68px)] font-bold leading-none tracking-[-0.065em] text-navy">
-              Practical help for a full life.
+              Reminders you can rely on. Plus the things around them.
             </h2>
           </Reveal>
           <div className="mt-16 divide-y divide-line">
@@ -493,13 +494,13 @@ export default function HomePage() {
                 Privacy and control
               </p>
               <h2 className="mt-5 text-[clamp(40px,4vw,58px)] font-bold leading-none tracking-[-0.06em]">
-                Powerful help,
+                Your reminders,
                 <br />
                 under your control.
               </h2>
               <p className="mt-5 max-w-107.5 text-sm leading-7 text-white/60">
-                Amiva is designed to be useful without becoming invisible. You
-                decide what connects and approve important actions.
+                Amiva only messages you about what you asked for. You decide
+                what connects and approve important actions.
               </p>
               <Link
                 href="/privacy-policy"
@@ -531,7 +532,7 @@ export default function HomePage() {
               Amiva on the web
             </p>
             <h2 className="mt-5 max-w-180 text-[clamp(42px,5vw,68px)] font-bold leading-none tracking-[-0.065em] text-navy">
-              Everything from your chats, organised on the web.
+              Every reminder from your chats, and everything else, on the web.
             </h2>
             <div className="mt-14">
               <AppScreenshot
@@ -560,7 +561,7 @@ export default function HomePage() {
                 name: "Free",
                 price: "₦0",
                 per: null,
-                desc: "Get organised with the essentials.",
+                desc: "Reminders on WhatsApp, plus the essentials.",
                 items: [
                   "Reminders and tasks",
                   "Basic memory",
@@ -571,7 +572,7 @@ export default function HomePage() {
                 name: "Pro",
                 price: "₦1,500",
                 per: "/mo",
-                desc: "More capacity for a fuller schedule.",
+                desc: "More room for a busier reminder list.",
                 items: [
                   "Everything in Free",
                   "Voice-note requests",

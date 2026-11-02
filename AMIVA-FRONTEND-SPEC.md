@@ -109,9 +109,9 @@ The front door. Users arriving from ads, social or word of mouth land here, unde
 - **Analytics:** lightweight, cookieless-by-default analytics; events: `cta_whatsapp_click`, `cta_register_click`, `faq_open`. Consent banner only if/when non-essential cookies are added.
 
 ### 4.1 Home (`/`)
-- **Purpose:** communicate "manage your life and work from one conversation" and convert to WhatsApp or sign-up in one screenful.
+- **Purpose:** communicate "reminders that reach you, on WhatsApp" and convert to WhatsApp or sign-up in one screenful.
 - **Sections, in order:**
-  1. **Hero** — headline "Your personal chief of staff, on WhatsApp." + subline (reminders, calendar, email, memory in one conversation). CTA pair (§4.0). Right: phone mockup showing a real conversation ("Remind me to pay rent on Friday" → Amiva's confirmation bubble) — build as styled DOM, not a screenshot, so copy stays editable and light. Trust line under CTAs: "Free to start · No app to install".
+  1. **Hero** — headline "Reminders that reach you, on WhatsApp." + subline (reminders first; calendar, tasks, memory alongside). CTA pair (§4.0). Right: phone mockup showing a real conversation ("Remind me to pay rent on Friday" → Amiva's confirmation bubble) — build as styled DOM, not a screenshot, so copy stays editable and light. Trust line under CTAs: "Free to start · No app to install".
   2. **How it works** — 3 numbered cards: ① Say hello on WhatsApp ② Connect your calendar and email ③ Ask for anything — remind, schedule, remember. Each with a small illustration from brand assets.
   3. **Feature tour** — alternating text/visual rows, one per module: Reminders ("Set it in one sentence — get it on WhatsApp, email or both"), Calendar ("Schedules meetings, finds free slots, handles time zones"), Memory ("Tell Amiva once, find it forever"), Email ("Your inbox, summarised; replies drafted, sent only with your approval"), Tasks & Lists ("From voice note to organised to-do"). Each row ends with a micro-CTA "Try it on WhatsApp →".
   4. **Trust & privacy band** (indigo background, white text) — 3 columns: "You approve every important action" / "Your data is encrypted and yours to delete" / "See everything Amiva does in your activity log". Link → Privacy Policy.
@@ -149,7 +149,7 @@ Branded 404 ("That page wandered off — Amiva can't remember everything… yet"
 Reached from marketing CTAs (**Get started** → `/register`, **Log in** → `/login`) or WhatsApp deep links.
 
 ### 5.1 `/register` — Sign up
-- **Layout:** split screen — left: brand panel (indigo gradient, logo, one-line value prop "Manage your life from one conversation"); right: form card. Mobile: form only, logo on top.
+- **Layout:** split screen — left: brand panel (indigo gradient, logo, one-line value prop "Reminders that reach you, on WhatsApp."); right: form card. Mobile: form only, logo on top.
 - **Fields:** name, email, phone (intl input with country selector, default +234), password (strength meter, min 8), timezone (auto-detect via `Intl.DateTimeFormat`, editable select), ToS/Privacy consent checkbox (required, links to §4.6 pages).
 - **API:** `POST /auth/register` → route to `/verify`.
 - **States:** field-level validation errors from `VALIDATION_ERROR.details`; duplicate email → inline "You already have an account — log in?".

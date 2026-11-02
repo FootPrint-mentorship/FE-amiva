@@ -116,7 +116,7 @@ export default function ChatPage() {
           {
             id: `msg_${Date.now()}_e`,
             role: "assistant",
-            text: "I couldn't reach the assistant just now — nothing was changed. Please try that again in a moment.",
+            text: "I couldn't reach Amiva just now, nothing was changed. Please try that again in a moment.",
             at: new Date().toISOString(),
           },
         ]);

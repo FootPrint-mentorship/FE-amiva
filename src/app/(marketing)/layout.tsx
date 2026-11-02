@@ -62,7 +62,7 @@ export default function MarketingLayout({
             <div className="flex flex-col items-start gap-3 text-[13px]">
               <Logo size={30} />
               <p className="max-w-72 leading-[1.6] text-ink-muted">
-                Your personal chief of staff, on WhatsApp.
+                Reminders that reach you, on WhatsApp.
               </p>
               {/* <p className="max-w-72 leading-[1.6] text-ink-muted">
                 If you connect Google Calendar, Amiva only accesses the calendar

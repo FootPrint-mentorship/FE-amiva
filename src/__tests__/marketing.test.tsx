@@ -23,11 +23,11 @@ describe("FaqAccordion", () => {
   it("expands and collapses answers", async () => {
     render(<FaqAccordion />);
     // first item open by default
-    expect(screen.getByText(/Amiva works inside WhatsApp/)).toBeInTheDocument();
+    expect(screen.getByText(/takes reminders inside WhatsApp/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /Is my data private/ }));
     expect(screen.getByText(/never used to train AI models/)).toBeInTheDocument();
     // previous answer collapsed
-    expect(screen.queryByText(/Amiva works inside WhatsApp/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/takes reminders inside WhatsApp/)).not.toBeInTheDocument();
   });
 });
 
@@ -57,7 +57,7 @@ describe("Landing page", () => {
   it("renders the hero with both CTAs above everything else", () => {
     render(<HomePage />);
     expect(
-      screen.getByRole("heading", { name: /Your personal chief of staff/ })
+      screen.getByRole("heading", { name: /Reminders that reach you/ })
     ).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /Start on WhatsApp/ }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Create free account" }).length).toBeGreaterThan(0);

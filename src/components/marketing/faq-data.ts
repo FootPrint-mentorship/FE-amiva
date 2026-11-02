@@ -3,11 +3,15 @@
 export const faqs = [
   {
     q: "Do I need to install an app?",
-    a: "No. Amiva works inside WhatsApp, the app you already use every day. The web dashboard is optional, for when you want a bigger view of your reminders, calendar and memories.",
+    a: "No. Amiva sends and takes reminders inside WhatsApp, the app you already use every day. The web dashboard is optional, for when you want a bigger view of your reminders, calendar and memories.",
   },
   {
     q: "What can I ask Amiva to do?",
-    a: "Set one-time or recurring reminders, create and reschedule calendar events, manage tasks and shopping lists, save things to memory (\"remember my landlord's account...\"), and search everything you've saved.",
+    a: "Mostly reminders: one-off or recurring, in plain words, delivered back to you on WhatsApp. You can also create and reschedule calendar events, manage tasks and shopping lists, save things to memory (\"remember my landlord's account...\") and search everything you've saved.",
+  },
+  {
+    q: "Where will Amiva remind me?",
+    a: "On WhatsApp today. You can also have reminders delivered by email from Settings, and more channels are planned.",
   },
   {
     q: "Is my data private?",
