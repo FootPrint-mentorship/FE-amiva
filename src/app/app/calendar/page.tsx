@@ -969,7 +969,7 @@ export default function CalendarPage() {
               {fmtTime(openEvent.end_at)} ({tzAbbr})
             </p>
             <div className="mt-4 space-y-2.5 text-sm text-navy">
-              {openEvent.conference_url && (
+              {openEvent.conference_url && /^https?:\/\//i.test(openEvent.conference_url) && (
                 <p className="flex items-center gap-2">
                   <Video className="size-4 text-violet-500" aria-hidden />
                   <a

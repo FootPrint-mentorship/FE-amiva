@@ -1,6 +1,9 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
+> **Session note (2 Nov 2026) — security batch (STAGED uncommitted; tsc + eslint + 164 vitest + `next build` green):** `npm audit fix` → next 16.4.3 / sharp 0.35.5 / @sentry/nextjs 10.78.0 (critical Next.js image-optimizer advisories; 22 moderate DEV-only advisories remain, need major bumps); security headers + `poweredByHeader:false` in `next.config.ts` (no CSP yet — inline bootstrap scripts need hashes; roll out Report-Only first); Google sign-in now sends/verifies an OAuth `state` nonce (`lib/google.ts` `consumeGoogleState`) and strips code/state from history; Sentry scrub redacts `token`/`code`/`state` query values incl. `request.url`; reset token removed from history; conference links only render for http(s); `api()` gained an opt-in `credentials` option used ONLY by `connectGoogle` (the BE binds OAuth state to an HttpOnly cookie on the API origin — **deploy with the BE batch and re-test one Google Connect on prod**). Sentry `sourcemaps.deleteSourcemapsAfterUpload: true`. Full report: `~/Documents/V/Claude/Amiva-review-2026-11/03-security-review.md`.
+
+
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { googleSignIn } from "@/lib/data/auth";
-import { googleRedirectUri } from "@/lib/google";
+import { consumeGoogleState, googleRedirectUri } from "@/lib/google";
 import { toast } from "@/components/ui/toast";
 import { EVENTS, track } from "@/lib/analytics";
 
@@ -19,7 +19,9 @@ export default function GoogleCallbackPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    if (!code) {
+    // The code and state never belong in history (back button, sync, Sentry).
+    window.history.replaceState(null, "", window.location.pathname);
+    if (!code || !consumeGoogleState(params.get("state"))) {
       toast(
         params.get("error") === "access_denied" ? t("cancelled") : t("failed"),
         { tone: "error" }

@@ -13,6 +13,20 @@ describe("Sentry PII scrubbing", () => {
     expect(out).toContain("[number]");
   });
 
+  it("redacts link, reset and OAuth secrets carried in URLs", () => {
+    const out = scrubText(
+      "https://tryamiva.com/link?token=abc123&x=1 /forgot-password?token=r3set /google-callback?code=4%2Fxyz&state=n0nce"
+    );
+    expect(out).not.toMatch(/abc123|r3set|4%2Fxyz|n0nce/);
+    expect(out).toContain("token=[redacted]&x=1");
+    expect(out).toContain("code=[redacted]&state=[redacted]");
+  });
+
+  it("scrubs request.url too", () => {
+    const out = scrubEvent({ request: { url: "https://tryamiva.com/link?token=abc123" } });
+    expect(out.request.url).toBe("https://tryamiva.com/link?token=[redacted]");
+  });
+
   it("keeps resource ids and short numbers untouched", () => {
     const s = "reminder rem_01a030eeb52d7cb8a73b39283c63def4 code 482913";
     expect(scrubText(s)).toBe(s);
