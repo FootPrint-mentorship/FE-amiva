@@ -447,6 +447,9 @@ export default function SettingsPage() {
                 { value: "ar", label: "العربية", hint: "Arabic" },
                 { value: "pcm", label: "Naija Pidgin", hint: "Nigerian Pidgin" },
                 { value: "it", label: "Italiano", hint: "Italian" },
+                { value: "es", label: "Español", hint: "Spanish" },
+                { value: "pt", label: "Português", hint: "Portuguese" },
+                { value: "tr", label: "Türkçe", hint: "Turkish" },
               ]}
             />
             <p className="mt-1 text-xs text-ink-muted">

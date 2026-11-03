@@ -13,7 +13,8 @@
  * backend catalogs (BE scripts/review_i18n_catalog.py --json-dir messages).
  */
 
-export const locales = ["en", "fr", "it"] as const;
+// Arabic is chat-only (RTL web is Phase 3), so it is deliberately absent here.
+export const locales = ["en", "fr", "it", "es", "pt", "tr"] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "en";
 
