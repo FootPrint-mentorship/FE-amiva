@@ -19,6 +19,7 @@ import { ApiError } from "@/lib/api/client";
 import { buildE164, isValidE164 } from "@/lib/phone";
 import { startGoogleSignIn } from "@/lib/google";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
+import { useDetectedTimezone } from "@/lib/use-detected-timezone";
 import { cn } from "@/lib/cn";
 import { useRedirectAuthed } from "@/lib/use-redirect-authed";
 import { EVENTS, track } from "@/lib/analytics";
@@ -45,9 +46,13 @@ export default function RegisterPage() {
     cc: "+234",
     phone: "",
     password: "",
-    timezone: detectTimezone(),
+    // null = the user hasn't picked one; the detected zone applies. It must
+    // not be detected here: this initializer also runs on the server.
+    timezone: null as string | null,
     consent: false,
   });
+  const detectedTimezone = useDetectedTimezone();
+  const timezone = form.timezone ?? detectedTimezone;
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -123,7 +128,7 @@ export default function RegisterPage() {
         email: form.email,
         phone,
         password: form.password,
-        timezone: form.timezone,
+        timezone: timezone ?? detectTimezone(),
       });
       track(EVENTS.signupCompleted, { method: "email" });
       router.push("/onboarding");
@@ -264,7 +269,7 @@ export default function RegisterPage() {
           <p className="mb-1.5 text-sm font-medium text-navy">{tu("timezone")}</p>
           <Select
             label={tu("timezone")}
-            value={form.timezone}
+            value={timezone}
             onChange={(timezone) => setForm({ ...form, timezone })}
             options={timezoneOptions()}
             searchable
