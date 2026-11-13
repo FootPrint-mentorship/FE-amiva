@@ -13,6 +13,7 @@ import { toast } from "@/components/ui/toast";
 import { pendingGoogleProfile, clearGoogleProfile } from "@/lib/google";
 import { buildE164 } from "@/lib/phone";
 import { detectTimezone, timezoneOptions } from "@/lib/timezones";
+import { useDetectedTimezone } from "@/lib/use-detected-timezone";
 import { completeProfile } from "@/lib/data/auth";
 import { ApiError } from "@/lib/api/client";
 
@@ -31,7 +32,11 @@ export default function CompleteProfilePage() {
   );
   const [cc, setCc] = useState("+234");
   const [phone, setPhone] = useState("");
-  const [timezone, setTimezone] = useState(detectTimezone());
+  // null = no pick yet; the detected zone applies. Not detected in the
+  // initializer, which also runs on the server (hydration mismatch).
+  const [pickedTimezone, setTimezone] = useState<string | null>(null);
+  const detectedTimezone = useDetectedTimezone();
+  const timezone = pickedTimezone ?? detectedTimezone;
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -46,7 +51,7 @@ export default function CompleteProfilePage() {
     completeProfile({
       phone: digits ? buildE164(cc, digits) : null,
       preferredName: preferredName.trim() || null,
-      timezone,
+      timezone: timezone ?? detectTimezone(),
     })
       .then(() => {
         clearGoogleProfile();
